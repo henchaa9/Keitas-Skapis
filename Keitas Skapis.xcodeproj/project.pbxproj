@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2D1AF2EC2CB2C3AD00388469 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D1AF2EB2CB2C3AD00388469 /* Models.swift */; };
+		2D1AF2F02CB2F59D00388469 /* PievienotKategoriju.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D1AF2EF2CB2F59D00388469 /* PievienotKategoriju.swift */; };
 		2D55E1FD2C96FFCA002C18FB /* DancingScript-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2D55E1F92C96FFCA002C18FB /* DancingScript-Regular.ttf */; };
 		2D55E1FE2C96FFCA002C18FB /* DancingScript-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2D55E1FA2C96FFCA002C18FB /* DancingScript-Medium.ttf */; };
 		2D55E1FF2C96FFCA002C18FB /* DancingScript-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2D55E1FB2C96FFCA002C18FB /* DancingScript-SemiBold.ttf */; };
@@ -18,6 +20,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2D1AF2EB2CB2C3AD00388469 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		2D1AF2EF2CB2F59D00388469 /* PievienotKategoriju.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PievienotKategoriju.swift; sourceTree = "<group>"; };
 		2D55E1F92C96FFCA002C18FB /* DancingScript-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DancingScript-Regular.ttf"; sourceTree = "<group>"; };
 		2D55E1FA2C96FFCA002C18FB /* DancingScript-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DancingScript-Medium.ttf"; sourceTree = "<group>"; };
 		2D55E1FB2C96FFCA002C18FB /* DancingScript-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DancingScript-SemiBold.ttf"; sourceTree = "<group>"; };
@@ -74,6 +78,8 @@
 				2D55E2022C9717DB002C18FB /* Info.plist */,
 				2D8032742CA94B8000CE0615 /* KeitasSkapisApp.swift */,
 				2DFC61D62C8360B00019B63D /* ContentView.swift */,
+				2D1AF2EF2CB2F59D00388469 /* PievienotKategoriju.swift */,
+				2D1AF2EB2CB2C3AD00388469 /* Models.swift */,
 				2DFC61D82C8360B10019B63D /* Assets.xcassets */,
 				2DFC61DA2C8360B10019B63D /* Preview Content */,
 			);
@@ -163,6 +169,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D1AF2F02CB2F59D00388469 /* PievienotKategoriju.swift in Sources */,
+				2D1AF2EC2CB2C3AD00388469 /* Models.swift in Sources */,
 				2DFC61D72C8360B00019B63D /* ContentView.swift in Sources */,
 				2D8032752CA94B8000CE0615 /* KeitasSkapisApp.swift in Sources */,
 			);

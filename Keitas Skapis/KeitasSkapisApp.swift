@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct KeitasSkapisApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            PievienotKategorijuView()
         }
+        .modelContainer(for: [Kategorija.self, Apgerbs.self])
     }
 }
