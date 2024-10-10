@@ -52,7 +52,7 @@ struct PievienotKategorijuView: View {
     }
     
     func apstiprinat() {
-        print("apstiprinu yeehaw")
+        modelContext.insert(Kategorija(nosaukums: kategorijasNosaukums))
     }
 }
 

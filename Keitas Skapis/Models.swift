@@ -16,7 +16,7 @@ class Kategorija {
     
     var apgerbi: [Apgerbs] = []
     
-    init(nosaukums: String = "jauna kategorija") {
+    init(nosaukums: String = "Jauna Kategorija") {
         self.nosaukums = nosaukums
     }
 }
@@ -27,22 +27,28 @@ class Apgerbs {
     var nosaukums: String
     var piezimes: String
     var krasa: String
+    var stavoklis: Int
     var gludinams: Bool
     var izmers: String
     var sezona: [String] = []
     var pedejoreizVilkts: Date
+    var mazgajas: Bool
+    var netirs: Bool
     //@Attribute(.externalStorage) var attels: Data?
     
     var kategorijas: [Kategorija] = []
     var dienas: [Diena] = []
     
-    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: String = "", gludinams: Bool = true, izmers: String = "", pedejoreizVilkts: Date = .now) {
+    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: String = "", stavoklis: Int = 0, gludinams: Bool = true, izmers: String = "", pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false) {
         self.nosaukums = nosaukums
         self.piezimes = piezimes
         self.krasa = krasa
+        self.stavoklis = stavoklis
         self.gludinams = gludinams
         self.izmers = izmers
         self.pedejoreizVilkts = pedejoreizVilkts
+        self.mazgajas = mazgajas
+        self.netirs = netirs
     }
 }
 
@@ -75,20 +81,3 @@ class Milakais {
     }
 }
 
-@Model
-class Mazgasana {
-    var apgerbi: [Apgerbs] = []
-    
-    init (apgerbi: [Apgerbs] = []) {
-        self.apgerbi = apgerbi
-    }
-}
-
-@Model
-class Netirs {
-    var apgerbi: [Apgerbs] = []
-    
-    init (apgerbi: [Apgerbs] = []) {
-        self.apgerbi = apgerbi
-    }
-}
