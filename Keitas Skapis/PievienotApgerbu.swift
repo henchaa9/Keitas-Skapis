@@ -35,32 +35,7 @@ struct PievienotApgerbuView: View {
         }.padding()
         Spacer()
         ScrollView {
-            VStack (alignment: .leading) {
-                Button (action: pievienotFoto) {
-                    ZStack {
-                        Image(systemName: "rectangle.portrait.fill").resizable().frame(width: 60, height: 90).foregroundStyle(.gray).opacity(0.50)
-                        Image(systemName: "camera").foregroundStyle(.black).font(.title2)
-                    }
-                }
-                Text("Foto").font(.title3)
-                TextField("", text: $apgerbaNosaukums).textFieldStyle(.roundedBorder).padding(.top, 15)
-                Text("Nosaukums").font(.title3)
-                TextField("", text: $apgerbaPiezimes).textFieldStyle(.roundedBorder).padding(.top, 15)
-                Text("Piezīmes").font(.title3)
-                TextField("", text: $apgerbaKrasa).textFieldStyle(.roundedBorder).padding(.top, 15)
-                Text("Krāsa").font(.title3)
-                //stavoklis ir ta slidinama izvele no vidika
-                //gludinams ir toggle
-                TextField("", text: $apgerbaIzmers).textFieldStyle(.roundedBorder).padding(.top, 15)
-                Text("Nosaukums").font(.title3)
-                //sezona ir checkboxes, par katru pievieno nosaukumu sarakstam
-                //pedejoreiz vilkts ir kkads date picker
-                HStack {
-                    Button (action: apstiprinat) {
-                        Text("Apstiprināt")
-                    }
-                }.padding(.top, 15)
-            }
+            
         }.padding()
     }
     

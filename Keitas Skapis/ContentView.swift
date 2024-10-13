@@ -16,15 +16,22 @@ struct ContentView: View {
     @Query private var kategorijas: [Kategorija]
     @Query private var apgerbi: [Apgerbs]
     @Environment(\.modelContext) private var modelContext
-    @State private var jaunasKategorijasNosaukums = ""
-    @State private var jaunaApgerbaNosaukums = ""
-    
     
     
     var body: some View {
-        
-        VStack {
-            Text("hi")
+        NavigationStack {
+            ScrollView (.horizontal) {
+                HStack {
+                    NavigationLink(destination: {
+                        PievienotKategorijuView()
+                    }, label: {
+                        Image(systemName: "plus").frame(width: 80, height: 110).background(.gray).padding(5).foregroundStyle(.black)
+                    })
+                    ForEach (kategorijas) { kategorija in
+                        Text(kategorija.nosaukums).frame(width: 80, height: 110).background(.gray).padding(5)
+                    }
+                }
+            }
         }
         
     }

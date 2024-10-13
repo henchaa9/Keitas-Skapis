@@ -12,7 +12,7 @@ import SwiftData
 struct KeitasSkapisApp: App {
     var body: some Scene {
         WindowGroup {
-            PievienotKategorijuView()
+            ContentView()
         }
         .modelContainer(for: [Kategorija.self, Apgerbs.self])
     }

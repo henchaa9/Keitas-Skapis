@@ -10,7 +10,6 @@ import SwiftData
 
 @Model
 class Kategorija {
-    var id: UUID = UUID()
     var nosaukums: String
     //@Attribute(.externalStorage) var attels: Data?
     
@@ -23,7 +22,6 @@ class Kategorija {
 
 @Model
 class Apgerbs {
-    var id: UUID = UUID()
     var nosaukums: String
     var piezimes: String
     var krasa: String
@@ -54,7 +52,6 @@ class Apgerbs {
 
 @Model
 class Diena {
-    var id: UUID = UUID()
     var datums: Date
     var piezimes: String
     
@@ -69,7 +66,6 @@ class Diena {
 
 @Model
 class Milakais {
-    var id: UUID = UUID()
     var nosaukums: String
     var piezimes: String
     

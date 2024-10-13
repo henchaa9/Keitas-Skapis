@@ -10,7 +10,7 @@ import SwiftData
 
 struct PievienotKategorijuView: View {
     
-    @Query var kategorijas: [Kategorija]
+    @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
     @State var kategorijasNosaukums = ""
     
@@ -18,9 +18,9 @@ struct PievienotKategorijuView: View {
         HStack {
             Text("Pievienot Kategoriju").font(.title).bold()
             Spacer()
-            Button(action: atpakal) {
+            Button(action: {dismiss()}) {
                 Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
-            }
+            }.navigationBarBackButtonHidden(true)
         }.padding()
         Spacer()
         VStack (alignment: .leading) {
@@ -43,16 +43,14 @@ struct PievienotKategorijuView: View {
         }.padding()
     }
     
-    func atpakal () {
-        print("eju atpakal")
-    }
-    
     func pievienotFoto () {
         print("foto pievienosana very cool")
     }
     
     func apstiprinat() {
-        modelContext.insert(Kategorija(nosaukums: kategorijasNosaukums))
+        let jaunaKategorija = Kategorija(nosaukums: kategorijasNosaukums)
+        modelContext.insert(jaunaKategorija)
+        dismiss()
     }
 }
 
