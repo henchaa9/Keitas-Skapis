@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import SwiftUI
 
 @Model
 class Kategorija {
@@ -21,10 +22,38 @@ class Kategorija {
 }
 
 @Model
+class Krasa {
+    var red: Double
+    var green: Double
+    var blue: Double
+    var alpha: Double
+    
+    init(red: Double, green: Double, blue: Double, alpha: Double) {
+        self.red = red
+        self.green = green
+        self.blue = blue
+        self.alpha = alpha
+    }
+    
+    init(color: Color) {
+        let uiColor = UIColor(color)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        self.red = Double(red)
+        self.green = Double(green)
+        self.blue = Double(blue)
+        self.alpha = Double(alpha)
+    }
+}
+
+@Model
 class Apgerbs {
     var nosaukums: String
     var piezimes: String
-    var krasa: String
+    var krasa: Krasa
     var stavoklis: Int
     var gludinams: Bool
     var izmers: String
@@ -37,7 +66,7 @@ class Apgerbs {
     var kategorijas: [Kategorija] = []
     var dienas: [Diena] = []
     
-    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: String = "", stavoklis: Int = 0, gludinams: Bool = true, izmers: String = "", pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false) {
+    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, izmers: String = "", pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false) {
         self.nosaukums = nosaukums
         self.piezimes = piezimes
         self.krasa = krasa

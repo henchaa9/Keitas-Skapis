@@ -17,12 +17,15 @@ struct PievienotApgerbuView: View {
     
     @State var apgerbaNosaukums = ""
     @State var apgerbaPiezimes = ""
-    @State var apgerbaKrasa = ""
+    
+    @State var izveletaKrasa: Color = .white
+    @State var apgerbaKrasa: Krasa?
+    
     @State var apgerbaStavoklis = 0
-    @State var apgerbaGludinams = true
+    @State var apgerbsGludinams = true
     @State var apgerbaIzmers = ""
     @State var apgerbaSezona = []
-    @State var apgerbaPedejoreizVilkts = Date.now
+    @State var apgerbsPedejoreizVilkts = Date.now
     //attels
     
     var body: some View {
@@ -35,7 +38,31 @@ struct PievienotApgerbuView: View {
         }.padding()
         Spacer()
         ScrollView {
-            
+            VStack (alignment: .leading) {
+                Button (action: pievienotFoto) {
+                    ZStack {
+                        Image(systemName: "rectangle.portrait.fill").resizable().frame(width: 60, height: 90).foregroundStyle(.gray).opacity(0.20)
+                        Image(systemName: "camera").foregroundStyle(.black).font(.title2)
+                    }
+                }
+                TextField("Nosaukums", text: $apgerbaNosaukums).textFieldStyle(.roundedBorder).padding(.top, 20)
+                TextField("Piezīmes", text: $apgerbaPiezimes).textFieldStyle(.roundedBorder).padding(.top, 10)
+                
+                
+                ColorPicker("Krāsa", selection: Binding(
+                    get: { izveletaKrasa },
+                    set: { jaunaKrasa in
+                        izveletaKrasa = jaunaKrasa
+                        apgerbaKrasa = Krasa(color: jaunaKrasa)
+                    })).padding(8)
+                            
+                
+                Picker("Stāvoklis", selection: $apgerbaStavoklis) {
+                    Text("Tīrs").tag(0)
+                    Text("Netīrs").tag(1)
+                    Text("Mazgājas").tag(2)
+                }.pickerStyle(.segmented).padding(.top, 10)
+            }
         }.padding()
     }
     

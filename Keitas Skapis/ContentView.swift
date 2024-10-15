@@ -32,6 +32,11 @@ struct ContentView: View {
                     }
                 }
             }
+            NavigationLink(destination: {
+                PievienotApgerbuView()
+            }, label: {
+                Text("Pievienot apgerbu")
+            })
         }
         
     }
