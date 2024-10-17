@@ -23,7 +23,7 @@ struct PievienotApgerbuView: View {
     
     @State var apgerbaStavoklis = 0
     @State var apgerbsGludinams = true
-    @State var apgerbaIzmers = ""
+    @State var apgerbaIzmers = 0
     @State var apgerbaSezona = []
     @State var apgerbsPedejoreizVilkts = Date.now
     //attels
@@ -55,13 +55,27 @@ struct PievienotApgerbuView: View {
                         izveletaKrasa = jaunaKrasa
                         apgerbaKrasa = Krasa(color: jaunaKrasa)
                     })).padding(8)
-                            
+                      
+                Picker("Izmērs", selection: $apgerbaIzmers) {
+                    Text("XS").tag(0)
+                    Text("S").tag(1)
+                    Text("M").tag(3)
+                    Text("L").tag(4)
+                    Text("XL").tag(5)
+                }.pickerStyle(.segmented).padding(.top, 10)
                 
                 Picker("Stāvoklis", selection: $apgerbaStavoklis) {
                     Text("Tīrs").tag(0)
                     Text("Netīrs").tag(1)
                     Text("Mazgājas").tag(2)
                 }.pickerStyle(.segmented).padding(.top, 10)
+                
+                Toggle(isOn: $apgerbsGludinams) {
+                    Text("Gludināms")
+                }.padding(.top, 15).padding(.horizontal, 5)
+                
+                
+                DatePicker("Pēdējoreiz vilkts", selection: $apgerbsPedejoreizVilkts, displayedComponents: [.date]).padding(.top, 15).padding(.horizontal, 5)
             }
         }.padding()
     }

@@ -56,7 +56,7 @@ class Apgerbs {
     var krasa: Krasa
     var stavoklis: Int
     var gludinams: Bool
-    var izmers: String
+    var izmers: Int
     var sezona: [String] = []
     var pedejoreizVilkts: Date
     var mazgajas: Bool
@@ -66,7 +66,7 @@ class Apgerbs {
     var kategorijas: [Kategorija] = []
     var dienas: [Diena] = []
     
-    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, izmers: String = "", pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false) {
+    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, izmers: Int = 0, pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false) {
         self.nosaukums = nosaukums
         self.piezimes = piezimes
         self.krasa = krasa
