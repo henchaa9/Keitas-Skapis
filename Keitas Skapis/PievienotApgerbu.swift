@@ -24,7 +24,13 @@ struct PievienotApgerbuView: View {
     @State var apgerbaStavoklis = 0
     @State var apgerbsGludinams = true
     @State var apgerbaIzmers = 0
-    @State var apgerbaSezona = []
+    
+    @State var izveleVasara = false
+    @State var izveleRudens = false
+    @State var izveleZiema = false
+    @State var izvelePavasaris = false
+    @State var apgerbaSezona: Set<Sezona> = []
+    
     @State var apgerbsPedejoreizVilkts = Date.now
     //attels
     
@@ -70,12 +76,29 @@ struct PievienotApgerbuView: View {
                     Text("Mazgājas").tag(2)
                 }.pickerStyle(.segmented).padding(.top, 10)
                 
+                let columns = [GridItem(.flexible()), GridItem(.flexible())]
+                LazyVGrid(columns: columns, spacing: 15) {
+                     ForEach(Sezona.allCases, id: \.self) { sezona in
+                         Toggle(sezona.rawValue, isOn: Binding(
+                            get: { apgerbaSezona.contains(sezona) },
+                             set: { izvelets in
+                                 if izvelets {
+                                     apgerbaSezona.insert(sezona)
+                                 } else {
+                                     apgerbaSezona.remove(sezona)
+                                 }
+                             }
+                         ))
+                     }
+                 }
+                .padding(.top, 15).padding(.horizontal, 5)
+                
+                DatePicker("Pēdējoreiz vilkts", selection: $apgerbsPedejoreizVilkts, displayedComponents: [.date]).padding(.top, 15).padding(.horizontal, 5)
+                
                 Toggle(isOn: $apgerbsGludinams) {
                     Text("Gludināms")
                 }.padding(.top, 15).padding(.horizontal, 5)
-                
-                
-                DatePicker("Pēdējoreiz vilkts", selection: $apgerbsPedejoreizVilkts, displayedComponents: [.date]).padding(.top, 15).padding(.horizontal, 5)
+
             }
         }.padding()
     }
@@ -90,6 +113,14 @@ struct PievienotApgerbuView: View {
     
     func apstiprinat() {
         //modelContext.insert()
+    }
+    
+    private func atjaunotSezonu(izveletaSezona: Sezona, izvele: Bool) {
+        if izvele {
+            apgerbaSezona.insert(izveletaSezona)
+        } else {
+            apgerbaSezona.remove(izveletaSezona)
+        }
     }
 }
 

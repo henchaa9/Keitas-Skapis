@@ -22,7 +22,6 @@ struct PievienotKategorijuView: View {
                 Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
             }.navigationBarBackButtonHidden(true)
         }.padding()
-        Spacer()
         VStack (alignment: .leading) {
             Button (action: pievienotFoto) {
                 ZStack {
@@ -30,10 +29,8 @@ struct PievienotKategorijuView: View {
                     Image(systemName: "camera").foregroundStyle(.black).font(.title2)
                 }
             }
-            Text("Foto").font(.title3)
-            TextField("", text: $kategorijasNosaukums).textFieldStyle(.roundedBorder).padding(.top, 30)
-            Text("Nosaukums").font(.title3).padding(.bottom, 150)
-        }.padding()
+            TextField("Nosaukums", text: $kategorijasNosaukums).textFieldStyle(.roundedBorder).padding(.top, 20)
+        }.padding(.top, 50).padding(.horizontal, 20)
         Spacer()
         HStack {
             Button (action: apstiprinat) {

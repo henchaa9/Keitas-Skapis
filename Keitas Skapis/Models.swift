@@ -49,6 +49,13 @@ class Krasa {
     }
 }
 
+enum Sezona: String, CaseIterable, Codable {
+    case vasara = "Vasara"
+    case rudens = "Rudens"
+    case ziema = "Ziema"
+    case pavasaris = "Pavasaris"
+}
+
 @Model
 class Apgerbs {
     var nosaukums: String
@@ -57,7 +64,7 @@ class Apgerbs {
     var stavoklis: Int
     var gludinams: Bool
     var izmers: Int
-    var sezona: [String] = []
+    var sezona: [Sezona]
     var pedejoreizVilkts: Date
     var mazgajas: Bool
     var netirs: Bool
@@ -66,12 +73,13 @@ class Apgerbs {
     var kategorijas: [Kategorija] = []
     var dienas: [Diena] = []
     
-    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, izmers: Int = 0, pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false) {
+    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, sezona: [Sezona] = [], izmers: Int = 0, pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false) {
         self.nosaukums = nosaukums
         self.piezimes = piezimes
         self.krasa = krasa
         self.stavoklis = stavoklis
         self.gludinams = gludinams
+        self.sezona = sezona
         self.izmers = izmers
         self.pedejoreizVilkts = pedejoreizVilkts
         self.mazgajas = mazgajas
