@@ -10,7 +10,7 @@ import SwiftData
 import SwiftUI
 
 @Model
-class Kategorija {
+class Kategorija: Identifiable, Hashable {
     var nosaukums: String
     //@Attribute(.externalStorage) var attels: Data?
     

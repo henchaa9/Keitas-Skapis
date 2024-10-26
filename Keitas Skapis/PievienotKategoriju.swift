@@ -12,6 +12,7 @@ struct PievienotKategorijuView: View {
     
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
+    
     @State var kategorijasNosaukums = ""
     
     var body: some View {
@@ -47,6 +48,7 @@ struct PievienotKategorijuView: View {
     func apstiprinat() {
         let jaunaKategorija = Kategorija(nosaukums: kategorijasNosaukums)
         modelContext.insert(jaunaKategorija)
+        try? modelContext.save()
         dismiss()
     }
 }
