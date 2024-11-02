@@ -12,12 +12,33 @@ import SwiftUI
 @Model
 class Kategorija: Identifiable, Hashable {
     var nosaukums: String
-    //@Attribute(.externalStorage) var attels: Data?
+    @Attribute(.externalStorage) var attels: Data?
     
     var apgerbi: [Apgerbs] = []
     
-    init(nosaukums: String = "Jauna Kategorija") {
+    init(nosaukums: String = "Jauna Kategorija", attels: Data? = nil) {
         self.nosaukums = nosaukums
+        self.attels = attels
+    }
+    
+    // Computed property to access `UIImage`
+    var image: UIImage? {
+        get {
+            guard let attels = attels else { return nil }
+            return UIImage(data: attels)
+        }
+        set {
+            attels = newValue?.pngData()
+        }
+    }
+    
+    // Conformance to `Hashable`
+    static func == (lhs: Kategorija, rhs: Kategorija) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 

@@ -70,7 +70,7 @@ struct PievienotKategorijuView: View {
             Button(action: {dismiss()}) {
                 Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
             }.navigationBarBackButtonHidden(true)
-        }.padding()
+        }.padding().preferredColorScheme(.light)
         
         VStack (alignment: .leading) {
             Button (action: pievienotFoto) {
@@ -147,9 +147,13 @@ struct PievienotKategorijuView: View {
     }
     
     func apstiprinat() {
-        let jaunaKategorija = Kategorija(nosaukums: kategorijasNosaukums)
+        let imageData = selectedImage?.pngData()
+        
+        let jaunaKategorija = Kategorija(nosaukums: kategorijasNosaukums, attels: imageData)
+        
         modelContext.insert(jaunaKategorija)
         try? modelContext.save()
+        
         dismiss()
     }
 }

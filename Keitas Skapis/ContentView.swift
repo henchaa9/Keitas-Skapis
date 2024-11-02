@@ -25,19 +25,52 @@ struct ContentView: View {
                     NavigationLink(destination: {
                         PievienotKategorijuView()
                     }, label: {
-                        Image(systemName: "plus").frame(width: 80, height: 110).background(.gray).padding(5).foregroundStyle(.black)
+                        Image(systemName: "plus").frame(width: 90, height: 120).background(Color.gray.opacity(0.1)).foregroundStyle(.black).cornerRadius(8)
                     })
-                    ForEach (kategorijas) { kategorija in
-                        Text(kategorija.nosaukums).frame(width: 80, height: 110).background(.gray).padding(5)
-                    }
+//                    ForEach (kategorijas) { kategorija in
+//                        Text(kategorija.nosaukums).frame(width: 80, height: 110).background(.gray).padding(5)
+                    
+//                    }
+                    ForEach(kategorijas) { kategorija in
+                           VStack {
+                               if let image = kategorija.image {
+                                   // Display the image if it exists
+                                   Image(uiImage: image)
+                                       .resizable()
+                                       .scaledToFit()
+                                       .frame(width: 80, height: 80)
+                                       .padding(.top, 5)
+                                       .padding(.bottom, -10)
+                               } else {
+                                   // Show a placeholder if no image exists
+                                   Image(systemName: "rectangle.portrait.fill")
+                                       .resizable()
+                                       .scaledToFit()
+                                       .frame(width: 80, height: 80)
+                                       .foregroundStyle(.gray)
+                                       .opacity(0.5)
+                                       .padding(.top, 5)
+                                       .padding(.bottom, -10)
+                               }
+                               
+                               // Display the category name below the image
+                               Text(kategorija.nosaukums)
+                                   .frame(width: 80, height: 30)
+                                   .bold()
+
+                           }
+                           .frame(width: 90, height: 120)
+                           .background(Color.gray.opacity(0.1))
+                           .cornerRadius(8)
+                       }
                 }
-            }
+            }.padding(.horizontal, 10)
             NavigationLink(destination: {
                 PievienotApgerbuView()
             }, label: {
                 Text("Pievienot apgerbu")
             })
-        }
+        }.preferredColorScheme(.light)
         
     }
     
