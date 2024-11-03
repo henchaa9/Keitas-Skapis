@@ -45,6 +45,28 @@ struct PievienotApgerbuView: View {
     
     @State private var showingOption = false
     
+    var existingApgerbs: Apgerbs?
+    
+    init(existingApgerbs: Apgerbs? = nil) {
+           self.existingApgerbs = existingApgerbs
+           if let apgerbs = existingApgerbs {
+               _apgerbaNosaukums = State(initialValue: apgerbs.nosaukums)
+               _apgerbaPiezimes = State(initialValue: apgerbs.piezimes)
+               _apgerbaKategorijas = State(initialValue: Set(apgerbs.kategorijas))
+               _izveletaKrasa = State(initialValue: apgerbs.krasa.color)  // Use the color from `apgerbaKrasa`
+               _apgerbaStavoklis = State(initialValue: apgerbs.stavoklis)
+               _apgerbsGludinams = State(initialValue: apgerbs.gludinams)
+               _apgerbaIzmers = State(initialValue: apgerbs.izmers)
+               _apgerbaSezona = State(initialValue: Set(apgerbs.sezona))
+               _apgerbsPedejoreizVilkts = State(initialValue: apgerbs.pedejoreizVilkts)
+               
+               // If there is an image, set it as well
+               if let imageData = apgerbs.attels, let image = UIImage(data: imageData) {
+                   _selectedImage = State(initialValue: image)
+               }
+           }
+       }
+    
     struct ImagePicker: UIViewControllerRepresentable {
         @Environment(\.presentationMode) private var presentationMode
         @Binding var selectedImage: UIImage?
@@ -168,7 +190,8 @@ struct PievienotApgerbuView: View {
                         set: { jaunaKrasa in
                             izveletaKrasa = jaunaKrasa
                             apgerbaKrasa = Krasa(color: jaunaKrasa)
-                        })).padding(8)
+                        }
+                    )).padding(8)
                     
                     Picker("Izmērs", selection: $apgerbaIzmers) {
                         Text("XS").tag(0)
@@ -254,35 +277,42 @@ struct PievienotApgerbuView: View {
     }
     
     func apstiprinat() {
-        // Convert color to `Krasa`
         let krasa = Krasa(color: izveletaKrasa)
         
-        // Create a new `Apgerbs` object with the current values
-        let jaunsApgerbs = Apgerbs(
-            nosaukums: apgerbaNosaukums,
-            piezimes: apgerbaPiezimes,
-            krasa: krasa,
-            stavoklis: apgerbaStavoklis,
-            gludinams: apgerbsGludinams,
-            sezona: Array(apgerbaSezona),
-            izmers: apgerbaIzmers,
-            pedejoreizVilkts: apgerbsPedejoreizVilkts,
-            netirs: apgerbaStavoklis == 1,
-            mazgajas: apgerbaStavoklis == 2
-        )
-        
-        // Assign selected categories
-        jaunsApgerbs.kategorijas = Array(apgerbaKategorijas)
-        
-        // If an image was selected, assign it to `attels`
-        if let imageData = selectedImage?.pngData() {
-            jaunsApgerbs.attels = imageData
+        if let apgerbs = existingApgerbs {
+            // Update the existing item
+            apgerbs.nosaukums = apgerbaNosaukums
+            apgerbs.piezimes = apgerbaPiezimes
+            apgerbs.kategorijas = Array(apgerbaKategorijas)
+            apgerbs.krasa = krasa
+            apgerbs.stavoklis = apgerbaStavoklis
+            apgerbs.gludinams = apgerbsGludinams
+            apgerbs.izmers = apgerbaIzmers
+            apgerbs.sezona = Array(apgerbaSezona)
+            apgerbs.pedejoreizVilkts = apgerbsPedejoreizVilkts
+            if let imageData = selectedImage?.pngData() {
+                apgerbs.attels = imageData
+            }
+        } else {
+            // Create a new item
+            let jaunsApgerbs = Apgerbs(
+                nosaukums: apgerbaNosaukums,
+                piezimes: apgerbaPiezimes,
+                krasa: krasa,
+                stavoklis: apgerbaStavoklis,
+                gludinams: apgerbsGludinams,
+                sezona: Array(apgerbaSezona),
+                izmers: apgerbaIzmers,
+                pedejoreizVilkts: apgerbsPedejoreizVilkts,
+                netirs: apgerbaStavoklis == 1,
+                mazgajas: apgerbaStavoklis == 2
+            )
+            jaunsApgerbs.kategorijas = Array(apgerbaKategorijas)
+            if let imageData = selectedImage?.pngData() {
+                jaunsApgerbs.attels = imageData
+            }
+            modelContext.insert(jaunsApgerbs)
         }
-        
-        // Save the new `Apgerbs` object to the model context
-        modelContext.insert(jaunsApgerbs)
-        
-        // Dismiss the view after saving
         dismiss()
     }
     

@@ -68,7 +68,13 @@ class Krasa {
         self.blue = Double(blue)
         self.alpha = Double(alpha)
     }
+    
+    // Computed property to convert Krasa to SwiftUI Color
+    var color: Color {
+        Color(red: red, green: green, blue: blue, opacity: alpha)
+    }
 }
+
 
 enum Sezona: String, CaseIterable, Codable {
     case vasara = "Vasara"

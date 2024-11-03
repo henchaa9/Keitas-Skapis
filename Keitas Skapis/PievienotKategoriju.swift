@@ -22,6 +22,16 @@ struct PievienotKategorijuView: View {
     
     @State private var showingOption = false
     
+    var existingKategorija: Kategorija?
+    
+    init(existingKategorija: Kategorija? = nil) {
+        self.existingKategorija = existingKategorija
+        _kategorijasNosaukums = State(initialValue: existingKategorija?.nosaukums ?? "")
+        if let imageData = existingKategorija?.attels {
+            _selectedImage = State(initialValue: UIImage(data: imageData))
+        }
+    }
+    
     struct ImagePicker: UIViewControllerRepresentable {
         @Environment(\.presentationMode) private var presentationMode
         @Binding var selectedImage: UIImage?
@@ -112,11 +122,17 @@ struct PievienotKategorijuView: View {
     }
     
     func apstiprinat() {
-        let imageData = selectedImage?.pngData()
-        
-        let jaunaKategorija = Kategorija(nosaukums: kategorijasNosaukums, attels: imageData)
-        
-        modelContext.insert(jaunaKategorija)
+        if let kategorija = existingKategorija {
+            // Update existing category
+            kategorija.nosaukums = kategorijasNosaukums
+            if let image = selectedImage?.pngData() {
+                kategorija.attels = image
+            }
+        } else {
+            // Create new category
+            let newKategorija = Kategorija(nosaukums: kategorijasNosaukums, attels: selectedImage?.pngData())
+            modelContext.insert(newKategorija)
+        }
         
         dismiss()
     }
