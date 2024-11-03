@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct PievienotApgerbuView: View {
     
@@ -18,7 +19,6 @@ struct PievienotApgerbuView: View {
     
     @State var apgerbaNosaukums = ""
     @State var apgerbaPiezimes = ""
-    
     
     @State private var isExpandedKategorijas = false
     @State private var isExpandedSezona = false
@@ -32,18 +32,56 @@ struct PievienotApgerbuView: View {
     @State var apgerbsGludinams = true
     @State var apgerbaIzmers = 0
     
-    
-//    @State var izveleVasara = false
-//    @State var izveleRudens = false
-//    @State var izveleZiema = false
-//    @State var izvelePavasaris = false
-    
     let sezonaIzvele = [Sezona.vasara, Sezona.rudens, Sezona.ziema, Sezona.pavasaris]
     @State var apgerbaSezona: Set<Sezona> = []
     
     
     @State var apgerbsPedejoreizVilkts = Date.now
-    //attels
+    
+    // foto pievienosanai
+    @State private var selectedImage: UIImage?
+    @State private var isPickerPresented = false
+    @State private var sourceType: UIImagePickerController.SourceType?
+    
+    @State private var showingOption = false
+    
+    struct ImagePicker: UIViewControllerRepresentable {
+        @Environment(\.presentationMode) private var presentationMode
+        @Binding var selectedImage: UIImage?
+        var sourceType: UIImagePickerController.SourceType
+
+        func makeUIViewController(context: Context) -> UIImagePickerController {
+            let picker = UIImagePickerController()
+            picker.delegate = context.coordinator
+            picker.sourceType = sourceType
+            return picker
+        }
+
+        func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+        func makeCoordinator() -> Coordinator {
+            Coordinator(self)
+        }
+
+        class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+            let parent: ImagePicker
+
+            init(_ parent: ImagePicker) {
+                self.parent = parent
+            }
+
+            func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+                if let image = info[.originalImage] as? UIImage {
+                    parent.selectedImage = image
+                }
+                parent.presentationMode.wrappedValue.dismiss()
+            }
+            
+            func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+                parent.presentationMode.wrappedValue.dismiss()
+            }
+        }
+    }
     
     
     var body: some View {
@@ -59,12 +97,28 @@ struct PievienotApgerbuView: View {
             ScrollView {
                 VStack (alignment: .leading) {
                     
-                    Button (action: pievienotFoto) {
-                        ZStack {
-                            Image(systemName: "rectangle.portrait.fill").resizable().frame(width: 60, height: 90).foregroundStyle(.gray).opacity(0.20)
-                            Image(systemName: "camera").foregroundStyle(.black).font(.title2)
+                    VStack (alignment: .leading) {
+                        Button (action: pievienotFoto) {
+                            ZStack {
+                                Image(systemName: "rectangle.portrait.fill").resizable().frame(width: 60, height: 90).foregroundStyle(.gray).opacity(0.50)
+                                Image(systemName: "camera").foregroundStyle(.black).font(.title2)
+                            }
+                        }.confirmationDialog("Change background", isPresented: $showingOption) {
+                            Button("Camera") {
+                                sourceType = .camera
+                                isPickerPresented = true
+                            }
+                            Button("Photo Library") {
+                                sourceType = .photoLibrary
+                                isPickerPresented = true
+                            }
+                            Button("Cancel", role: .cancel) { }
                         }
-                    }
+                    }.sheet(isPresented: $isPickerPresented) {
+                            if let sourceType = sourceType {
+                                ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
+                            }
+                        }
                     
                     TextField("Nosaukums", text: $apgerbaNosaukums).textFieldStyle(.roundedBorder).padding(.top, 20)
                     TextField("Piezīmes", text: $apgerbaPiezimes).textFieldStyle(.roundedBorder).padding(.top, 10)
@@ -130,22 +184,6 @@ struct PievienotApgerbuView: View {
                         Text("Mazgājas").tag(2)
                     }.pickerStyle(.segmented).padding(.top, 10)
                     
-                    //                let columns = [GridItem(.flexible()), GridItem(.flexible())]
-                    //                LazyVGrid(columns: columns, spacing: 15) {
-                    //                     ForEach(Sezona.allCases, id: \.self) { sezona in
-                    //                         Toggle(sezona.rawValue, isOn: Binding(
-                    //                            get: { apgerbaSezona.contains(sezona) },
-                    //                             set: { izvelets in
-                    //                                 if izvelets {
-                    //                                     apgerbaSezona.insert(sezona)
-                    //                                 } else {
-                    //                                     apgerbaSezona.remove(sezona)
-                    //                                 }
-                    //                             }
-                    //                         ))
-                    //                     }
-                    //                 }
-                    //                .padding(.top, 15).padding(.horizontal, 5)
                     
                     VStack(alignment: .leading) {
                         Button(action: { isExpandedSezona.toggle() }) {
@@ -193,6 +231,13 @@ struct PievienotApgerbuView: View {
                         Text("Gludināms")
                     }.padding(.top, 15).padding(.horizontal, 5)
                     
+                    HStack {
+                        Button (action: apstiprinat) {
+                            Text("Apstiprināt").bold()
+                        }
+                        Spacer()
+                    }.padding(.top, 20).padding(.leading, 5)
+                    
                 }
             }.padding()
         }.preferredColorScheme(.light)
@@ -205,11 +250,40 @@ struct PievienotApgerbuView: View {
     }
     
     func pievienotFoto () {
-        print("foto pievienosana very cool")
+        showingOption = true
     }
     
     func apstiprinat() {
-        //modelContext.insert()
+        // Convert color to `Krasa`
+        let krasa = Krasa(color: izveletaKrasa)
+        
+        // Create a new `Apgerbs` object with the current values
+        let jaunsApgerbs = Apgerbs(
+            nosaukums: apgerbaNosaukums,
+            piezimes: apgerbaPiezimes,
+            krasa: krasa,
+            stavoklis: apgerbaStavoklis,
+            gludinams: apgerbsGludinams,
+            sezona: Array(apgerbaSezona),
+            izmers: apgerbaIzmers,
+            pedejoreizVilkts: apgerbsPedejoreizVilkts,
+            netirs: apgerbaStavoklis == 1,
+            mazgajas: apgerbaStavoklis == 2
+        )
+        
+        // Assign selected categories
+        jaunsApgerbs.kategorijas = Array(apgerbaKategorijas)
+        
+        // If an image was selected, assign it to `attels`
+        if let imageData = selectedImage?.pngData() {
+            jaunsApgerbs.attels = imageData
+        }
+        
+        // Save the new `Apgerbs` object to the model context
+        modelContext.insert(jaunsApgerbs)
+        
+        // Dismiss the view after saving
+        dismiss()
     }
     
     private func atjaunotSezonu(izveletaSezona: Sezona, izvele: Bool) {
@@ -224,3 +298,4 @@ struct PievienotApgerbuView: View {
 #Preview {
     PievienotApgerbuView()
 }
+

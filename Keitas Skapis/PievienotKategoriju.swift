@@ -101,45 +101,10 @@ struct PievienotKategorijuView: View {
         
         HStack {
             Button (action: apstiprinat) {
-                Text("Apstiprinat")
+                Text("Apstiprināt").bold()
             }
             Spacer()
         }.padding()
-        
-//        VStack {
-//             // Display the selected image
-//             if let image = selectedImage {
-//                 Image(uiImage: image)
-//                     .resizable()
-//                     .scaledToFit()
-//                     .frame(width: 200, height: 200)
-//             } else {
-//                 Text("Select an Image")
-//                     .font(.headline)
-//             }
-//
-//             // Buttons to pick image or take photo
-//             HStack {
-//                 Button("Pick from Gallery") {
-//                     sourceType = .photoLibrary
-//                     DispatchQueue.main.async {
-//                         isPickerPresented = true
-//                     }
-//                 }
-//
-//                 Button("Take Photo") {
-//                     sourceType = .camera
-//                     DispatchQueue.main.async {
-//                         isPickerPresented = true
-//                     }
-//                 }
-//            }
-//         }
-//        .sheet(isPresented: $isPickerPresented) {
-//            if let sourceType = sourceType {
-//                ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
-//            }
-//        }
     }
     
     func pievienotFoto () {
@@ -152,7 +117,6 @@ struct PievienotKategorijuView: View {
         let jaunaKategorija = Kategorija(nosaukums: kategorijasNosaukums, attels: imageData)
         
         modelContext.insert(jaunaKategorija)
-        try? modelContext.save()
         
         dismiss()
     }

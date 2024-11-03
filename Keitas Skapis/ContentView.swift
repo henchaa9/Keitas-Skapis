@@ -17,6 +17,9 @@ struct ContentView: View {
     @Query private var apgerbi: [Apgerbs]
     @Environment(\.modelContext) private var modelContext
     
+    private let adaptiveColumn = [
+        GridItem(.adaptive(minimum: 90, maximum: 120))
+        ]
     
     var body: some View {
         NavigationStack {
@@ -27,10 +30,7 @@ struct ContentView: View {
                     }, label: {
                         Image(systemName: "plus").frame(width: 90, height: 120).background(Color.gray.opacity(0.1)).foregroundStyle(.black).cornerRadius(8)
                     })
-//                    ForEach (kategorijas) { kategorija in
-//                        Text(kategorija.nosaukums).frame(width: 80, height: 110).background(.gray).padding(5)
                     
-//                    }
                     ForEach(kategorijas) { kategorija in
                            VStack {
                                if let image = kategorija.image {
@@ -56,7 +56,6 @@ struct ContentView: View {
                                // Display the category name below the image
                                Text(kategorija.nosaukums)
                                    .frame(width: 80, height: 30)
-                                   .bold()
 
                            }
                            .frame(width: 90, height: 120)
@@ -70,6 +69,45 @@ struct ContentView: View {
             }, label: {
                 Text("Pievienot apgerbu")
             })
+            
+            //apgerbi
+            ScrollView{
+                LazyVGrid(columns: adaptiveColumn, spacing: 10) {
+                    ForEach(apgerbi, id: \.self) { apgerbs in
+                        VStack {
+                            if let image = apgerbs.image {
+                                // Display the image if it exists
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+                                    .padding(.top, 5)
+                                    .padding(.bottom, -10)
+                            } else {
+                                // Show a placeholder if no image exists
+                                Image(systemName: "rectangle.portrait.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+                                    .foregroundStyle(.gray)
+                                    .opacity(0.5)
+                                    .padding(.top, 5)
+                                    .padding(.bottom, -10)
+                            }
+                            
+                            // Display the category name below the image
+                            Text(apgerbs.nosaukums)
+                                .frame(width: 80, height: 30)
+
+                        }
+                        .frame(width: 90, height: 120)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                }
+                
+            } .padding()
+            
         }.preferredColorScheme(.light)
         
     }

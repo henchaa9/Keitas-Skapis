@@ -78,7 +78,7 @@ enum Sezona: String, CaseIterable, Codable {
 }
 
 @Model
-class Apgerbs {
+class Apgerbs: Identifiable, Hashable {
     var nosaukums: String
     var piezimes: String
     var krasa: Krasa
@@ -89,12 +89,12 @@ class Apgerbs {
     var pedejoreizVilkts: Date
     var mazgajas: Bool
     var netirs: Bool
-    //@Attribute(.externalStorage) var attels: Data?
+    @Attribute(.externalStorage) var attels: Data?
     
     var kategorijas: [Kategorija] = []
     var dienas: [Diena] = []
     
-    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, sezona: [Sezona] = [], izmers: Int = 0, pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false) {
+    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, sezona: [Sezona] = [], izmers: Int = 0, pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false, attels: Data? = nil) {
         self.nosaukums = nosaukums
         self.piezimes = piezimes
         self.krasa = krasa
@@ -105,6 +105,27 @@ class Apgerbs {
         self.pedejoreizVilkts = pedejoreizVilkts
         self.mazgajas = mazgajas
         self.netirs = netirs
+        self.attels = attels
+    }
+    
+    // Computed property to access `UIImage`
+    var image: UIImage? {
+        get {
+            guard let attels = attels else { return nil }
+            return UIImage(data: attels)
+        }
+        set {
+            attels = newValue?.pngData()
+        }
+    }
+    
+    // Conformance to `Hashable`
+    static func == (lhs: Apgerbs, rhs: Apgerbs) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
