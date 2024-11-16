@@ -8,6 +8,9 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import Vision
+import CoreImage
+import CoreImage.CIFilterBuiltins
 
 struct PievienotKategorijuView: View {
     
@@ -117,25 +120,116 @@ struct PievienotKategorijuView: View {
         }.padding()
     }
     
+    // nakamas 4 funkcijas ir prieks background removal
+    private func createMask(from inputImage: CIImage) -> CIImage? {
+        
+        let request = VNGenerateForegroundInstanceMaskRequest()
+        let handler = VNImageRequestHandler(ciImage: inputImage)
+
+        do {
+            try handler.perform([request])
+            
+            if let result = request.results?.first {
+                let mask = try result.generateScaledMaskForImage(forInstances: result.allInstances, from: handler)
+                return CIImage(cvPixelBuffer: mask)
+            }
+        } catch {
+            print(error)
+        }
+        
+        return nil
+    }
+
+    private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
+        let filter = CIFilter.blendWithMask()
+        
+        filter.inputImage = image
+        filter.maskImage = mask
+        filter.backgroundImage = CIImage.empty()
+        
+        return filter.outputImage!
+    }
+    
+    private func convertToUIImage(ciImage: CIImage) -> UIImage {
+        guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
+            fatalError("Failed to render CGImage")
+        }
+        
+        return UIImage(cgImage: cgImage)
+    }
+    
+    private func removeBackground(from image: UIImage) -> UIImage {
+        guard let inputImage = CIImage(image: image) else {
+            print("Failed to create CIImage")
+            return image
+        }
+        
+        // Background removal logic
+        guard let maskImage = createMask(from: inputImage) else {
+            print("Failed to create mask")
+            return image
+        }
+        
+        let outputImage = applyMask(mask: maskImage, to: inputImage)
+        let finalImage = convertToUIImage(ciImage: outputImage)
+        
+        // Rotate the final image 90 degrees clockwise
+        return rotateImageClockwise(finalImage)
+    }
+
+    
+    private func rotateImageClockwise(_ image: UIImage) -> UIImage {
+        UIGraphicsBeginImageContext(CGSize(width: image.size.height, height: image.size.width))
+        guard let context = UIGraphicsGetCurrentContext() else {
+            UIGraphicsEndImageContext()
+            return image
+        }
+        
+        // Move origin to the center of the image
+        context.translateBy(x: image.size.height / 2, y: image.size.width / 2)
+        // Rotate context 90 degrees clockwise
+        context.rotate(by: .pi / 2)
+        // Draw the image at the new orientation
+        image.draw(in: CGRect(x: -image.size.width / 2, y: -image.size.height / 2, width: image.size.width, height: image.size.height))
+        
+        let rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return rotatedImage ?? image
+    }
+
+    //
+    
     func pievienotFoto () {
         showingOption = true
     }
     
     func apstiprinat() {
-        if let kategorija = existingKategorija {
-            // Update existing category
-            kategorija.nosaukums = kategorijasNosaukums
-            if let image = selectedImage?.pngData() {
-                kategorija.attels = image
-            }
-        } else {
-            // Create new category
-            let newKategorija = Kategorija(nosaukums: kategorijasNosaukums, attels: selectedImage?.pngData())
-            modelContext.insert(newKategorija)
+        guard let selectedImage = selectedImage else {
+            print("No image selected")
+            return
         }
         
-        dismiss()
+        Task {
+            // Remove background from the selected image
+            let backgroundlessImage = removeBackground(from: selectedImage)
+            
+            // Convert the processed image to Data
+            let processedImageData = backgroundlessImage.pngData()
+            
+            if let kategorija = existingKategorija {
+                // Update existing category
+                kategorija.nosaukums = kategorijasNosaukums
+                kategorija.attels = processedImageData // Save processed image
+            } else {
+                // Create new category with processed image
+                let newKategorija = Kategorija(nosaukums: kategorijasNosaukums, attels: processedImageData)
+                modelContext.insert(newKategorija)
+            }
+            
+            dismiss()
+        }
     }
+
 }
 
 #Preview {
