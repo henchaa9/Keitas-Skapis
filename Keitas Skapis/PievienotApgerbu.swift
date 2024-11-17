@@ -283,6 +283,7 @@ struct PievienotApgerbuView: View {
             // Update the existing item
             apgerbs.nosaukums = apgerbaNosaukums
             apgerbs.piezimes = apgerbaPiezimes
+            apgerbs.kategorijas = Array(apgerbaKategorijas)
             apgerbs.krasa = krasa
             apgerbs.stavoklis = apgerbaStavoklis
             apgerbs.gludinams = apgerbsGludinams
@@ -291,15 +292,6 @@ struct PievienotApgerbuView: View {
             apgerbs.pedejoreizVilkts = apgerbsPedejoreizVilkts
             if let imageData = selectedImage?.pngData() {
                 apgerbs.attels = imageData
-            }
-            
-            // Synchronize relationships
-            for kategorija in kategorijas {
-                if apgerbaKategorijas.contains(kategorija), !kategorija.apgerbi.contains(apgerbs) {
-                    kategorija.apgerbi.append(apgerbs)
-                } else if !apgerbaKategorijas.contains(kategorija), kategorija.apgerbi.contains(apgerbs) {
-                    kategorija.apgerbi.removeAll { $0.id == apgerbs.id }
-                }
             }
         } else {
             // Create a new item
@@ -315,20 +307,14 @@ struct PievienotApgerbuView: View {
                 netirs: apgerbaStavoklis == 1,
                 mazgajas: apgerbaStavoklis == 2
             )
+            jaunsApgerbs.kategorijas = Array(apgerbaKategorijas)
             if let imageData = selectedImage?.pngData() {
                 jaunsApgerbs.attels = imageData
-            }
-            
-            // Synchronize relationships
-            for kategorija in apgerbaKategorijas {
-                kategorija.apgerbi.append(jaunsApgerbs)
             }
             modelContext.insert(jaunsApgerbs)
         }
         dismiss()
     }
-
-
     
     private func atjaunotSezonu(izveletaSezona: Sezona, izvele: Bool) {
         if izvele {

@@ -14,7 +14,6 @@ class Kategorija: Identifiable, Hashable {
     var nosaukums: String
     @Attribute(.externalStorage) var attels: Data?
     
-    // Store `Apgerbs` relationships manually
     var apgerbi: [Apgerbs] = []
     
     init(nosaukums: String = "Jauna Kategorija", attels: Data? = nil) {
@@ -22,6 +21,7 @@ class Kategorija: Identifiable, Hashable {
         self.attels = attels
     }
     
+    // Computed property to access `UIImage`
     var image: UIImage? {
         get {
             guard let attels = attels else { return nil }
@@ -32,6 +32,7 @@ class Kategorija: Identifiable, Hashable {
         }
     }
     
+    // Conformance to `Hashable`
     static func == (lhs: Kategorija, rhs: Kategorija) -> Bool {
         lhs.id == rhs.id
     }
@@ -40,7 +41,6 @@ class Kategorija: Identifiable, Hashable {
         hasher.combine(id)
     }
 }
-
 
 @Model
 class Krasa {
@@ -97,10 +97,10 @@ class Apgerbs: Identifiable, Hashable {
     var netirs: Bool
     @Attribute(.externalStorage) var attels: Data?
     
-    // Manually manage Kategorija relationships
     var kategorijas: [Kategorija] = []
+    var dienas: [Diena] = []
     
-    init(nosaukums: String = "Jauns Apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, sezona: [Sezona] = [], izmers: Int = 0, pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false, attels: Data? = nil) {
+    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, sezona: [Sezona] = [], izmers: Int = 0, pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false, attels: Data? = nil) {
         self.nosaukums = nosaukums
         self.piezimes = piezimes
         self.krasa = krasa
@@ -114,6 +114,7 @@ class Apgerbs: Identifiable, Hashable {
         self.attels = attels
     }
     
+    // Computed property to access `UIImage`
     var image: UIImage? {
         get {
             guard let attels = attels else { return nil }
@@ -124,6 +125,7 @@ class Apgerbs: Identifiable, Hashable {
         }
     }
     
+    // Conformance to `Hashable`
     static func == (lhs: Apgerbs, rhs: Apgerbs) -> Bool {
         lhs.id == rhs.id
     }
@@ -132,7 +134,6 @@ class Apgerbs: Identifiable, Hashable {
         hasher.combine(id)
     }
 }
-
 
 @Model
 class Diena {
