@@ -13,11 +13,17 @@ struct ContentView: View {
     @Query private var apgerbi: [Apgerbs]
     @Environment(\.modelContext) private var modelContext
     
+    // State variables for managing actions
     @State private var selectedKategorija: Kategorija?
     @State private var selectedApgerbs: Apgerbs?
     @State private var showActionSheet = false
     @State private var isEditingKategorija = false
     @State private var isEditingApgerbs = false
+    @State private var showDeleteSheet = false
+    @State private var showDeleteConfirmation = false
+    @State private var newKategorijaName = "" // For adding a new kategorija
+    @State private var showAddConfirmation = false
+    @State private var targetKategorija: Kategorija? // The selected target kategorija
     
     private let adaptiveColumn = [
         GridItem(.adaptive(minimum: 90, maximum: 120))
@@ -29,6 +35,7 @@ struct ContentView: View {
                 // Categories Section
                 ScrollView(.horizontal) {
                     HStack {
+                        // Add new category button
                         NavigationLink(destination: PievienotKategorijuView()) {
                             Image(systemName: "plus")
                                 .frame(width: 90, height: 120)
@@ -37,6 +44,7 @@ struct ContentView: View {
                                 .cornerRadius(8)
                         }
                         
+                        // Display existing categories
                         ForEach(kategorijas) { kategorija in
                             VStack {
                                 if let image = kategorija.image {
@@ -56,7 +64,6 @@ struct ContentView: View {
                                         .padding(.top, 5)
                                         .padding(.bottom, -10)
                                 }
-                                
                                 Text(kategorija.nosaukums)
                                     .frame(width: 80, height: 30)
                             }
@@ -64,6 +71,7 @@ struct ContentView: View {
                             .background(Color.gray.opacity(0.1))
                             .cornerRadius(8)
                             .onLongPressGesture {
+                                selectedApgerbs = nil // Clear previous selection
                                 selectedKategorija = kategorija
                                 showActionSheet = true
                             }
@@ -72,7 +80,7 @@ struct ContentView: View {
                 }
                 .padding(.horizontal, 10)
                 
-                // Pievienot apgerbu Button
+                // Add clothing item button
                 NavigationLink(destination: PievienotApgerbuView()) {
                     Text("Pievienot apgerbu")
                 }
@@ -100,7 +108,6 @@ struct ContentView: View {
                                         .padding(.top, 5)
                                         .padding(.bottom, -10)
                                 }
-                                
                                 Text(apgerbs.nosaukums)
                                     .frame(width: 80, height: 30)
                             }
@@ -108,6 +115,7 @@ struct ContentView: View {
                             .background(Color.gray.opacity(0.1))
                             .cornerRadius(8)
                             .onLongPressGesture {
+                                selectedKategorija = nil // Clear previous selection
                                 selectedApgerbs = apgerbs
                                 showActionSheet = true
                             }
@@ -134,34 +142,128 @@ struct ContentView: View {
                     ]
                 )
             }
-            .navigationDestination(isPresented: $isEditingKategorija) {
-                if let kategorija = selectedKategorija {
-                    PievienotKategorijuView(existingKategorija: kategorija)
+            .sheet(isPresented: $showDeleteSheet) {
+                VStack {
+                    Text("Kategorija \(selectedKategorija?.nosaukums ?? "") contains \(selectedKategorija?.apgerbi.count ?? 0) apgerbs.")
+                        .font(.headline)
+                        .padding()
+                    
+                    // Horizontal List of Categories
+                    ScrollView(.horizontal) {
+                        HStack {
+                            // Add button for creating a new category
+                            NavigationLink(destination: PievienotKategorijuView(apgerbiToAdd: selectedKategorija?.apgerbi ?? [])) {
+                                Image(systemName: "plus")
+                                    .frame(width: 90, height: 120)
+                                    .background(Color.gray.opacity(0.1))
+                                    .cornerRadius(8)
+                            }
+                            
+                            // List of other categories
+                            ForEach(kategorijas.filter { $0.id != selectedKategorija?.id }) { kategorija in
+                                VStack {
+                                    if let image = kategorija.image {
+                                        Image(uiImage: image)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 80, height: 80)
+                                    }
+                                    Text(kategorija.nosaukums)
+                                        .frame(width: 80)
+                                }
+                                .frame(width: 90, height: 120)
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                                .onTapGesture {
+                                    targetKategorija = kategorija
+                                    showAddConfirmation = true
+                                }
+                            }
+                        }
+                        .padding()
+                    }
+                    
+                    // Delete All Button
+                    Button(action: {
+                        showDeleteConfirmation = true
+                    }) {
+                        Text("Delete All Apgerbs and Kategorija")
+                            .foregroundColor(.red)
+                    }
+                    .padding()
+                    .confirmationDialog(
+                        "Are you sure you want to delete all Apgerbs and the Kategorija?",
+                        isPresented: $showDeleteConfirmation,
+                        actions: {
+                            Button("Delete", role: .destructive) {
+                                deleteAllInKategorija()
+                            }
+                            Button("Cancel", role: .cancel) {}
+                        }
+                    )
+                }
+                .padding()
+                .confirmationDialog(
+                    "Add Apgerbs to \(targetKategorija?.nosaukums ?? "")?",
+                    isPresented: $showAddConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    if let currentKategorija = selectedKategorija, let targetKategorija = targetKategorija {
+                        Button("Move \(currentKategorija.apgerbi.count) Apgerbs") {
+                            moveApgerbi(to: targetKategorija)
+                            showAddConfirmation = false // Reset the state
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {
+                        showAddConfirmation = false // Reset the state on cancel
+                    }
                 }
             }
-            .navigationDestination(isPresented: $isEditingApgerbs) {
-                if let apgerbs = selectedApgerbs {
-                    PievienotApgerbuView(existingApgerbs: apgerbs)
-                }
-            }
+            .preferredColorScheme(.light)
         }
-        .preferredColorScheme(.light)
     }
     
-    private func deleteSelectedItem() {
+    // MARK: - Helper Functions
+    
+    func deleteAllInKategorija() {
+        // Delete all associated Apgerbs and the selected Kategorija
         if let kategorija = selectedKategorija {
+            for apgerbs in kategorija.apgerbi {
+                modelContext.delete(apgerbs)
+            }
             modelContext.delete(kategorija)
             selectedKategorija = nil
+        }
+    }
+    
+    func moveApgerbi(to newKategorija: Kategorija) {
+        // Move Apgerbs from the current Kategorija to a new Kategorija
+        if let currentKategorija = selectedKategorija {
+            for apgerbs in currentKategorija.apgerbi {
+                newKategorija.apgerbi.append(apgerbs)
+            }
+            modelContext.delete(currentKategorija) // Delete the old Kategorija
+            selectedKategorija = nil
+        }
+    }
+    
+    func deleteSelectedItem() {
+        // Delete the selected Kategorija or Apgerbs
+        if let kategorija = selectedKategorija {
+            if kategorija.apgerbi.isEmpty {
+                modelContext.delete(kategorija)
+                selectedKategorija = nil
+            } else {
+                showDeleteSheet = true
+            }
         } else if let apgerbs = selectedApgerbs {
             modelContext.delete(apgerbs)
             selectedApgerbs = nil
         }
     }
 }
-    
-#Preview {
-    ContentView()
-}
+
+
 
 
 
