@@ -280,10 +280,9 @@ struct PievienotApgerbuView: View {
         let krasa = Krasa(color: izveletaKrasa)
         
         if let apgerbs = existingApgerbs {
-            // Update the existing item
+            // Update existing item
             apgerbs.nosaukums = apgerbaNosaukums
             apgerbs.piezimes = apgerbaPiezimes
-            apgerbs.kategorijas = Array(apgerbaKategorijas)
             apgerbs.krasa = krasa
             apgerbs.stavoklis = apgerbaStavoklis
             apgerbs.gludinams = apgerbsGludinams
@@ -293,6 +292,9 @@ struct PievienotApgerbuView: View {
             if let imageData = selectedImage?.pngData() {
                 apgerbs.attels = imageData
             }
+            
+            // Update Kategorijas relationships
+            updateKategorijaRelationships(for: apgerbs, newKategorijas: Array(apgerbaKategorijas))
         } else {
             // Create a new item
             let jaunsApgerbs = Apgerbs(
@@ -307,14 +309,40 @@ struct PievienotApgerbuView: View {
                 netirs: apgerbaStavoklis == 1,
                 mazgajas: apgerbaStavoklis == 2
             )
-            jaunsApgerbs.kategorijas = Array(apgerbaKategorijas)
             if let imageData = selectedImage?.pngData() {
                 jaunsApgerbs.attels = imageData
             }
+            
+            // Establish relationships
+            jaunsApgerbs.kategorijas = Array(apgerbaKategorijas)
+            for kategorija in apgerbaKategorijas {
+                if !kategorija.apgerbi.contains(jaunsApgerbs) {
+                    kategorija.apgerbi.append(jaunsApgerbs)
+                }
+            }
+            
+            // Insert new item into the model context
             modelContext.insert(jaunsApgerbs)
         }
+        
         dismiss()
     }
+
+    private func updateKategorijaRelationships(for apgerbs: Apgerbs, newKategorijas: [Kategorija]) {
+        // Remove Apgerbs from old Kategorijas
+        for kategorija in apgerbs.kategorijas {
+            kategorija.apgerbi.removeAll { $0 == apgerbs }
+        }
+        
+        // Assign new Kategorijas and update their Apgerbi
+        apgerbs.kategorijas = newKategorijas
+        for kategorija in newKategorijas {
+            if !kategorija.apgerbi.contains(apgerbs) {
+                kategorija.apgerbi.append(apgerbs)
+            }
+        }
+    }
+
     
     private func atjaunotSezonu(izveletaSezona: Sezona, izvele: Bool) {
         if izvele {

@@ -12,17 +12,17 @@ struct ContentView: View {
     @Query private var kategorijas: [Kategorija]
     @Query private var apgerbi: [Apgerbs]
     @Environment(\.modelContext) private var modelContext
-    
+
     @State private var selectedKategorija: Kategorija?
     @State private var selectedApgerbs: Apgerbs?
     @State private var showActionSheet = false
-    @State private var isEditingKategorija = false
-    @State private var isEditingApgerbs = false
-    
-    private let adaptiveColumn = [
-        GridItem(.adaptive(minimum: 90, maximum: 120))
-    ]
-    
+    @State private var actionSheetType: ActionSheetType?
+    @State private var isEditing = false
+
+    enum ActionSheetType {
+        case kategorija, apgerbs
+    }
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -36,7 +36,7 @@ struct ContentView: View {
                                 .foregroundStyle(.black)
                                 .cornerRadius(8)
                         }
-                        
+
                         ForEach(kategorijas) { kategorija in
                             VStack {
                                 if let image = kategorija.image {
@@ -56,32 +56,36 @@ struct ContentView: View {
                                         .padding(.top, 5)
                                         .padding(.bottom, -10)
                                 }
-                                
+
                                 Text(kategorija.nosaukums)
                                     .frame(width: 80, height: 30)
                             }
                             .frame(width: 90, height: 120)
                             .background(Color.gray.opacity(0.1))
                             .cornerRadius(8)
+                            .contentShape(Rectangle()) // Ensures the whole area is tappable
                             .onLongPressGesture {
+                                print("Long press on Kategorija: \(kategorija.nosaukums)")
                                 selectedKategorija = kategorija
+                                selectedApgerbs = nil
+                                actionSheetType = .kategorija
                                 showActionSheet = true
                             }
                         }
                     }
                 }
                 .padding(.horizontal, 10)
-                
-                // Pievienot apgerbu Button
+
+                // Add Clothing Button
                 NavigationLink(destination: PievienotApgerbuView()) {
                     Text("Pievienot apgerbu")
                 }
                 .padding(.bottom, 10)
-                
+
                 // Clothing Items Section
                 ScrollView {
-                    LazyVGrid(columns: adaptiveColumn, spacing: 10) {
-                        ForEach(apgerbi, id: \.self) { apgerbs in
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
+                        ForEach(apgerbi, id: \.id) { apgerbs in
                             VStack {
                                 if let image = apgerbs.image {
                                     Image(uiImage: image)
@@ -100,15 +104,19 @@ struct ContentView: View {
                                         .padding(.top, 5)
                                         .padding(.bottom, -10)
                                 }
-                                
+
                                 Text(apgerbs.nosaukums)
                                     .frame(width: 80, height: 30)
                             }
                             .frame(width: 90, height: 120)
                             .background(Color.gray.opacity(0.1))
                             .cornerRadius(8)
+                            .contentShape(Rectangle()) // Ensures the whole area is tappable
                             .onLongPressGesture {
+                                print("Long press on Apgerbs: \(apgerbs.nosaukums)")
                                 selectedApgerbs = apgerbs
+                                selectedKategorija = nil
+                                actionSheetType = .apgerbs
                                 showActionSheet = true
                             }
                         }
@@ -117,47 +125,88 @@ struct ContentView: View {
                 .padding()
             }
             .actionSheet(isPresented: $showActionSheet) {
-                ActionSheet(
-                    title: Text("Choose an action"),
-                    buttons: [
-                        .default(Text("Edit")) {
-                            if selectedKategorija != nil {
-                                isEditingKategorija = true
-                            } else if selectedApgerbs != nil {
-                                isEditingApgerbs = true
-                            }
-                        },
-                        .destructive(Text("Delete")) {
-                            deleteSelectedItem()
-                        },
-                        .cancel()
-                    ]
-                )
-            }
-            .navigationDestination(isPresented: $isEditingKategorija) {
-                if let kategorija = selectedKategorija {
-                    PievienotKategorijuView(existingKategorija: kategorija)
+                switch actionSheetType {
+                case .kategorija:
+                    return kategorijaActionSheet()
+                case .apgerbs:
+                    return apgerbsActionSheet()
+                case .none:
+                    return ActionSheet(title: Text("Error"))
                 }
             }
-            .navigationDestination(isPresented: $isEditingApgerbs) {
-                if let apgerbs = selectedApgerbs {
+            .navigationDestination(isPresented: $isEditing) {
+                if let kategorija = selectedKategorija {
+                    PievienotKategorijuView(existingKategorija: kategorija)
+                } else if let apgerbs = selectedApgerbs {
                     PievienotApgerbuView(existingApgerbs: apgerbs)
                 }
             }
         }
         .preferredColorScheme(.light)
     }
-    
-    private func deleteSelectedItem() {
+
+    private func kategorijaActionSheet() -> ActionSheet {
+        ActionSheet(
+            title: Text("Manage \(selectedKategorija?.nosaukums ?? "")"),
+            message: Text("This category contains \(selectedKategorija?.apgerbi.count ?? 0) items."),
+            buttons: [
+                .default(Text("Edit")) {
+                    isEditing = true
+                },
+                .default(Text("Delete Category Only")) {
+                    removeKategorijaOnly()
+                },
+                .destructive(Text("Delete Category and Items")) {
+                    deleteKategorijaAndItems()
+                },
+                .cancel()
+            ]
+        )
+    }
+
+    private func apgerbsActionSheet() -> ActionSheet {
+        ActionSheet(
+            title: Text("Manage \(selectedApgerbs?.nosaukums ?? "")"),
+            buttons: [
+                .default(Text("Edit")) {
+                    isEditing = true
+                },
+                .destructive(Text("Delete")) {
+                    deleteSelectedApgerbs()
+                },
+                .cancel()
+            ]
+        )
+    }
+
+    private func removeKategorijaOnly() {
         if let kategorija = selectedKategorija {
+            for apgerbs in kategorija.apgerbi {
+                apgerbs.kategorijas.removeAll { $0 == kategorija }
+            }
             modelContext.delete(kategorija)
             selectedKategorija = nil
-        } else if let apgerbs = selectedApgerbs {
+        }
+    }
+
+    private func deleteKategorijaAndItems() {
+        if let kategorija = selectedKategorija {
+            for apgerbs in kategorija.apgerbi {
+                modelContext.delete(apgerbs)
+            }
+            modelContext.delete(kategorija)
+            selectedKategorija = nil
+        }
+    }
+
+    private func deleteSelectedApgerbs() {
+        if let apgerbs = selectedApgerbs {
             modelContext.delete(apgerbs)
             selectedApgerbs = nil
         }
     }
 }
+
     
 #Preview {
     ContentView()

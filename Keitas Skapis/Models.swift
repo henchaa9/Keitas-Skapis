@@ -11,8 +11,10 @@ import SwiftUI
 
 @Model
 class Kategorija: Identifiable, Hashable {
+    @Attribute var id: UUID = UUID() // Unique identifier managed by SwiftData
+    
     var nosaukums: String
-    @Attribute(.externalStorage) var attels: Data?
+    @Attribute(.externalStorage) var attels: Data? // For storing image data externally
     
     var apgerbi: [Apgerbs] = []
     
@@ -32,7 +34,7 @@ class Kategorija: Identifiable, Hashable {
         }
     }
     
-    // Conformance to `Hashable`
+    // Hashable conformance
     static func == (lhs: Kategorija, rhs: Kategorija) -> Bool {
         lhs.id == rhs.id
     }
@@ -41,6 +43,7 @@ class Kategorija: Identifiable, Hashable {
         hasher.combine(id)
     }
 }
+
 
 @Model
 class Krasa {
@@ -85,6 +88,8 @@ enum Sezona: String, CaseIterable, Codable {
 
 @Model
 class Apgerbs: Identifiable, Hashable {
+    @Attribute var id: UUID = UUID() // Unique identifier managed by SwiftData
+    
     var nosaukums: String
     var piezimes: String
     var krasa: Krasa
@@ -95,12 +100,24 @@ class Apgerbs: Identifiable, Hashable {
     var pedejoreizVilkts: Date
     var mazgajas: Bool
     var netirs: Bool
-    @Attribute(.externalStorage) var attels: Data?
+    @Attribute(.externalStorage) var attels: Data? // For storing image data externally
     
     var kategorijas: [Kategorija] = []
     var dienas: [Diena] = []
     
-    init(nosaukums: String = "jauns apgerbs", piezimes: String = "", krasa: Krasa, stavoklis: Int = 0, gludinams: Bool = true, sezona: [Sezona] = [], izmers: Int = 0, pedejoreizVilkts: Date = .now, netirs: Bool = false, mazgajas: Bool = false, attels: Data? = nil) {
+    init(
+        nosaukums: String = "jauns apgerbs",
+        piezimes: String = "",
+        krasa: Krasa,
+        stavoklis: Int = 0,
+        gludinams: Bool = true,
+        sezona: [Sezona] = [],
+        izmers: Int = 0,
+        pedejoreizVilkts: Date = .now,
+        netirs: Bool = false,
+        mazgajas: Bool = false,
+        attels: Data? = nil
+    ) {
         self.nosaukums = nosaukums
         self.piezimes = piezimes
         self.krasa = krasa
@@ -125,7 +142,7 @@ class Apgerbs: Identifiable, Hashable {
         }
     }
     
-    // Conformance to `Hashable`
+    // Hashable conformance
     static func == (lhs: Apgerbs, rhs: Apgerbs) -> Bool {
         lhs.id == rhs.id
     }
@@ -134,6 +151,7 @@ class Apgerbs: Identifiable, Hashable {
         hasher.combine(id)
     }
 }
+
 
 @Model
 class Diena {
