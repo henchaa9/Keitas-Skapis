@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
+import Vision
 
 struct PievienotApgerbuView: View {
     
@@ -45,7 +46,17 @@ struct PievienotApgerbuView: View {
     
     @State private var showingOption = false
     
+    @State private var removeBackground = false // User preference for background removal
+    @State private var backgroundRemovedImage: UIImage? // Stores the image with background removed
+
     var existingApgerbs: Apgerbs?
+    
+    var displayedImage: UIImage? {
+        if removeBackground, let backgroundRemovedImage = backgroundRemovedImage {
+            return backgroundRemovedImage
+        }
+        return selectedImage
+    }
     
     init(existingApgerbs: Apgerbs? = nil) {
            self.existingApgerbs = existingApgerbs
@@ -120,12 +131,30 @@ struct PievienotApgerbuView: View {
                 VStack (alignment: .leading) {
                     
                     VStack (alignment: .leading) {
-                        Button (action: pievienotFoto) {
+                        Button(action: pievienotFoto) {
                             ZStack {
-                                Image(systemName: "rectangle.portrait.fill").resizable().frame(width: 60, height: 90).foregroundStyle(.gray).opacity(0.50)
-                                Image(systemName: "camera").foregroundStyle(.black).font(.title2)
+                                if let displayedImage = displayedImage {
+                                    // Display the image dynamically based on the toggle
+                                    Image(uiImage: displayedImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 90, height: 120)
+                                        .clipped()
+                                } else {
+                                    ZStack {
+                                        Image(systemName: "rectangle.portrait.fill")
+                                            .resizable()
+                                            .frame(width: 90, height: 120)
+                                            .foregroundStyle(.gray)
+                                            .opacity(0.50)
+                                        Image(systemName: "camera")
+                                            .foregroundStyle(.black)
+                                            .font(.title2)
+                                    }
+                                }
                             }
-                        }.confirmationDialog("Change background", isPresented: $showingOption) {
+                        }
+                        .confirmationDialog("Change background", isPresented: $showingOption) {
                             Button("Camera") {
                                 sourceType = .camera
                                 isPickerPresented = true
@@ -139,6 +168,16 @@ struct PievienotApgerbuView: View {
                     }.sheet(isPresented: $isPickerPresented) {
                             if let sourceType = sourceType {
                                 ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
+                            }
+                        }
+                    
+                    Toggle("Remove Background", isOn: $removeBackground)
+                        .padding(.top, 20)
+                        .onChange(of: removeBackground) { _, newValue in
+                            if newValue {
+                                if let selectedImage = selectedImage {
+                                    backgroundRemovedImage = removeBackground(from: selectedImage)
+                                }
                             }
                         }
                     
@@ -272,6 +311,55 @@ struct PievienotApgerbuView: View {
                                     
     }
     
+    private func removeBackground(from image: UIImage) -> UIImage {
+        guard let inputImage = CIImage(image: image) else {
+            print("Failed to create CIImage")
+            return image
+        }
+
+        // Background removal logic
+        guard let maskImage = createMask(from: inputImage) else {
+            print("Failed to create mask")
+            return image
+        }
+
+        let outputImage = applyMask(mask: maskImage, to: inputImage)
+
+        // Convert the processed CIImage to UIImage while preserving the original orientation
+        return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
+    }
+
+    private func createMask(from inputImage: CIImage) -> CIImage? {
+        let request = VNGenerateForegroundInstanceMaskRequest()
+        let handler = VNImageRequestHandler(ciImage: inputImage)
+        do {
+            try handler.perform([request])
+            if let result = request.results?.first {
+                let mask = try result.generateScaledMaskForImage(forInstances: result.allInstances, from: handler)
+                return CIImage(cvPixelBuffer: mask)
+            }
+        } catch {
+            print(error)
+        }
+        return nil
+    }
+
+    private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
+        let filter = CIFilter.blendWithMask()
+        filter.inputImage = image
+        filter.maskImage = mask
+        filter.backgroundImage = CIImage.empty()
+        return filter.outputImage!
+    }
+
+    private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage {
+        guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
+            fatalError("Failed to render CGImage")
+        }
+        return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
+    }
+
+    
     func pievienotFoto () {
         showingOption = true
     }
@@ -289,9 +377,12 @@ struct PievienotApgerbuView: View {
             apgerbs.izmers = apgerbaIzmers
             apgerbs.sezona = Array(apgerbaSezona)
             apgerbs.pedejoreizVilkts = apgerbsPedejoreizVilkts
-            if let imageData = selectedImage?.pngData() {
-                apgerbs.attels = imageData
+            if let finalImage = displayedImage {
+                if let imageData = finalImage.pngData() {
+                    apgerbs.attels = imageData
+                }
             }
+
             
             // Update Kategorijas relationships
             updateKategorijaRelationships(for: apgerbs, newKategorijas: Array(apgerbaKategorijas))

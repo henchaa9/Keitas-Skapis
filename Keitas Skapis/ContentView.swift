@@ -32,7 +32,7 @@ struct ContentView: View {
                         NavigationLink(destination: PievienotKategorijuView()) {
                             Image(systemName: "plus")
                                 .frame(width: 90, height: 120)
-                                .background(Color.gray.opacity(0.1))
+                                .background(Color.gray.opacity(0.50))
                                 .foregroundStyle(.black)
                                 .cornerRadius(8)
                         }
@@ -61,7 +61,7 @@ struct ContentView: View {
                                     .frame(width: 80, height: 30)
                             }
                             .frame(width: 90, height: 120)
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.gray.opacity(0.50))
                             .cornerRadius(8)
                             .contentShape(Rectangle()) // Ensures the whole area is tappable
                             .onLongPressGesture {
@@ -109,7 +109,7 @@ struct ContentView: View {
                                     .frame(width: 80, height: 30)
                             }
                             .frame(width: 90, height: 120)
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.gray.opacity(0.50))
                             .cornerRadius(8)
                             .contentShape(Rectangle()) // Ensures the whole area is tappable
                             .onLongPressGesture {
@@ -124,6 +124,13 @@ struct ContentView: View {
                 }
                 .padding()
             }
+            .preferredColorScheme(.light)
+            .background(Image("wardrobe_background")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .blur(radius: 5)
+            .edgesIgnoringSafeArea(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/))
+
             .actionSheet(isPresented: $showActionSheet) {
                 switch actionSheetType {
                 case .kategorija:
@@ -142,7 +149,6 @@ struct ContentView: View {
                 }
             }
         }
-        .preferredColorScheme(.light)
     }
 
     private func kategorijaActionSheet() -> ActionSheet {

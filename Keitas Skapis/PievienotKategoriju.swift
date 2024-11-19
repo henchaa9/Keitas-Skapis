@@ -18,12 +18,13 @@ struct PievienotKategorijuView: View {
     @Environment(\.modelContext) var modelContext
     
     @State var kategorijasNosaukums = ""
-    
     @State private var selectedImage: UIImage?
     @State private var isPickerPresented = false
     @State private var sourceType: UIImagePickerController.SourceType?
     
     @State private var showingOption = false
+    @State private var removeBackground = false // User preference for background removal
+    @State private var backgroundRemovedImage: UIImage? // Stores the image with background removed
     
     var existingKategorija: Kategorija?
     
@@ -33,6 +34,14 @@ struct PievienotKategorijuView: View {
         if let imageData = existingKategorija?.attels {
             _selectedImage = State(initialValue: UIImage(data: imageData))
         }
+    }
+    
+    // Computed property to show the correct image
+    var displayedImage: UIImage? {
+        if removeBackground, let backgroundRemovedImage = backgroundRemovedImage {
+            return backgroundRemovedImage
+        }
+        return selectedImage
     }
     
     struct ImagePicker: UIViewControllerRepresentable {
@@ -73,62 +82,99 @@ struct PievienotKategorijuView: View {
         }
     }
 
-    
     var body: some View {
-        HStack {
-            Text("Pievienot Kategoriju").font(.title).bold()
-            
-            Spacer()
-            
-            Button(action: {dismiss()}) {
-                Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
-            }.navigationBarBackButtonHidden(true)
-        }.padding().preferredColorScheme(.light)
-        
-        VStack (alignment: .leading) {
-            Button (action: pievienotFoto) {
-                ZStack {
-                    Image(systemName: "rectangle.portrait.fill").resizable().frame(width: 60, height: 90).foregroundStyle(.gray).opacity(0.50)
-                    Image(systemName: "camera").foregroundStyle(.black).font(.title2)
-                }
-            }.confirmationDialog("Change background", isPresented: $showingOption) {
-                Button("Camera") {
-                    sourceType = .camera
-                    isPickerPresented = true
-                }
-                Button("Photo Library") {
-                    sourceType = .photoLibrary
-                    isPickerPresented = true
-                }
-                Button("Cancel", role: .cancel) { }
+        VStack {
+            HStack {
+                Text("Pievienot Kategoriju").font(.title).bold()
+                Spacer()
+                Button(action: { dismiss() }) {
+                    Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
+                }.navigationBarBackButtonHidden(true)
             }
-            TextField("Nosaukums", text: $kategorijasNosaukums).textFieldStyle(.roundedBorder).padding(.top, 20)
-        }.padding(.top, 50).padding(.horizontal, 20)
-            .sheet(isPresented: $isPickerPresented) {
+            .padding()
+            
+            VStack(alignment: .leading) {
+                Button(action: pievienotFoto) {
+                    ZStack {
+                        if let displayedImage = displayedImage {
+                            // Display the image based on the toggle
+                            Image(uiImage: displayedImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 90, height: 120)
+                                .clipped()
+                        } else {
+                            ZStack {
+                                Image(systemName: "rectangle.portrait.fill")
+                                    .resizable()
+                                    .frame(width: 90, height: 120)
+                                    .foregroundStyle(.gray)
+                                    .opacity(0.50)
+                                Image(systemName: "camera")
+                                    .foregroundStyle(.black)
+                                    .font(.title2)
+                            }
+                        }
+                    }
+                }
+                .confirmationDialog("Change background", isPresented: $showingOption) {
+                    Button("Camera") {
+                        sourceType = .camera
+                        isPickerPresented = true
+                    }
+                    Button("Photo Library") {
+                        sourceType = .photoLibrary
+                        isPickerPresented = true
+                    }
+                    Button("Cancel", role: .cancel) {}
+                }
+                .sheet(isPresented: $isPickerPresented) {
                     if let sourceType = sourceType {
                         ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
                     }
                 }
-        
-        Spacer()
-        
-        HStack {
-            Button (action: apstiprinat) {
-                Text("Apstiprināt").bold()
+                
+                Toggle("Remove Background", isOn: $removeBackground)
+                    .padding(.top, 20)
+                    .onChange(of: removeBackground) { _, newValue in
+                        if newValue {
+                            if let selectedImage = selectedImage {
+                                backgroundRemovedImage = removeBackground(from: selectedImage)
+                            }
+                        }
+                    }
+                
+                TextField("Nosaukums", text: $kategorijasNosaukums)
+                    .textFieldStyle(.roundedBorder)
+                    .padding(.top, 20)
             }
+            .padding(.top, 50)
+            .padding(.horizontal, 20)
+            
             Spacer()
-        }.padding()
+            
+            HStack {
+                Button(action: apstiprinat) {
+                    Text("Apstiprināt").bold()
+                }
+                Spacer()
+            }
+            .padding()
+        }
+        .preferredColorScheme(.light)
+        .background(Image("wardrobe_background")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .blur(radius: 5)
+            .edgesIgnoringSafeArea(.all))
     }
     
-    // nakamas 4 funkcijas ir prieks background removal
+    // Background removal logic
     private func createMask(from inputImage: CIImage) -> CIImage? {
-        
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(ciImage: inputImage)
-
         do {
             try handler.perform([request])
-            
             if let result = request.results?.first {
                 let mask = try result.generateScaledMaskForImage(forInstances: result.allInstances, from: handler)
                 return CIImage(cvPixelBuffer: mask)
@@ -136,27 +182,26 @@ struct PievienotKategorijuView: View {
         } catch {
             print(error)
         }
-        
         return nil
     }
 
     private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
         let filter = CIFilter.blendWithMask()
-        
         filter.inputImage = image
         filter.maskImage = mask
         filter.backgroundImage = CIImage.empty()
-        
         return filter.outputImage!
     }
     
-    private func convertToUIImage(ciImage: CIImage) -> UIImage {
+    private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage {
         guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
             fatalError("Failed to render CGImage")
         }
         
-        return UIImage(cgImage: cgImage)
+        // Create the UIImage with the original orientation
+        return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
+
     
     private func removeBackground(from image: UIImage) -> UIImage {
         guard let inputImage = CIImage(image: image) else {
@@ -171,65 +216,34 @@ struct PievienotKategorijuView: View {
         }
         
         let outputImage = applyMask(mask: maskImage, to: inputImage)
-        let finalImage = convertToUIImage(ciImage: outputImage)
         
-        // Rotate the final image 90 degrees clockwise
-        return rotateImageClockwise(finalImage)
+        // Convert the processed CIImage to UIImage while preserving the original orientation
+        return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
     }
 
     
-    private func rotateImageClockwise(_ image: UIImage) -> UIImage {
-        UIGraphicsBeginImageContext(CGSize(width: image.size.height, height: image.size.width))
-        guard let context = UIGraphicsGetCurrentContext() else {
-            UIGraphicsEndImageContext()
-            return image
-        }
-        
-        // Move origin to the center of the image
-        context.translateBy(x: image.size.height / 2, y: image.size.width / 2)
-        // Rotate context 90 degrees clockwise
-        context.rotate(by: .pi / 2)
-        // Draw the image at the new orientation
-        image.draw(in: CGRect(x: -image.size.width / 2, y: -image.size.height / 2, width: image.size.width, height: image.size.height))
-        
-        let rotatedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return rotatedImage ?? image
-    }
-
-    //
-    
-    func pievienotFoto () {
+    func pievienotFoto() {
         showingOption = true
     }
     
     func apstiprinat() {
-        guard let selectedImage = selectedImage else {
+        guard let finalImage = displayedImage else {
             print("No image selected")
             return
         }
         
         Task {
-            // Remove background from the selected image
-            let backgroundlessImage = removeBackground(from: selectedImage)
-            
-            // Convert the processed image to Data
-            let processedImageData = backgroundlessImage.pngData()
-            
+            let processedImageData = finalImage.pngData()
             if let kategorija = existingKategorija {
-                // Update existing category
                 kategorija.nosaukums = kategorijasNosaukums
-                kategorija.attels = processedImageData // Save processed image
+                kategorija.attels = processedImageData
             } else {
-                // Create new category with processed image
                 let newKategorija = Kategorija(nosaukums: kategorijasNosaukums, attels: processedImageData)
                 modelContext.insert(newKategorija)
             }
-            
             dismiss()
         }
     }
-
 }
 
 #Preview {
