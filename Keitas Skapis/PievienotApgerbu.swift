@@ -52,11 +52,12 @@ struct PievienotApgerbuView: View {
     var existingApgerbs: Apgerbs?
     
     var displayedImage: UIImage? {
-        if removeBackground, let backgroundRemovedImage = backgroundRemovedImage {
-            return backgroundRemovedImage
+        if removeBackground, let selectedImage = selectedImage {
+            return removeBackground(from: selectedImage)
         }
         return selectedImage
     }
+
     
     init(existingApgerbs: Apgerbs? = nil) {
            self.existingApgerbs = existingApgerbs
@@ -377,12 +378,11 @@ struct PievienotApgerbuView: View {
             apgerbs.izmers = apgerbaIzmers
             apgerbs.sezona = Array(apgerbaSezona)
             apgerbs.pedejoreizVilkts = apgerbsPedejoreizVilkts
-            if let finalImage = displayedImage {
-                if let imageData = finalImage.pngData() {
-                    apgerbs.attels = imageData
-                }
+            apgerbs.removeBackground = removeBackground // Save the toggle state
+            
+            if let originalImage = selectedImage, let imageData = originalImage.pngData() {
+                apgerbs.attels = imageData // Save the original image
             }
-
             
             // Update Kategorijas relationships
             updateKategorijaRelationships(for: apgerbs, newKategorijas: Array(apgerbaKategorijas))
@@ -400,8 +400,10 @@ struct PievienotApgerbuView: View {
                 netirs: apgerbaStavoklis == 1,
                 mazgajas: apgerbaStavoklis == 2
             )
-            if let imageData = selectedImage?.pngData() {
-                jaunsApgerbs.attels = imageData
+            jaunsApgerbs.removeBackground = removeBackground // Save the toggle state
+            
+            if let originalImage = selectedImage, let imageData = originalImage.pngData() {
+                jaunsApgerbs.attels = imageData // Save the original image
             }
             
             // Establish relationships
@@ -418,6 +420,7 @@ struct PievienotApgerbuView: View {
         
         dismiss()
     }
+
 
     private func updateKategorijaRelationships(for apgerbs: Apgerbs, newKategorijas: [Kategorija]) {
         // Remove Apgerbs from old Kategorijas

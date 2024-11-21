@@ -17,10 +17,12 @@ class Kategorija: Identifiable, Hashable {
     @Attribute(.externalStorage) var attels: Data? // For storing image data externally
     
     var apgerbi: [Apgerbs] = []
-    
-    init(nosaukums: String = "Jauna Kategorija", attels: Data? = nil) {
+    var removeBackground: Bool = false // Indicates whether to remove the background
+
+    init(nosaukums: String = "Jauna Kategorija", attels: Data? = nil, removeBackground: Bool = false) {
         self.nosaukums = nosaukums
         self.attels = attels
+        self.removeBackground = removeBackground
     }
     
     // Computed property to access `UIImage`
@@ -43,6 +45,7 @@ class Kategorija: Identifiable, Hashable {
         hasher.combine(id)
     }
 }
+
 
 
 @Model
@@ -105,6 +108,8 @@ class Apgerbs: Identifiable, Hashable {
     var kategorijas: [Kategorija] = []
     var dienas: [Diena] = []
     
+    @Attribute var removeBackground: Bool = false // Indicates whether to remove the background
+    
     init(
         nosaukums: String = "jauns apgerbs",
         piezimes: String = "",
@@ -116,7 +121,8 @@ class Apgerbs: Identifiable, Hashable {
         pedejoreizVilkts: Date = .now,
         netirs: Bool = false,
         mazgajas: Bool = false,
-        attels: Data? = nil
+        attels: Data? = nil,
+        removeBackground: Bool = false
     ) {
         self.nosaukums = nosaukums
         self.piezimes = piezimes
@@ -129,6 +135,7 @@ class Apgerbs: Identifiable, Hashable {
         self.mazgajas = mazgajas
         self.netirs = netirs
         self.attels = attels
+        self.removeBackground = removeBackground
     }
     
     // Computed property to access `UIImage`
