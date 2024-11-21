@@ -8,7 +8,9 @@
 import Foundation
 import SwiftData
 import SwiftUI
-
+import Vision
+import CoreImage
+import CoreImage.CIFilterBuiltins
 
 @Model
 class Kategorija: Identifiable, Hashable, Codable {
@@ -25,9 +27,65 @@ class Kategorija: Identifiable, Hashable, Codable {
         self.removeBackground = removeBackground
     }
 
+    // Computed property to get the UIImage from attels
     var image: UIImage? {
         get { attels.flatMap { UIImage(data: $0) } }
         set { attels = newValue?.pngData() }
+    }
+    
+    // Computed property to return the displayed image with or without background
+    var displayedImage: UIImage? {
+        if removeBackground, let image = self.image {
+            return removeBackground(from: image)
+        }
+        return self.image
+    }
+    
+    // Background removal functions
+    private func removeBackground(from image: UIImage) -> UIImage? {
+        guard let inputImage = CIImage(image: image) else {
+            print("Failed to create CIImage")
+            return image
+        }
+
+        guard let maskImage = createMask(from: inputImage) else {
+            print("Failed to create mask")
+            return image
+        }
+
+        let outputImage = applyMask(mask: maskImage, to: inputImage)
+        return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
+    }
+
+    private func createMask(from inputImage: CIImage) -> CIImage? {
+        let request = VNGenerateForegroundInstanceMaskRequest()
+        let handler = VNImageRequestHandler(ciImage: inputImage)
+        do {
+            try handler.perform([request])
+            if let result = request.results?.first {
+                let mask = try result.generateScaledMaskForImage(forInstances: result.allInstances, from: handler)
+                return CIImage(cvPixelBuffer: mask)
+            }
+        } catch {
+            print(error)
+        }
+        return nil
+    }
+
+    private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
+        let filter = CIFilter.blendWithMask()
+        filter.inputImage = image
+        filter.maskImage = mask
+        filter.backgroundImage = CIImage.empty()
+        return filter.outputImage!
+    }
+
+    private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage? {
+        guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
+            print("Failed to render CGImage")
+            return nil
+        }
+        return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
 
     static func == (lhs: Kategorija, rhs: Kategorija) -> Bool {
@@ -153,9 +211,65 @@ class Apgerbs: Identifiable, Hashable, Codable {
         self.removeBackground = removeBackground
     }
 
+    // Computed property to get the UIImage from attels
     var image: UIImage? {
         get { attels.flatMap { UIImage(data: $0) } }
         set { attels = newValue?.pngData() }
+    }
+    
+    // Computed property to return the displayed image with or without background
+    var displayedImage: UIImage? {
+        if removeBackground, let image = self.image {
+            return removeBackground(from: image)
+        }
+        return self.image
+    }
+    
+    // Background removal functions
+    private func removeBackground(from image: UIImage) -> UIImage? {
+        guard let inputImage = CIImage(image: image) else {
+            print("Failed to create CIImage")
+            return image
+        }
+
+        guard let maskImage = createMask(from: inputImage) else {
+            print("Failed to create mask")
+            return image
+        }
+
+        let outputImage = applyMask(mask: maskImage, to: inputImage)
+        return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
+    }
+
+    private func createMask(from inputImage: CIImage) -> CIImage? {
+        let request = VNGenerateForegroundInstanceMaskRequest()
+        let handler = VNImageRequestHandler(ciImage: inputImage)
+        do {
+            try handler.perform([request])
+            if let result = request.results?.first {
+                let mask = try result.generateScaledMaskForImage(forInstances: result.allInstances, from: handler)
+                return CIImage(cvPixelBuffer: mask)
+            }
+        } catch {
+            print(error)
+        }
+        return nil
+    }
+
+    private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
+        let filter = CIFilter.blendWithMask()
+        filter.inputImage = image
+        filter.maskImage = mask
+        filter.backgroundImage = CIImage.empty()
+        return filter.outputImage!
+    }
+
+    private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage? {
+        guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
+            print("Failed to render CGImage")
+            return nil
+        }
+        return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
 
     static func == (lhs: Apgerbs, rhs: Apgerbs) -> Bool {

@@ -37,9 +37,9 @@ struct ContentView: View {
                                 .cornerRadius(8)
                         }
 
-                        ForEach(kategorijas) { kategorija in
+                        ForEach(kategorijas, id: \.id) { kategorija in
                             VStack {
-                                if let image = kategorija.image {
+                                if let image = kategorija.displayedImage {
                                     Image(uiImage: image)
                                         .resizable()
                                         .scaledToFit()
@@ -47,6 +47,7 @@ struct ContentView: View {
                                         .padding(.top, 5)
                                         .padding(.bottom, -10)
                                 } else {
+                                    // Fallback image
                                     Image(systemName: "rectangle.portrait.fill")
                                         .resizable()
                                         .scaledToFit()
@@ -87,7 +88,7 @@ struct ContentView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
                         ForEach(apgerbi, id: \.id) { apgerbs in
                             VStack {
-                                if let image = apgerbs.image {
+                                if let image = apgerbs.displayedImage {
                                     Image(uiImage: image)
                                         .resizable()
                                         .scaledToFit()
@@ -95,6 +96,7 @@ struct ContentView: View {
                                         .padding(.top, 5)
                                         .padding(.bottom, -10)
                                 } else {
+                                    // Fallback image
                                     Image(systemName: "rectangle.portrait.fill")
                                         .resizable()
                                         .scaledToFit()
