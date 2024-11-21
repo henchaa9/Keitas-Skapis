@@ -195,6 +195,7 @@ struct ContentView: View {
         }
     }
 
+
     private func deleteKategorijaAndItems() {
         if let kategorija = selectedKategorija {
             for apgerbs in kategorija.apgerbi {

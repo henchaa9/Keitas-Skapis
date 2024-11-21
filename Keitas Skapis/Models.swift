@@ -9,77 +9,93 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+
 @Model
-class Kategorija: Identifiable, Hashable {
-    @Attribute var id: UUID = UUID() // Unique identifier managed by SwiftData
-    
-    var nosaukums: String
-    @Attribute(.externalStorage) var attels: Data? // For storing image data externally
-    
-    var apgerbi: [Apgerbs] = []
-    var removeBackground: Bool = false // Indicates whether to remove the background
+class Kategorija: Identifiable, Hashable, Codable {
+    @Attribute var id: UUID = UUID()
+    @Attribute var nosaukums: String
+    @Attribute(.externalStorage) var attels: Data?
+    @Attribute var removeBackground: Bool = false
+
+    @Relationship var apgerbi: [Apgerbs] = []
 
     init(nosaukums: String = "Jauna Kategorija", attels: Data? = nil, removeBackground: Bool = false) {
         self.nosaukums = nosaukums
         self.attels = attels
         self.removeBackground = removeBackground
     }
-    
-    // Computed property to access `UIImage`
+
     var image: UIImage? {
-        get {
-            guard let attels = attels else { return nil }
-            return UIImage(data: attels)
-        }
-        set {
-            attels = newValue?.pngData()
-        }
+        get { attels.flatMap { UIImage(data: $0) } }
+        set { attels = newValue?.pngData() }
     }
-    
-    // Hashable conformance
+
     static func == (lhs: Kategorija, rhs: Kategorija) -> Bool {
         lhs.id == rhs.id
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+    }
+
+    // Exclude relationships from coding to prevent cyclical references
+    enum CodingKeys: String, CodingKey {
+        case id, nosaukums, attels, removeBackground
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.nosaukums = try container.decode(String.self, forKey: .nosaukums)
+        self.attels = try container.decodeIfPresent(Data.self, forKey: .attels)
+        self.removeBackground = try container.decode(Bool.self, forKey: .removeBackground)
+        self.apgerbi = []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(nosaukums, forKey: .nosaukums)
+        try container.encodeIfPresent(attels, forKey: .attels)
+        try container.encode(removeBackground, forKey: .removeBackground)
     }
 }
 
 
-
-@Model
-class Krasa {
+struct Krasa: Codable, Hashable {
     var red: Double
     var green: Double
     var blue: Double
     var alpha: Double
-    
+
+    // Computed property to get SwiftUI Color
+    var color: Color {
+        Color(red: red, green: green, blue: blue, opacity: alpha)
+    }
+
+    // Initializer from components
     init(red: Double, green: Double, blue: Double, alpha: Double) {
         self.red = red
         self.green = green
         self.blue = blue
         self.alpha = alpha
     }
-    
+
+    // Initializer from Color
     init(color: Color) {
         let uiColor = UIColor(color)
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
-        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        self.red = Double(red)
-        self.green = Double(green)
-        self.blue = Double(blue)
-        self.alpha = Double(alpha)
-    }
-    
-    // Computed property to convert Krasa to SwiftUI Color
-    var color: Color {
-        Color(red: red, green: green, blue: blue, opacity: alpha)
+        var redComponent: CGFloat = 0
+        var greenComponent: CGFloat = 0
+        var blueComponent: CGFloat = 0
+        var alphaComponent: CGFloat = 0
+        uiColor.getRed(&redComponent, green: &greenComponent, blue: &blueComponent, alpha: &alphaComponent)
+        self.red = Double(redComponent)
+        self.green = Double(greenComponent)
+        self.blue = Double(blueComponent)
+        self.alpha = Double(alphaComponent)
     }
 }
+
 
 
 enum Sezona: String, CaseIterable, Codable {
@@ -89,27 +105,26 @@ enum Sezona: String, CaseIterable, Codable {
     case pavasaris = "Pavasaris"
 }
 
+
 @Model
-class Apgerbs: Identifiable, Hashable {
-    @Attribute var id: UUID = UUID() // Unique identifier managed by SwiftData
-    
-    var nosaukums: String
-    var piezimes: String
-    var krasa: Krasa
-    var stavoklis: Int
-    var gludinams: Bool
-    var izmers: Int
-    var sezona: [Sezona]
-    var pedejoreizVilkts: Date
-    var mazgajas: Bool
-    var netirs: Bool
-    @Attribute(.externalStorage) var attels: Data? // For storing image data externally
-    
-    var kategorijas: [Kategorija] = []
-    var dienas: [Diena] = []
-    
-    @Attribute var removeBackground: Bool = false // Indicates whether to remove the background
-    
+class Apgerbs: Identifiable, Hashable, Codable {
+    @Attribute var id: UUID = UUID()
+    @Attribute var nosaukums: String
+    @Attribute var piezimes: String
+    @Attribute var krasa: Krasa
+    @Attribute var stavoklis: Int
+    @Attribute var gludinams: Bool
+    @Attribute var izmers: Int
+    @Attribute var sezona: [Sezona]
+    @Attribute var pedejoreizVilkts: Date
+    @Attribute var mazgajas: Bool
+    @Attribute var netirs: Bool
+    @Attribute var removeBackground: Bool = false
+    @Attribute(.externalStorage) var attels: Data?
+
+    @Relationship var kategorijas: [Kategorija] = []
+    @Relationship var dienas: [Diena] = []
+
     init(
         nosaukums: String = "jauns apgerbs",
         piezimes: String = "",
@@ -137,53 +152,123 @@ class Apgerbs: Identifiable, Hashable {
         self.attels = attels
         self.removeBackground = removeBackground
     }
-    
-    // Computed property to access `UIImage`
+
     var image: UIImage? {
-        get {
-            guard let attels = attels else { return nil }
-            return UIImage(data: attels)
-        }
-        set {
-            attels = newValue?.pngData()
-        }
+        get { attels.flatMap { UIImage(data: $0) } }
+        set { attels = newValue?.pngData() }
     }
-    
-    // Hashable conformance
+
     static func == (lhs: Apgerbs, rhs: Apgerbs) -> Bool {
         lhs.id == rhs.id
     }
-    
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, nosaukums, piezimes, krasa, stavoklis, gludinams, izmers, sezona, pedejoreizVilkts, mazgajas, netirs, attels, removeBackground
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.nosaukums = try container.decode(String.self, forKey: .nosaukums)
+        self.piezimes = try container.decode(String.self, forKey: .piezimes)
+        self.krasa = try container.decode(Krasa.self, forKey: .krasa)
+        self.stavoklis = try container.decode(Int.self, forKey: .stavoklis)
+        self.gludinams = try container.decode(Bool.self, forKey: .gludinams)
+        self.izmers = try container.decode(Int.self, forKey: .izmers)
+        self.sezona = try container.decode([Sezona].self, forKey: .sezona)
+        self.pedejoreizVilkts = try container.decode(Date.self, forKey: .pedejoreizVilkts)
+        self.mazgajas = try container.decode(Bool.self, forKey: .mazgajas)
+        self.netirs = try container.decode(Bool.self, forKey: .netirs)
+        self.attels = try container.decodeIfPresent(Data.self, forKey: .attels)
+        self.removeBackground = try container.decode(Bool.self, forKey: .removeBackground)
+        self.kategorijas = []
+        self.dienas = []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(nosaukums, forKey: .nosaukums)
+        try container.encode(piezimes, forKey: .piezimes)
+        try container.encode(krasa, forKey: .krasa)
+        try container.encode(stavoklis, forKey: .stavoklis)
+        try container.encode(gludinams, forKey: .gludinams)
+        try container.encode(izmers, forKey: .izmers)
+        try container.encode(sezona, forKey: .sezona)
+        try container.encode(pedejoreizVilkts, forKey: .pedejoreizVilkts)
+        try container.encode(mazgajas, forKey: .mazgajas)
+        try container.encode(netirs, forKey: .netirs)
+        try container.encodeIfPresent(attels, forKey: .attels)
+        try container.encode(removeBackground, forKey: .removeBackground)
     }
 }
 
 
 @Model
-class Diena {
-    var datums: Date
-    var piezimes: String
-    
-    var apgerbi: [Apgerbs] = []
-    
-    init(datums: Date, piezimes: String, apgerbi: [Apgerbs]) {
+class Diena: Codable {
+    @Attribute var datums: Date
+    @Attribute var piezimes: String
+
+    @Relationship var apgerbi: [Apgerbs] = []
+
+    init(datums: Date, piezimes: String, apgerbi: [Apgerbs] = []) {
         self.datums = datums
         self.piezimes = piezimes
         self.apgerbi = apgerbi
     }
-}
 
-@Model
-class Milakais {
-    var nosaukums: String
-    var piezimes: String
-    
-    var apgerbi: [Apgerbs] = []
-    
-    init(nosaukums: String, piezimes: String) {
-        self.nosaukums = nosaukums
-        self.piezimes = piezimes
+    enum CodingKeys: String, CodingKey {
+        case datums, piezimes
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.datums = try container.decode(Date.self, forKey: .datums)
+        self.piezimes = try container.decode(String.self, forKey: .piezimes)
+        self.apgerbi = []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(datums, forKey: .datums)
+        try container.encode(piezimes, forKey: .piezimes)
     }
 }
+
+
+@Model
+class Milakais: Codable {
+    @Attribute var nosaukums: String
+    @Attribute var piezimes: String
+
+    @Relationship var apgerbi: [Apgerbs] = []
+
+    init(nosaukums: String, piezimes: String, apgerbi: [Apgerbs] = []) {
+        self.nosaukums = nosaukums
+        self.piezimes = piezimes
+        self.apgerbi = apgerbi
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case nosaukums, piezimes
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.nosaukums = try container.decode(String.self, forKey: .nosaukums)
+        self.piezimes = try container.decode(String.self, forKey: .piezimes)
+        self.apgerbi = []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(nosaukums, forKey: .nosaukums)
+        try container.encode(piezimes, forKey: .piezimes)
+    }
+}
+
 
