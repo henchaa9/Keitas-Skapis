@@ -32,9 +32,12 @@ struct ContentView: View {
     @State private var isLaundering: Bool? = nil
     @State private var isDirty: Bool? = nil
     @State private var allColors: [Krasa] = [] // Caches colors from unfiltered Apgerbs
+    
+    @State private var isAddingKategorija = false
+    @State private var isAddingApgerbs = false
 
     enum ActionSheetType {
-        case kategorija, apgerbs
+        case kategorija, apgerbs, addOptions
     }
 
     var body: some View {
@@ -45,6 +48,7 @@ struct ContentView: View {
                     Text("Keitas Skapis").font(.title).bold()
                     Spacer()
                     Button(action: {
+                        actionSheetType = .addOptions
                         showActionSheet = true
                     }) {
                         Image(systemName: "plus")
@@ -54,167 +58,206 @@ struct ContentView: View {
                             .foregroundStyle(.black)
                     }
                 }
-                .padding()
-
-                // Categories Section
-                ScrollView(.horizontal) {
+                    .padding()
+                    
+                    // Categories Section
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(kategorijas, id: \.id) { kategorija in
+                                VStack {
+                                    if let image = kategorija.displayedImage {
+                                        Image(uiImage: image)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 80, height: 80)
+                                            .padding(.top, 5)
+                                            .padding(.bottom, -10)
+                                    } else {
+                                        // Fallback image
+                                        Image(systemName: "rectangle.portrait.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 80, height: 80)
+                                            .foregroundStyle(.gray)
+                                            .opacity(0.5)
+                                            .padding(.top, 5)
+                                            .padding(.bottom, -10)
+                                    }
+                                    
+                                    Text(kategorija.nosaukums)
+                                        .frame(width: 80, height: 30)
+                                }
+                                .frame(width: 90, height: 120)
+                                .background(selectedKategorijas.contains(kategorija.id) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.50))
+                                .cornerRadius(8)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    toggleKategorijaSelection(kategorija)
+                                }
+                                .simultaneousGesture(
+                                    LongPressGesture().onEnded { _ in
+                                        selectedKategorija = kategorija
+                                        selectedApgerbs = nil // Reset other selection
+                                        actionSheetType = .kategorija
+                                        showActionSheet = true
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    
+                    // Search Bar with Filter Button
                     HStack {
-                        ForEach(kategorijas, id: \.id) { kategorija in
-                            VStack {
-                                if let image = kategorija.displayedImage {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 80, height: 80)
-                                        .padding(.top, 5)
-                                        .padding(.bottom, -10)
-                                } else {
-                                    // Fallback image
-                                    Image(systemName: "rectangle.portrait.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 80, height: 80)
-                                        .foregroundStyle(.gray)
-                                        .opacity(0.5)
-                                        .padding(.top, 5)
-                                        .padding(.bottom, -10)
+                        TextField("Search for items...", text: $searchText)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding(.horizontal)
+                        
+                        Button(action: {
+                            showFilterSheet = true
+                        }) {
+                            Image(systemName: "slider.horizontal.3")
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                        }
+                        .padding(.trailing)
+                    }
+                    .padding(.bottom, 5)
+                    
+                    // Clothing Items Section
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
+                            ForEach(filteredApgerbi, id: \.id) { apgerbs in
+                                VStack {
+                                    if let image = apgerbs.displayedImage {
+                                        Image(uiImage: image)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 80, height: 80)
+                                            .padding(.top, 5)
+                                            .padding(.bottom, -10)
+                                    } else {
+                                        // Fallback image
+                                        Image(systemName: "rectangle.portrait.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 80, height: 80)
+                                            .foregroundStyle(.gray)
+                                            .opacity(0.5)
+                                            .padding(.top, 5)
+                                            .padding(.bottom, -10)
+                                    }
+                                    
+                                    Text(apgerbs.nosaukums)
+                                        .frame(width: 80, height: 30)
                                 }
-
-                                Text(kategorija.nosaukums)
-                                    .frame(width: 80, height: 30)
-                            }
-                            .frame(width: 90, height: 120)
-                            .background(selectedKategorijas.contains(kategorija.id) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.50))
-                            .cornerRadius(8)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                toggleKategorijaSelection(kategorija)
-                            }
-                            .onLongPressGesture {
-                                selectedKategorija = kategorija
-                                actionSheetType = .kategorija
-                                showActionSheet = true
+                                .frame(width: 90, height: 120)
+                                .background(Color.gray.opacity(0.50))
+                                .cornerRadius(8)
+                                .contentShape(Rectangle())
+                                .simultaneousGesture(
+                                    LongPressGesture().onEnded { _ in
+                                        selectedApgerbs = apgerbs
+                                        selectedKategorija = nil // Reset other selection
+                                        actionSheetType = .apgerbs
+                                        showActionSheet = true
+                                    }
+                                )
                             }
                         }
                     }
+                    .padding()
                 }
-                .padding(.horizontal, 10)
-
-                // Search Bar with Filter Button
-                HStack {
-                    TextField("Search for items...", text: $searchText)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .padding(.horizontal)
-
-                    Button(action: {
-                        showFilterSheet = true
-                    }) {
-                        Image(systemName: "slider.horizontal.3")
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                    }
-                    .padding(.trailing)
-                }
-                .padding(.bottom, 5)
-
-                // Clothing Items Section
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
-                        ForEach(filteredApgerbi, id: \.id) { apgerbs in
-                            VStack {
-                                if let image = apgerbs.displayedImage {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 80, height: 80)
-                                        .padding(.top, 5)
-                                        .padding(.bottom, -10)
-                                } else {
-                                    // Fallback image
-                                    Image(systemName: "rectangle.portrait.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 80, height: 80)
-                                        .foregroundStyle(.gray)
-                                        .opacity(0.5)
-                                        .padding(.top, 5)
-                                        .padding(.bottom, -10)
-                                }
-
-                                Text(apgerbs.nosaukums)
-                                    .frame(width: 80, height: 30)
-                            }
-                            .frame(width: 90, height: 120)
-                            .background(Color.gray.opacity(0.50))
-                            .cornerRadius(8)
-                            .contentShape(Rectangle())
-                            .onLongPressGesture {
-                                selectedApgerbs = apgerbs
-                                actionSheetType = .apgerbs
-                                showActionSheet = true
-                            }
-                        }
-                    }
-                }
-                .padding()
-            }
-            .background(Image("wardrobe_background")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .blur(radius: 5)
-                .edgesIgnoringSafeArea(.all)
-            )
-            .actionSheet(isPresented: $showActionSheet) {
-                switch actionSheetType {
-                case .kategorija:
-                    return kategorijaActionSheet()
-                case .apgerbs:
-                    return apgerbsActionSheet()
-                case .none:
-                    return ActionSheet(title: Text("Error"))
-                }
-            }
-            .onAppear {
-                allColors = Array(Set(apgerbi.map { $0.krasa }))
-            }
-            .sheet(isPresented: $showFilterSheet) {
-                FilterSelectionView(
-                    selectedColors: $selectedColors,
-                    selectedSizes: $selectedSizes,
-                    selectedSeasons: $selectedSeasons,
-                    selectedLastWorn: $selectedLastWorn,
-                    isIronable: $isIronable,
-                    isLaundering: $isLaundering,
-                    isDirty: $isDirty,
-                    allColors: allColors // Pass cached colors
+                .background(Image("wardrobe_background")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .blur(radius: 5)
+                    .edgesIgnoringSafeArea(.all)
                 )
-            }
-            .navigationDestination(isPresented: $isEditing) {
-                if let kategorija = selectedKategorija {
-                    PievienotKategorijuView(existingKategorija: kategorija)
-                } else if let apgerbs = selectedApgerbs {
-                    PievienotApgerbuView(existingApgerbs: apgerbs)
+                .actionSheet(isPresented: $showActionSheet) {
+                    switch actionSheetType {
+                    case .kategorija:
+                        return kategorijaActionSheet()
+                    case .apgerbs:
+                        return apgerbsActionSheet()
+                    case .addOptions:
+                        return addOptionsActionSheet()
+                    case .none:
+                        return ActionSheet(title: Text("Error"))
+                    }
                 }
+                .onAppear {
+                    allColors = Array(Set(apgerbi.map { $0.krasa }))
+                }
+                .sheet(isPresented: $showFilterSheet) {
+                    FilterSelectionView(
+                        selectedColors: $selectedColors,
+                        selectedSizes: $selectedSizes,
+                        selectedSeasons: $selectedSeasons,
+                        selectedLastWorn: $selectedLastWorn,
+                        isIronable: $isIronable,
+                        isLaundering: $isLaundering,
+                        isDirty: $isDirty,
+                        allColors: allColors // Pass cached colors
+                    )
+                }
+                .navigationDestination(isPresented: $isAddingKategorija) {
+                    PievienotKategorijuView()
+                }
+                .navigationDestination(isPresented: $isAddingApgerbs) {
+                    PievienotApgerbuView()
+                }
+                .navigationDestination(isPresented: $isEditing) {
+                    if let kategorija = selectedKategorija {
+                        PievienotKategorijuView(existingKategorija: kategorija)
+                            .onDisappear {
+                                isEditing = false
+                                selectedKategorija = nil
+                            }
+                    } else if let apgerbs = selectedApgerbs {
+                        PievienotApgerbuView(existingApgerbs: apgerbs)
+                            .onDisappear {
+                                isEditing = false
+                                selectedApgerbs = nil
+                            }
+                    }
+                }
+                .preferredColorScheme(.light)
             }
-            .preferredColorScheme(.light)
         }
+        
+        // Filtered Apgerbs Logic
+        var filteredApgerbi: [Apgerbs] {
+            apgerbi.filter { apgerbs in
+                (selectedKategorijas.isEmpty || apgerbs.kategorijas.contains { selectedKategorijas.contains($0.id) }) &&
+                (selectedColors.isEmpty || selectedColors.contains(apgerbs.krasa)) &&
+                (selectedSizes.isEmpty || selectedSizes.contains(apgerbs.izmers)) &&
+                (selectedSeasons.isEmpty || !Set(apgerbs.sezona).intersection(selectedSeasons).isEmpty) &&
+                (selectedLastWorn == nil || apgerbs.pedejoreizVilkts <= selectedLastWorn!) &&
+                (isIronable == nil || apgerbs.gludinams == isIronable) &&
+                (isLaundering == nil || apgerbs.mazgajas == isLaundering) &&
+                (isDirty == nil || apgerbs.netirs == isDirty)
+            }.filter {
+                searchText.isEmpty || $0.nosaukums.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        
+    private func addOptionsActionSheet() -> ActionSheet {
+        ActionSheet(
+            title: Text("Add"),
+            buttons: [
+                .default(Text("Add Kategorija")) {
+                    isAddingKategorija = true
+                },
+                .default(Text("Add Apgerbs")) {
+                    isAddingApgerbs = true
+                },
+                .cancel()
+            ]
+        )
     }
 
-    // Filtered Apgerbs Logic
-    var filteredApgerbi: [Apgerbs] {
-        apgerbi.filter { apgerbs in
-            (selectedKategorijas.isEmpty || apgerbs.kategorijas.contains { selectedKategorijas.contains($0.id) }) &&
-            (selectedColors.isEmpty || selectedColors.contains(apgerbs.krasa)) &&
-            (selectedSizes.isEmpty || selectedSizes.contains(apgerbs.izmers)) &&
-            (selectedSeasons.isEmpty || !Set(apgerbs.sezona).intersection(selectedSeasons).isEmpty) &&
-            (selectedLastWorn == nil || apgerbs.pedejoreizVilkts <= selectedLastWorn!) &&
-            (isIronable == nil || apgerbs.gludinams == isIronable) &&
-            (isLaundering == nil || apgerbs.mazgajas == isLaundering) &&
-            (isDirty == nil || apgerbs.netirs == isDirty)
-        }.filter {
-            searchText.isEmpty || $0.nosaukums.localizedCaseInsensitiveContains(searchText)
-        }
-    }
 
     private func kategorijaActionSheet() -> ActionSheet {
         ActionSheet(
