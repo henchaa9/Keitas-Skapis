@@ -12,6 +12,8 @@ import Vision
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
+
+
 @Model
 class Kategorija: Identifiable, Hashable, Codable {
     @Attribute var id: UUID = UUID()
