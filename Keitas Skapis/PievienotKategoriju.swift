@@ -113,16 +113,16 @@ struct PievienotKategorijuView: View {
                         }
                     }
                 }
-                .confirmationDialog("Change background", isPresented: $showingOption) {
-                    Button("Camera") {
+                .confirmationDialog("Pievienot attēlu", isPresented: $showingOption) {
+                    Button("Kamera") {
                         sourceType = .camera
                         isPickerPresented = true
                     }
-                    Button("Photo Library") {
+                    Button("Galerija") {
                         sourceType = .photoLibrary
                         isPickerPresented = true
                     }
-                    Button("Cancel", role: .cancel) {}
+                    Button("Atcelt", role: .cancel) {}
                 }
                 .sheet(isPresented: $isPickerPresented) {
                     if let sourceType = sourceType {
@@ -130,7 +130,7 @@ struct PievienotKategorijuView: View {
                     }
                 }
 
-                Toggle("Remove Background", isOn: $removeBackground)
+                Toggle("Noņemt fonu", isOn: $removeBackground)
                     .padding(.top, 20)
 
                 TextField("Nosaukums", text: $kategorijasNosaukums)
@@ -163,18 +163,20 @@ struct PievienotKategorijuView: View {
     }
 
     func apstiprinat() {
-        guard let selectedImage = selectedImage else {
-            print("No image selected")
+        guard !kategorijasNosaukums.isEmpty else {
+            print("Category name cannot be empty")
             return
         }
 
         Task {
-            let imageData = selectedImage.pngData()
+            let imageData = selectedImage?.pngData()
             if let kategorija = existingKategorija {
+                // Update existing Kategorija
                 kategorija.nosaukums = kategorijasNosaukums
                 kategorija.attels = imageData
                 kategorija.removeBackground = removeBackground
             } else {
+                // Insert new Kategorija
                 let newKategorija = Kategorija(
                     nosaukums: kategorijasNosaukums,
                     attels: imageData,
@@ -182,9 +184,18 @@ struct PievienotKategorijuView: View {
                 )
                 modelContext.insert(newKategorija)
             }
+
+            // Save context to persist changes
+            do {
+                try modelContext.save()
+            } catch {
+                print("Failed to save category: \(error.localizedDescription)")
+            }
+
             dismiss()
         }
     }
+
 
     // Background removal logic remains the same
     private func removeBackground(from image: UIImage) -> UIImage {

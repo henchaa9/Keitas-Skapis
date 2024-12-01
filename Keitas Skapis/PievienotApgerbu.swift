@@ -155,16 +155,16 @@ struct PievienotApgerbuView: View {
                                 }
                             }
                         }
-                        .confirmationDialog("Change background", isPresented: $showingOption) {
-                            Button("Camera") {
+                        .confirmationDialog("Pievienot attēlu", isPresented: $showingOption) {
+                            Button("Kamera") {
                                 sourceType = .camera
                                 isPickerPresented = true
                             }
-                            Button("Photo Library") {
+                            Button("Galerija") {
                                 sourceType = .photoLibrary
                                 isPickerPresented = true
                             }
-                            Button("Cancel", role: .cancel) { }
+                            Button("Atcelt", role: .cancel) { }
                         }
                     }.sheet(isPresented: $isPickerPresented) {
                             if let sourceType = sourceType {
@@ -172,7 +172,7 @@ struct PievienotApgerbuView: View {
                             }
                         }
                     
-                    Toggle("Remove Background", isOn: $removeBackground)
+                    Toggle("Noņemt fonu", isOn: $removeBackground)
                         .padding(.top, 20)
                         .onChange(of: removeBackground) { _, newValue in
                             if newValue {

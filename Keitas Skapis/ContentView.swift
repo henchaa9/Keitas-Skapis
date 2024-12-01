@@ -127,7 +127,7 @@ struct ContentView: View {
                     
                     // Search Bar with Filter Button
                     HStack {
-                        TextField("Search for items...", text: $searchText)
+                        TextField("Meklēt apģērbu...", text: $searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding(.horizontal)
                         
@@ -281,13 +281,13 @@ struct ContentView: View {
         
     private func addOptionsActionSheet() -> ActionSheet {
         ActionSheet(
-            title: Text("Add"),
+            title: Text("Pievienot"),
             buttons: [
-                .default(Text("Add Kategorija")) {
-                    isAddingKategorija = true
-                },
-                .default(Text("Add Apgerbs")) {
+                .default(Text("Pievienot apģērbu")) {
                     isAddingApgerbs = true
+                },
+                .default(Text("Pievienot kategoriju")) {
+                    isAddingKategorija = true
                 },
                 .cancel()
             ]
@@ -297,16 +297,16 @@ struct ContentView: View {
 
     private func kategorijaActionSheet() -> ActionSheet {
         ActionSheet(
-            title: Text("Manage \(selectedKategorija?.nosaukums ?? "")"),
-            message: Text("This category contains \(selectedKategorija?.apgerbi.count ?? 0) items."),
+            title: Text("Pārvaldīt \(selectedKategorija?.nosaukums ?? "")"),
+            message: Text("Šī kategorija satur \(selectedKategorija?.apgerbi.count ?? 0) apģērbu(s)."),
             buttons: [
-                .default(Text("Edit")) {
+                .default(Text("Rediģēt")) {
                     isEditing = true
                 },
-                .default(Text("Delete Category Only")) {
+                .default(Text("Dzēst tikai kategoriju")) {
                     removeKategorijaOnly()
                 },
-                .destructive(Text("Delete Category and Items")) {
+                .destructive(Text("Dzēst kategoriju un apģērbus")) {
                     deleteKategorijaAndItems()
                 },
                 .cancel()
@@ -316,18 +316,18 @@ struct ContentView: View {
 
     private func apgerbsActionSheet() -> ActionSheet {
         ActionSheet(
-            title: Text("Manage Selected Items"),
+            title: Text("Pārvaldīt apģērbus"),
             buttons: [
-                .default(Text("Move to Tīrs")) {
+                .default(Text("Mainīt uz Tīrs")) {
                     updateApgerbsStatus(to: "tirs")
                 },
-                .default(Text("Move to Netīrs")) {
+                .default(Text("Mainīt uz Netīrs")) {
                     updateApgerbsStatus(to: "netirs")
                 },
-                .default(Text("Move to Mazgājas")) {
+                .default(Text("Mainīt uz Mazgājas")) {
                     updateApgerbsStatus(to: "mazgajas")
                 },
-                .destructive(Text("Delete")) {
+                .destructive(Text("Dzēst")) {
                     deleteSelectedApgerbs()
                 },
                 .cancel()
@@ -424,109 +424,125 @@ struct ApgerbsDetailView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            // Name
-            Text(apgerbs.nosaukums)
-                .font(.title)
-                .bold()
-
-            // Last Worn
-            Text("Last worn: \(formattedDate(apgerbs.pedejoreizVilkts))")
-                .font(.subheadline)
-
-            // Image
-            if let image = apgerbs.displayedImage {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 200)
-            } else {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.5))
-                    .frame(height: 200)
-                    .overlay(Text("No Image"))
-            }
-
-            // Categories
-            Text("Categories")
-                .font(.headline)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) {
-                ForEach(apgerbs.kategorijas, id: \.id) { kategorija in
-                    Text(kategorija.nosaukums)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(8)
-                }
-            }
-
-            // Stavoklis
-            HStack {
-                Text("Stāvoklis: ").bold()
-                Text("\(selectedStavoklis)")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Name
+                Text(apgerbs.nosaukums)
+                    .font(.title)
                     .bold()
-                    .foregroundColor(colorForStavoklis(selectedStavoklis))
-            }
+                    .padding(.top, 20)
 
-            // Color, Size, Gludinams
-            HStack {
-                Circle()
-                    .fill(apgerbs.krasa.color)
-                    .frame(width: 24, height: 24)
-                Text("Size: \(sizeLetter(for: apgerbs.izmers))")
-                    .bold()
-                Text(apgerbs.gludinams ? "Gludināms" : "Negludināms")
-                    .foregroundColor(apgerbs.gludinams ? .green : .red)
-            }
+                // Last Worn
+                Text("Pēdējoreiz vilkts: \(formattedDate(apgerbs.pedejoreizVilkts))")
+                    .font(.subheadline)
 
-            // Seasons
-            Text("Seasons")
-                .font(.headline)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) {
-                ForEach(apgerbs.sezona, id: \.self) { sezona in
-                    Text(sezona.rawValue)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(8)
+                // Image
+                if let image = apgerbs.displayedImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 200)
+                } else {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.5))
+                        .frame(height: 200)
+                        .overlay(Text("Nav attēla"))
                 }
-            }
-
-            // Picker for Stavoklis
-            Picker("Stāvoklis", selection: $selectedStavoklis) {
-                Text("Tīrs").tag("Tīrs")
-                Text("Netīrs").tag("Netīrs")
-                Text("Mazgājas").tag("Mazgājas")
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .onChange(of: selectedStavoklis) { _, newValue in
-                updateStavoklis(newValue)
-            }
-
-
-            // Edit and Delete Buttons
-            HStack {
-                Button(action: onEdit) {
-                    Text("Edit")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+                
+                Text(apgerbs.piezimes)
+                
+                // Categories
+                Text("Kategorijas")
+                    .font(.headline)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 5)], spacing: 5) {
+                    ForEach(apgerbs.kategorijas, id: \.id) { kategorija in
+                        Text(kategorija.nosaukums)
+                            .lineLimit(1) // Prevents wrapping
+                            .truncationMode(.tail) // Truncates text with ellipsis
+                            .padding(8)
+                            .frame(minWidth: 70) // Ensures consistent size
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(8)
+                    }
                 }
 
-                Button(action: onDelete) {
-                    Text("Delete")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-            }
-            .padding(.top, 20)
 
-            Spacer()
+                // Stavoklis
+                HStack {
+                    Text("Stāvoklis: ").bold()
+                    Text("\(selectedStavoklis)")
+                        .bold()
+                        .foregroundColor(colorForStavoklis(selectedStavoklis))
+                }
+
+                // Color, Size, Gludinams
+                HStack {
+                    HStack {
+                        Text("Krāsa: ").bold()
+                        Circle()
+                            .fill(apgerbs.krasa.color)
+                            .frame(width: 24, height: 24)
+                    }
+                    Spacer()
+                    Text("Izmērs: \(sizeLetter(for: apgerbs.izmers))")
+                        .bold()
+                    Spacer()
+                    Text(apgerbs.gludinams ? "Gludināms" : "Negludināms")
+                        .foregroundColor(apgerbs.gludinams ? .green : .red).bold()
+                }
+
+                // Seasons
+                Text("Sezonas")
+                    .font(.headline)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 5)], spacing: 5) {
+                    ForEach(apgerbs.sezona, id: \.self) { sezona in
+                        Text(sezona.rawValue)
+                            .padding(8)
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(8)
+                    }
+                }
+
+                // Picker for Stavoklis
+                Text("Stāvoklis").bold()
+                
+                Picker("Stāvoklis", selection: $selectedStavoklis) {
+                    Text("Tīrs").tag("Tīrs")
+                    Text("Netīrs").tag("Netīrs")
+                    Text("Mazgājas").tag("Mazgājas")
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .onChange(of: selectedStavoklis) { _, newValue in
+                    updateStavoklis(newValue)
+                }
+
+
+                // Edit and Delete Buttons
+                HStack {
+                    Button(action: onEdit) {
+                        Text("Rediģēt")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+
+                    Button(action: onDelete) {
+                        Text("Dzēst")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                }
+                .padding(.top, 20)
+
+                Spacer()
+            }
+            .padding()
         }
-        .padding()
     }
 
     private func formattedDate(_ date: Date) -> String {
@@ -542,7 +558,7 @@ struct ApgerbsDetailView: View {
         case 2: return "M"
         case 3: return "L"
         case 4: return "XL"
-        default: return "Unknown"
+        default: return "Nezināms"
         }
     }
 
@@ -598,7 +614,7 @@ struct FilterSelectionView: View {
         NavigationStack {
             Form {
                 // Colors Filter
-                Section(header: Text("Colors")) {
+                Section(header: Text("Krāsa")) {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 40))]) {
                         ForEach(allColors, id: \.self) { color in
                             Circle()
@@ -616,7 +632,7 @@ struct FilterSelectionView: View {
                 }
 
                 // Size Filter
-                Section(header: Text("Sizes")) {
+                Section(header: Text("Izmērs")) {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))]) {
                         ForEach(0..<allSizes.count, id: \.self) { index in
                             Text(allSizes[index])
@@ -631,7 +647,7 @@ struct FilterSelectionView: View {
                 }
 
                 // Seasons Filter (Dropdown)
-                Section(header: Text("Seasons")) {
+                Section(header: Text("Sezona")) {
                     DisclosureGroup(isExpanded: $isSeasonDropdownExpanded) {
                         ForEach(allSeasons, id: \.self) { season in
                             Toggle(season.rawValue, isOn: Binding(
@@ -640,29 +656,29 @@ struct FilterSelectionView: View {
                             ))
                         }
                     } label: {
-                        Text("Select Seasons")
+                        Text("Izvēlieties sezonu")
                     }
                 }
 
                 // Last Worn Filter
-                Section(header: Text("Last Worn")) {
-                    DatePicker("Before", selection: Binding(
+                Section(header: Text("Pēdējoreiz vilkts")) {
+                    DatePicker("Vilkts pirms", selection: Binding(
                         get: { selectedLastWorn ?? Date() },
                         set: { newValue in selectedLastWorn = newValue }
                     ), displayedComponents: .date)
                 }
 
                 // Laundering and Dirty Filters
-                Section(header: Text("Laundry Status")) {
-                    Toggle("Ironable", isOn: Binding(
+                Section(header: Text("Apģērba stāvoklis")) {
+                    Toggle("Gludināms", isOn: Binding(
                         get: { isIronable ?? false },
                         set: { newValue in isIronable = newValue }
                     ))
-                    Toggle("Laundering", isOn: Binding(
+                    Toggle("Mazgājas", isOn: Binding(
                         get: { isLaundering ?? false },
                         set: { newValue in isLaundering = newValue }
                     ))
-                    Toggle("Dirty", isOn: Binding(
+                    Toggle("Netīrs", isOn: Binding(
                         get: { isDirty ?? false },
                         set: { newValue in isDirty = newValue }
                     ))
@@ -671,21 +687,21 @@ struct FilterSelectionView: View {
                 // Clear Filters Button
                 Section {
                     Button(action: clearFilters) {
-                        Text("Clear All Filters")
+                        Text("Notīrīt filtrus")
                             .foregroundColor(.red)
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-            .navigationTitle("Filters")
+            .navigationTitle("Filtri")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
+                    Button("Aizvērt") {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Apply") {
+                    Button("Pielietot") {
                         dismiss()
                     }
                 }
