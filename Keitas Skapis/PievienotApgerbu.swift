@@ -236,9 +236,9 @@ struct PievienotApgerbuView: View {
                     Picker("Izmērs", selection: $apgerbaIzmers) {
                         Text("XS").tag(0)
                         Text("S").tag(1)
-                        Text("M").tag(3)
-                        Text("L").tag(4)
-                        Text("XL").tag(5)
+                        Text("M").tag(2)
+                        Text("L").tag(3)
+                        Text("XL").tag(4)
                     }.pickerStyle(.segmented).padding(.top, 10)
                     
                     Picker("Stāvoklis", selection: $apgerbaStavoklis) {

@@ -35,9 +35,14 @@ struct ContentView: View {
     
     @State private var isAddingKategorija = false
     @State private var isAddingApgerbs = false
+    
+    @State private var selectedApgerbsIDs: Set<UUID> = [] // Tracks selected Apgerbs
+    
+    @State private var showApgerbsDetail = false
+
 
     enum ActionSheetType {
-        case kategorija, apgerbs, addOptions
+        case apgerbsOptions, kategorija, apgerbs, addOptions
     }
 
     var body: some View {
@@ -47,6 +52,19 @@ struct ContentView: View {
                 HStack {
                     Text("Keitas Skapis").font(.title).bold()
                     Spacer()
+                    if !selectedApgerbsIDs.isEmpty {
+                        Button(action: {
+                            actionSheetType = .apgerbsOptions
+                            showActionSheet = true
+                        }) {
+                            Image(systemName: "pencil")
+                                .resizable()
+                                .frame(width: 20, height: 20)
+                                .bold()
+                                .foregroundStyle(.black)
+                        }
+                    }
+                    
                     Button(action: {
                         actionSheetType = .addOptions
                         showActionSheet = true
@@ -152,17 +170,33 @@ struct ContentView: View {
                                         .frame(width: 80, height: 30)
                                 }
                                 .frame(width: 90, height: 120)
-                                .background(Color.gray.opacity(0.50))
+                                .background(selectedApgerbsIDs.contains(apgerbs.id) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.5))
                                 .cornerRadius(8)
                                 .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedApgerbs = apgerbs
+                                    showApgerbsDetail = true
+                                }
                                 .simultaneousGesture(
                                     LongPressGesture().onEnded { _ in
-                                        selectedApgerbs = apgerbs
-                                        selectedKategorija = nil // Reset other selection
-                                        actionSheetType = .apgerbs
-                                        showActionSheet = true
+                                        toggleApgerbsSelection(apgerbs)
                                     }
                                 )
+                                .sheet(isPresented: $showApgerbsDetail) {
+                                    if let apgerbs = selectedApgerbs {
+                                        ApgerbsDetailView(
+                                            apgerbs: apgerbs,
+                                            onEdit: {
+                                                isEditing = true
+                                                showApgerbsDetail = false
+                                            },
+                                            onDelete: {
+                                                deleteSelectedApgerbs()
+                                                showApgerbsDetail = false
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -182,8 +216,10 @@ struct ContentView: View {
                         return apgerbsActionSheet()
                     case .addOptions:
                         return addOptionsActionSheet()
+                    case .apgerbsOptions:
+                        return apgerbsActionSheet()
                     case .none:
-                        return ActionSheet(title: Text("Error"))
+                        return ActionSheet(title: Text("No Action"))
                     }
                 }
                 .onAppear {
@@ -280,10 +316,16 @@ struct ContentView: View {
 
     private func apgerbsActionSheet() -> ActionSheet {
         ActionSheet(
-            title: Text("Manage \(selectedApgerbs?.nosaukums ?? "")"),
+            title: Text("Manage Selected Items"),
             buttons: [
-                .default(Text("Edit")) {
-                    isEditing = true
+                .default(Text("Move to Tīrs")) {
+                    updateApgerbsStatus(to: "tirs")
+                },
+                .default(Text("Move to Netīrs")) {
+                    updateApgerbsStatus(to: "netirs")
+                },
+                .default(Text("Move to Mazgājas")) {
+                    updateApgerbsStatus(to: "mazgajas")
                 },
                 .destructive(Text("Delete")) {
                     deleteSelectedApgerbs()
@@ -292,6 +334,35 @@ struct ContentView: View {
             ]
         )
     }
+
+    
+    private func toggleApgerbsSelection(_ apgerbs: Apgerbs) {
+        if selectedApgerbsIDs.contains(apgerbs.id) {
+            selectedApgerbsIDs.remove(apgerbs.id)
+        } else {
+            selectedApgerbsIDs.insert(apgerbs.id)
+        }
+    }
+
+    private func updateApgerbsStatus(to status: String) {
+        for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
+            switch status {
+            case "tirs":
+                apgerbs.netirs = false
+                apgerbs.mazgajas = false
+            case "netirs":
+                apgerbs.netirs = true
+                apgerbs.mazgajas = false
+            case "mazgajas":
+                apgerbs.netirs = false
+                apgerbs.mazgajas = true
+            default:
+                break
+            }
+        }
+        selectedApgerbsIDs.removeAll()
+    }
+
 
     private func removeKategorijaOnly() {
         if let kategorija = selectedKategorija {
@@ -315,10 +386,18 @@ struct ContentView: View {
 
     private func deleteSelectedApgerbs() {
         if let apgerbs = selectedApgerbs {
-            modelContext.delete(apgerbs)
-            selectedApgerbs = nil
+            modelContext.delete(apgerbs) // Remove from data context
+            selectedApgerbs = nil       // Reset selection
+            try? modelContext.save()    // Persist changes
+        } else {
+            for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
+                modelContext.delete(apgerbs)
+            }
+            selectedApgerbsIDs.removeAll()
+            try? modelContext.save()
         }
     }
+
 
     // Toggle Kategorija Selection
     private func toggleKategorijaSelection(_ kategorija: Kategorija) {
@@ -330,6 +409,173 @@ struct ContentView: View {
     }
 }
 
+struct ApgerbsDetailView: View {
+    let apgerbs: Apgerbs
+    var onEdit: () -> Void
+    var onDelete: () -> Void
+
+    @State private var selectedStavoklis: String
+
+    init(apgerbs: Apgerbs, onEdit: @escaping () -> Void, onDelete: @escaping () -> Void) {
+        self.apgerbs = apgerbs
+        self.onEdit = onEdit
+        self.onDelete = onDelete
+        _selectedStavoklis = State(initialValue: apgerbs.netirs ? "Netīrs" : (apgerbs.mazgajas ? "Mazgājas" : "Tīrs"))
+    }
+
+    var body: some View {
+        VStack(spacing: 20) {
+            // Name
+            Text(apgerbs.nosaukums)
+                .font(.title)
+                .bold()
+
+            // Last Worn
+            Text("Last worn: \(formattedDate(apgerbs.pedejoreizVilkts))")
+                .font(.subheadline)
+
+            // Image
+            if let image = apgerbs.displayedImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 200)
+            } else {
+                Rectangle()
+                    .fill(Color.gray.opacity(0.5))
+                    .frame(height: 200)
+                    .overlay(Text("No Image"))
+            }
+
+            // Categories
+            Text("Categories")
+                .font(.headline)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) {
+                ForEach(apgerbs.kategorijas, id: \.id) { kategorija in
+                    Text(kategorija.nosaukums)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                }
+            }
+
+            // Stavoklis
+            HStack {
+                Text("Stāvoklis: ").bold()
+                Text("\(selectedStavoklis)")
+                    .bold()
+                    .foregroundColor(colorForStavoklis(selectedStavoklis))
+            }
+
+            // Color, Size, Gludinams
+            HStack {
+                Circle()
+                    .fill(apgerbs.krasa.color)
+                    .frame(width: 24, height: 24)
+                Text("Size: \(sizeLetter(for: apgerbs.izmers))")
+                    .bold()
+                Text(apgerbs.gludinams ? "Gludināms" : "Negludināms")
+                    .foregroundColor(apgerbs.gludinams ? .green : .red)
+            }
+
+            // Seasons
+            Text("Seasons")
+                .font(.headline)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) {
+                ForEach(apgerbs.sezona, id: \.self) { sezona in
+                    Text(sezona.rawValue)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                }
+            }
+
+            // Picker for Stavoklis
+            Picker("Stāvoklis", selection: $selectedStavoklis) {
+                Text("Tīrs").tag("Tīrs")
+                Text("Netīrs").tag("Netīrs")
+                Text("Mazgājas").tag("Mazgājas")
+            }
+            .pickerStyle(SegmentedPickerStyle())
+            .onChange(of: selectedStavoklis) { _, newValue in
+                updateStavoklis(newValue)
+            }
+
+
+            // Edit and Delete Buttons
+            HStack {
+                Button(action: onEdit) {
+                    Text("Edit")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+
+                Button(action: onDelete) {
+                    Text("Delete")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+            }
+            .padding(.top, 20)
+
+            Spacer()
+        }
+        .padding()
+    }
+
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: date)
+    }
+    
+    private func sizeLetter(for size: Int) -> String {
+        switch size {
+        case 0: return "XS"
+        case 1: return "S"
+        case 2: return "M"
+        case 3: return "L"
+        case 4: return "XL"
+        default: return "Unknown"
+        }
+    }
+
+    private func colorForStavoklis(_ stavoklis: String) -> Color {
+        switch stavoklis {
+        case "Tīrs":
+            return .green
+        case "Netīrs":
+            return .red
+        case "Mazgājas":
+            return .yellow
+        default:
+            return .gray
+        }
+    }
+
+    
+    private func updateStavoklis(_ newValue: String) {
+        switch newValue {
+        case "Tīrs":
+            apgerbs.netirs = false
+            apgerbs.mazgajas = false
+        case "Netīrs":
+            apgerbs.netirs = true
+            apgerbs.mazgajas = false
+        case "Mazgājas":
+            apgerbs.netirs = false
+            apgerbs.mazgajas = true
+        default:
+            break
+        }
+    }
+}
 
 
 struct FilterSelectionView: View {
