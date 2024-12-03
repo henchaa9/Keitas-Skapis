@@ -184,6 +184,8 @@ class Apgerbs: Identifiable, Hashable, Codable {
 
     @Relationship var kategorijas: [Kategorija] = []
     @Relationship var dienas: [Diena] = []
+    
+    static var imageCache = NSCache<NSString, UIImage>()
 
     init(
         nosaukums: String = "jauns apgerbs",
@@ -212,20 +214,36 @@ class Apgerbs: Identifiable, Hashable, Codable {
         self.attels = attels
         self.removeBackground = removeBackground
     }
-
-    // Computed property to get the UIImage from attels
-    var image: UIImage? {
-        get { attels.flatMap { UIImage(data: $0) } }
-        set { attels = newValue?.pngData() }
-    }
     
-    // Computed property to return the displayed image with or without background
-    var displayedImage: UIImage? {
-        if removeBackground, let image = self.image {
-            return removeBackground(from: image)
+    func loadImage(completion: @escaping (UIImage?) -> Void) {
+        if let cachedImage = Apgerbs.imageCache.object(forKey: self.id.uuidString as NSString) {
+            completion(cachedImage)
+            return
         }
-        return self.image
+
+        DispatchQueue.global(qos: .background).async {
+            var image: UIImage?
+
+            if let attelsData = self.attels, let uiImage = UIImage(data: attelsData) {
+                if self.removeBackground {
+                    image = self.removeBackground(from: uiImage)
+                } else {
+                    image = uiImage
+                }
+            }
+
+            // Cache the image
+            if let imageToCache = image {
+                Apgerbs.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
+            }
+
+            DispatchQueue.main.async {
+                completion(image)
+            }
+        }
     }
+
+
     
     // Background removal functions
     private func removeBackground(from image: UIImage) -> UIImage? {

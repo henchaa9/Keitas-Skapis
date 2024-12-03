@@ -7,6 +7,24 @@
 
 import SwiftUI
 import SwiftData
+import Combine
+
+class SearchTextObservable: ObservableObject {
+    @Published var searchText: String = ""
+    @Published var debouncedSearchText: String = ""
+
+    private var cancellables = Set<AnyCancellable>()
+
+    init() {
+        $searchText
+            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+            .removeDuplicates()
+            .sink { [weak self] in
+                self?.debouncedSearchText = $0
+            }
+            .store(in: &cancellables)
+    }
+}
 
 
 struct ContentView: View {
@@ -40,7 +58,10 @@ struct ContentView: View {
     
     @State private var showApgerbsDetail = false
 
-
+    @State private var filteredApgerbi: [Apgerbs] = []
+    
+    @StateObject private var searchTextObservable = SearchTextObservable()
+    
     enum ActionSheetType {
         case apgerbsOptions, kategorija, apgerbs, addOptions
     }
@@ -127,7 +148,7 @@ struct ContentView: View {
                     
                     // Search Bar with Filter Button
                     HStack {
-                        TextField("Meklēt apģērbu...", text: $searchText)
+                        TextField("Meklēt apģērbu...", text: $searchTextObservable.searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding(.horizontal)
                         
@@ -147,24 +168,11 @@ struct ContentView: View {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
                             ForEach(filteredApgerbi, id: \.id) { apgerbs in
                                 VStack {
-                                    if let image = apgerbs.displayedImage {
-                                        Image(uiImage: image)
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 80, height: 80)
-                                            .padding(.top, 5)
-                                            .padding(.bottom, -10)
-                                    } else {
-                                        // Fallback image
-                                        Image(systemName: "rectangle.portrait.fill")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 80, height: 80)
-                                            .foregroundStyle(.gray)
-                                            .opacity(0.5)
-                                            .padding(.top, 5)
-                                            .padding(.bottom, -10)
-                                    }
+                                    AsyncImageView(apgerbs: apgerbs)
+                                        .frame(width: 80, height: 80)
+                                        .padding(.top, 5)
+                                        .padding(.bottom, -10)
+
                                     
                                     Text(apgerbs.nosaukums)
                                         .frame(width: 80, height: 30)
@@ -222,9 +230,6 @@ struct ContentView: View {
                         return ActionSheet(title: Text("No Action"))
                     }
                 }
-                .onAppear {
-                    allColors = Array(Set(apgerbi.map { $0.krasa }))
-                }
                 .sheet(isPresented: $showFilterSheet) {
                     FilterSelectionView(
                         selectedColors: $selectedColors,
@@ -258,13 +263,45 @@ struct ContentView: View {
                             }
                     }
                 }
+                .onChange(of: searchTextObservable.debouncedSearchText) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onChange(of: selectedKategorijas) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onChange(of: selectedColors) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onChange(of: selectedSizes) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onChange(of: selectedSeasons) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onChange(of: selectedLastWorn) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onChange(of: isIronable) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onChange(of: isLaundering) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onChange(of: isDirty) { oldValue, newValue in
+                    performFiltering()
+                }
+                .onAppear {
+                    performFiltering()
+                    allColors = Array(Set(apgerbi.map { $0.krasa }))
+                }
                 .preferredColorScheme(.light)
             }
         }
-        
-        // Filtered Apgerbs Logic
-        var filteredApgerbi: [Apgerbs] {
-            apgerbi.filter { apgerbs in
+
+    func performFiltering() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let result = apgerbi.filter { apgerbs in
+                // Your existing filtering conditions
                 (selectedKategorijas.isEmpty || apgerbs.kategorijas.contains { selectedKategorijas.contains($0.id) }) &&
                 (selectedColors.isEmpty || selectedColors.contains(apgerbs.krasa)) &&
                 (selectedSizes.isEmpty || selectedSizes.contains(apgerbs.izmers)) &&
@@ -272,11 +309,14 @@ struct ContentView: View {
                 (selectedLastWorn == nil || apgerbs.pedejoreizVilkts <= selectedLastWorn!) &&
                 (isIronable == nil || apgerbs.gludinams == isIronable) &&
                 (isLaundering == nil || apgerbs.mazgajas == isLaundering) &&
-                (isDirty == nil || apgerbs.netirs == isDirty)
-            }.filter {
-                searchText.isEmpty || $0.nosaukums.localizedCaseInsensitiveContains(searchText)
+                (isDirty == nil || apgerbs.netirs == isDirty) &&
+                (searchTextObservable.debouncedSearchText.isEmpty || apgerbs.nosaukums.localizedCaseInsensitiveContains(searchTextObservable.debouncedSearchText))
+            }
+            DispatchQueue.main.async {
+                self.filteredApgerbi = result
             }
         }
+    }
 
         
     private func addOptionsActionSheet() -> ActionSheet {
@@ -409,6 +449,46 @@ struct ContentView: View {
     }
 }
 
+class ImageLoader: ObservableObject {
+    @Published var image: UIImage?
+
+    private let apgerbs: Apgerbs
+
+    init(apgerbs: Apgerbs) {
+        self.apgerbs = apgerbs
+        self.loadImage()
+    }
+
+    func loadImage() {
+        apgerbs.loadImage { [weak self] loadedImage in
+            self?.image = loadedImage
+        }
+    }
+}
+
+
+struct AsyncImageView: View {
+    @ObservedObject private var loader: ImageLoader
+
+    init(apgerbs: Apgerbs) {
+        self.loader = ImageLoader(apgerbs: apgerbs)
+    }
+
+    var body: some View {
+        Group {
+            if let image = loader.image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                // Placeholder or ProgressView
+                ProgressView()
+            }
+        }
+    }
+}
+
+
 struct ApgerbsDetailView: View {
     let apgerbs: Apgerbs
     var onEdit: () -> Void
@@ -437,17 +517,9 @@ struct ApgerbsDetailView: View {
                     .font(.subheadline)
 
                 // Image
-                if let image = apgerbs.displayedImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 200)
-                } else {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.5))
-                        .frame(height: 200)
-                        .overlay(Text("Nav attēla"))
-                }
+                AsyncImageView(apgerbs: apgerbs)
+                    .frame(height: 200)
+
                 
                 Text(apgerbs.piezimes)
                 
