@@ -14,6 +14,11 @@ struct KeitasSkapisApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: [Kategorija.self, Apgerbs.self])
+        .modelContainer(for: [
+            Kategorija.self,
+            Apgerbs.self,
+            Diena.self,
+            Milakais.self
+        ])
     }
 }
