@@ -65,6 +65,17 @@ struct ContentView: View {
     enum ActionSheetType {
         case apgerbsOptions, kategorija, apgerbs, addOptions
     }
+    
+    var isFilterActive: Bool {
+        !selectedColors.isEmpty ||
+        !selectedSizes.isEmpty ||
+        !selectedSeasons.isEmpty ||
+        selectedLastWorn != nil ||
+        isIronable != nil ||
+        isLaundering != nil ||
+        isDirty != nil
+    }
+
 
     var body: some View {
         NavigationStack {
@@ -103,43 +114,16 @@ struct ContentView: View {
                     ScrollView(.horizontal) {
                         HStack {
                             ForEach(kategorijas, id: \.id) { kategorija in
-                                VStack {
-                                    if let image = kategorija.displayedImage {
-                                        Image(uiImage: image)
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 80, height: 80)
-                                            .padding(.top, 5)
-                                            .padding(.bottom, -10)
-                                    } else {
-                                        // Fallback image
-                                        Image(systemName: "rectangle.portrait.fill")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 80, height: 80)
-                                            .foregroundStyle(.gray)
-                                            .opacity(0.5)
-                                            .padding(.top, 5)
-                                            .padding(.bottom, -10)
-                                    }
-                                    
-                                    Text(kategorija.nosaukums)
-                                        .frame(width: 80, height: 30)
-                                }
-                                .frame(width: 90, height: 120)
-                                .background(selectedKategorijas.contains(kategorija.id) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.50))
-                                .cornerRadius(8)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    toggleKategorijaSelection(kategorija)
-                                }
-                                .simultaneousGesture(
-                                    LongPressGesture().onEnded { _ in
-                                        selectedKategorija = kategorija
+                                CategoryButton(
+                                    kategorija: kategorija,
+                                    isSelected: selectedKategorijas.contains(kategorija.id),
+                                    onLongPress: { selected in
+                                        selectedKategorija = selected
                                         selectedApgerbs = nil // Reset other selection
                                         actionSheetType = .kategorija
                                         showActionSheet = true
-                                    }
+                                    },
+                                    toggleSelection: toggleKategorijaSelection
                                 )
                             }
                         }
@@ -155,38 +139,33 @@ struct ContentView: View {
                         Button(action: {
                             showFilterSheet = true
                         }) {
-                            Image(systemName: "slider.horizontal.3")
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                        }
-                        .padding(.trailing)
+                            ZStack {
+                                if isFilterActive {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(Color.blue.opacity(0.2))
+                                        .frame(width: 35, height: 35) // Ensure the background size is consistent
+                                }
+                                Image(systemName: "slider.horizontal.3")
+                                    .resizable()
+                                    .frame(width: 25, height: 20)
+                                    .foregroundColor(isFilterActive ? .blue : .black)
+                            }
+                        }.padding(.trailing)
+
                     }
-                    .padding(.bottom, 5)
                     
                     // Clothing Items Section
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
                             ForEach(filteredApgerbi, id: \.id) { apgerbs in
-                                VStack {
-                                    AsyncImageView(apgerbs: apgerbs)
-                                        .frame(width: 80, height: 80)
-                                        .padding(.top, 5)
-                                        .padding(.bottom, -10)
-
-                                    
-                                    Text(apgerbs.nosaukums)
-                                        .frame(width: 80, height: 30)
-                                }
-                                .frame(width: 90, height: 120)
-                                .background(selectedApgerbsIDs.contains(apgerbs.id) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.5))
-                                .cornerRadius(8)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    selectedApgerbs = apgerbs
-                                    showApgerbsDetail = true
-                                }
-                                .simultaneousGesture(
-                                    LongPressGesture().onEnded { _ in
+                                ApgerbsButton(
+                                    apgerbs: apgerbs,
+                                    isSelected: selectedApgerbsIDs.contains(apgerbs.id),
+                                    onTap: {
+                                        selectedApgerbs = apgerbs
+                                        showApgerbsDetail = true
+                                    },
+                                    onLongPress: {
                                         toggleApgerbsSelection(apgerbs)
                                     }
                                 )
@@ -210,12 +189,7 @@ struct ContentView: View {
                     }
                     .padding()
                 }
-                .background(Image("wardrobe_background")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .blur(radius: 5)
-                    .edgesIgnoringSafeArea(.all)
-                )
+                ToolBar()
                 .actionSheet(isPresented: $showActionSheet) {
                     switch actionSheetType {
                     case .kategorija:
@@ -694,8 +668,10 @@ struct FilterSelectionView: View {
                                 .frame(width: 40, height: 40)
                                 .overlay(
                                     Circle()
-                                        .stroke(selectedColors.contains(color) ? Color.blue : Color.clear, lineWidth: 3)
+                                        .stroke(selectedColors.contains(color) ? Color.blue : Color.black, lineWidth: selectedColors.contains(color) ? 3 : 1)
+
                                 )
+                                
                                 .onTapGesture {
                                     toggleColorSelection(color)
                                 }

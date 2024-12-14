@@ -15,6 +15,9 @@
 		2D55E2002C96FFCA002C18FB /* DancingScript-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2D55E1FC2C96FFCA002C18FB /* DancingScript-Bold.ttf */; };
 		2D6501572CB84ED9005DB578 /* PievienotApgerbu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6501562CB84ED9005DB578 /* PievienotApgerbu.swift */; };
 		2D8032752CA94B8000CE0615 /* KeitasSkapisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8032742CA94B8000CE0615 /* KeitasSkapisApp.swift */; };
+		2D83CDFA2D0D929A007CF84C /* ToolBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D83CDF92D0D929A007CF84C /* ToolBar.swift */; };
+		2D83CDFC2D0DB522007CF84C /* CategoryBtn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D83CDFB2D0DB522007CF84C /* CategoryBtn.swift */; };
+		2D83CDFE2D0DB9A7007CF84C /* ApgerbsBtn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D83CDFD2D0DB9A7007CF84C /* ApgerbsBtn.swift */; };
 		2D936A562D08C52C005DBBAE /* NetirieApgerbi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D936A552D08C52C005DBBAE /* NetirieApgerbi.swift */; };
 		2DFC61D72C8360B00019B63D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFC61D62C8360B00019B63D /* ContentView.swift */; };
 		2DFC61D92C8360B10019B63D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2DFC61D82C8360B10019B63D /* Assets.xcassets */; };
@@ -31,6 +34,9 @@
 		2D55E2022C9717DB002C18FB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2D6501562CB84ED9005DB578 /* PievienotApgerbu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PievienotApgerbu.swift; sourceTree = "<group>"; };
 		2D8032742CA94B8000CE0615 /* KeitasSkapisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeitasSkapisApp.swift; sourceTree = "<group>"; };
+		2D83CDF92D0D929A007CF84C /* ToolBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolBar.swift; sourceTree = "<group>"; };
+		2D83CDFB2D0DB522007CF84C /* CategoryBtn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryBtn.swift; sourceTree = "<group>"; };
+		2D83CDFD2D0DB9A7007CF84C /* ApgerbsBtn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApgerbsBtn.swift; sourceTree = "<group>"; };
 		2D936A552D08C52C005DBBAE /* NetirieApgerbi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetirieApgerbi.swift; sourceTree = "<group>"; };
 		2DFC61D12C8360B00019B63D /* Keitas Skapis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Keitas Skapis.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DFC61D62C8360B00019B63D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -82,7 +88,10 @@
 				2D55E2022C9717DB002C18FB /* Info.plist */,
 				2D8032742CA94B8000CE0615 /* KeitasSkapisApp.swift */,
 				2DFC61D62C8360B00019B63D /* ContentView.swift */,
+				2D83CDFD2D0DB9A7007CF84C /* ApgerbsBtn.swift */,
+				2D83CDFB2D0DB522007CF84C /* CategoryBtn.swift */,
 				2D936A552D08C52C005DBBAE /* NetirieApgerbi.swift */,
+				2D83CDF92D0D929A007CF84C /* ToolBar.swift */,
 				2D1AF2EF2CB2F59D00388469 /* PievienotKategoriju.swift */,
 				2D1AF2EB2CB2C3AD00388469 /* Models.swift */,
 				2D6501562CB84ED9005DB578 /* PievienotApgerbu.swift */,
@@ -176,10 +185,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D1AF2F02CB2F59D00388469 /* PievienotKategoriju.swift in Sources */,
+				2D83CDFE2D0DB9A7007CF84C /* ApgerbsBtn.swift in Sources */,
 				2D936A562D08C52C005DBBAE /* NetirieApgerbi.swift in Sources */,
 				2D1AF2EC2CB2C3AD00388469 /* Models.swift in Sources */,
 				2D6501572CB84ED9005DB578 /* PievienotApgerbu.swift in Sources */,
+				2D83CDFA2D0D929A007CF84C /* ToolBar.swift in Sources */,
 				2DFC61D72C8360B00019B63D /* ContentView.swift in Sources */,
+				2D83CDFC2D0DB522007CF84C /* CategoryBtn.swift in Sources */,
 				2D8032752CA94B8000CE0615 /* KeitasSkapisApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
