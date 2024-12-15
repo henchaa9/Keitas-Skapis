@@ -30,11 +30,9 @@ struct ApgerbsButton: View {
         .onTapGesture {
             onTap()
         }
-        .simultaneousGesture(
-            LongPressGesture().onEnded { _ in
-                onLongPress()
-            }
-        )
+        .onLongPressGesture {
+            onLongPress()
+        }
     }
 }
 

@@ -62,6 +62,8 @@ struct ContentView: View {
     
     @StateObject private var searchTextObservable = SearchTextObservable()
     
+    @State private var isSelectionModeActive = false
+    
     enum ActionSheetType {
         case apgerbsOptions, kategorija, apgerbs, addOptions
     }
@@ -156,38 +158,60 @@ struct ContentView: View {
                     
                     // Clothing Items Section
                     ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
-                            ForEach(filteredApgerbi, id: \.id) { apgerbs in
-                                ApgerbsButton(
-                                    apgerbs: apgerbs,
-                                    isSelected: selectedApgerbsIDs.contains(apgerbs.id),
-                                    onTap: {
-                                        selectedApgerbs = apgerbs
-                                        showApgerbsDetail = true
-                                    },
-                                    onLongPress: {
-                                        toggleApgerbsSelection(apgerbs)
-                                    }
-                                )
-                                .sheet(isPresented: $showApgerbsDetail) {
-                                    if let apgerbs = selectedApgerbs {
-                                        ApgerbsDetailView(
-                                            apgerbs: apgerbs,
-                                            onEdit: {
-                                                isEditing = true
-                                                showApgerbsDetail = false
-                                            },
-                                            onDelete: {
-                                                deleteSelectedApgerbs()
-                                                showApgerbsDetail = false
-                                            }
-                                        )
+                        ZStack {
+                            // Background to detect taps on empty space
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if isSelectionModeActive {
+                                        isSelectionModeActive = false
+                                        selectedApgerbsIDs.removeAll()
                                     }
                                 }
+
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
+                                ForEach(filteredApgerbi, id: \.id) { apgerbs in
+                                    ApgerbsButton(
+                                        apgerbs: apgerbs,
+                                        isSelected: selectedApgerbsIDs.contains(apgerbs.id),
+                                        onTap: {
+                                            if isSelectionModeActive {
+                                                toggleApgerbsSelection(apgerbs)
+                                            } else {
+                                                // Show detail when not in selection mode
+                                                selectedApgerbs = apgerbs
+                                                showApgerbsDetail = true
+                                            }
+                                        },
+                                        onLongPress: {
+                                            if !isSelectionModeActive {
+                                                isSelectionModeActive = true
+                                            }
+                                            toggleApgerbsSelection(apgerbs)
+                                        }
+                                    )
+                                }
                             }
+                            .padding()
                         }
                     }
-                    .padding()
+                    .sheet(isPresented: $showApgerbsDetail) {
+                        if let apgerbs = selectedApgerbs {
+                            ApgerbsDetailView(
+                                apgerbs: apgerbs,
+                                onEdit: {
+                                    isEditing = true
+                                    showApgerbsDetail = false
+                                },
+                                onDelete: {
+                                    deleteSelectedApgerbs()
+                                    showApgerbsDetail = false
+                                }
+                            )
+                        } else {
+                            Text("No Apgerbs Selected")
+                        }
+                    }
                 }
                 ToolBar()
                 .actionSheet(isPresented: $showActionSheet) {
@@ -349,14 +373,19 @@ struct ContentView: View {
         )
     }
 
-    
     private func toggleApgerbsSelection(_ apgerbs: Apgerbs) {
         if selectedApgerbsIDs.contains(apgerbs.id) {
             selectedApgerbsIDs.remove(apgerbs.id)
         } else {
             selectedApgerbsIDs.insert(apgerbs.id)
         }
+
+        // Exit selection mode if no items remain selected
+        if selectedApgerbsIDs.isEmpty {
+            isSelectionModeActive = false
+        }
     }
+
 
     private func updateApgerbsStatus(to status: String) {
         for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
