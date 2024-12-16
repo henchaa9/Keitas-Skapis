@@ -327,7 +327,7 @@ struct ContentView: View {
                 .default(Text("Pievienot kategoriju")) {
                     isAddingKategorija = true
                 },
-                .cancel()
+                .cancel(Text("Atcelt"))
             ]
         )
     }

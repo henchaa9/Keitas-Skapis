@@ -104,8 +104,7 @@ struct PievienotKategorijuView: View {
                                 Image(systemName: "rectangle.portrait.fill")
                                     .resizable()
                                     .frame(width: 90, height: 120)
-                                    .foregroundStyle(.gray)
-                                    .opacity(0.50)
+                                    .foregroundStyle(Color(.systemGray6))
                                 Image(systemName: "camera")
                                     .foregroundStyle(.black)
                                     .font(.title2)
@@ -151,11 +150,6 @@ struct PievienotKategorijuView: View {
             .padding()
         }
         .preferredColorScheme(.light)
-        .background(Image("wardrobe_background")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .blur(radius: 5)
-            .edgesIgnoringSafeArea(.all))
     }
 
     func pievienotFoto() {

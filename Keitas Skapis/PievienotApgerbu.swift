@@ -146,8 +146,7 @@ struct PievienotApgerbuView: View {
                                         Image(systemName: "rectangle.portrait.fill")
                                             .resizable()
                                             .frame(width: 90, height: 120)
-                                            .foregroundStyle(.gray)
-                                            .opacity(0.50)
+                                            .foregroundStyle(Color(.systemGray6))
                                         Image(systemName: "camera")
                                             .foregroundStyle(.black)
                                             .font(.title2)
@@ -194,7 +193,7 @@ struct PievienotApgerbuView: View {
                                 Image(systemName: isExpandedKategorijas ? "chevron.up" : "chevron.down").foregroundStyle(.black)
                             }
                             .padding(10)
-                            .background(Color.gray.opacity(0.2))
+                            .background(Color(.systemGray6))
                             .cornerRadius(8)
                         }
                         
@@ -256,7 +255,7 @@ struct PievienotApgerbuView: View {
                                 Image(systemName: isExpandedSezona ? "chevron.up" : "chevron.down").foregroundStyle(.black)
                             }
                             .padding(10)
-                            .background(Color.gray.opacity(0.2))
+                            .background(Color(.systemGray6))
                             .cornerRadius(8)
                         }
                         
@@ -304,12 +303,6 @@ struct PievienotApgerbuView: View {
                 }
             }.padding()
         }.preferredColorScheme(.light)
-            .background(Image("wardrobe_background")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .blur(radius: 5)
-            .edgesIgnoringSafeArea(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/))
-                                    
     }
     
     private func removeBackground(from image: UIImage) -> UIImage {

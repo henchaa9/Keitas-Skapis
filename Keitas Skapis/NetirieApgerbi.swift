@@ -10,6 +10,7 @@ import SwiftData
 import Combine
 
 struct NetirieApgerbiView: View {
+    @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query private var apgerbi: [Apgerbs]
     
@@ -19,6 +20,7 @@ struct NetirieApgerbiView: View {
     @State private var actionSheetType: ActionSheetType?
     @State private var showApgerbsDetail = false
     @State private var selectedApgerbs: Apgerbs?
+    @State private var isSelectionModeActive = false
 
     enum ActionSheetType {
         case apgerbsOptions
@@ -40,19 +42,25 @@ struct NetirieApgerbiView: View {
                 // Top toggle between "Netīrie" and "Mazgājas"
                 HStack(spacing: 20) {
                     Text("Netīrie")
-                        .font(.headline)
+                        .font(.title)
                         .foregroundColor(showNetirie ? .blue : .primary)
+                        .bold()
                         .onTapGesture {
                             showNetirie = true
                         }
                     Text("Mazgājas")
-                        .font(.headline)
+                        .font(.title)
                         .foregroundColor(!showNetirie ? .blue : .primary)
+                        .bold()
                         .onTapGesture {
                             showNetirie = false
-                        }
+                        }.navigationBarBackButtonHidden(true)
                     
                     Spacer()
+                    
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
+                    }
                     
                     if !selectedApgerbsIDs.isEmpty {
                         Button(action: {
@@ -71,51 +79,70 @@ struct NetirieApgerbiView: View {
 
                 // Grid of Apgerbi
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
-                        ForEach(filteredApgerbi, id: \.id) { apgerbs in
-                            VStack {
-                                AsyncImageView(apgerbs: apgerbs)
-                                    .frame(width: 80, height: 80)
-                                    .padding(.top, 5)
-                                    .padding(.bottom, -10)
-                                
-                                Text(apgerbs.nosaukums)
-                                    .frame(width: 80, height: 30)
-                                    .multilineTextAlignment(.center)
-                            }
-                            .frame(width: 90, height: 120)
-                            .background(selectedApgerbsIDs.contains(apgerbs.id) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.5))
-                            .cornerRadius(8)
+                    ZStack {
+                        Color.clear
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                // Single tap: show detail
-                                selectedApgerbs = apgerbs
-                                showApgerbsDetail = true
-                            }
-                            .simultaneousGesture(
-                                LongPressGesture().onEnded { _ in
-                                    // Long press: toggle selection
-                                    toggleApgerbsSelection(apgerbs)
+                                // Tap on empty space exits selection mode
+                                if isSelectionModeActive {
+                                    isSelectionModeActive = false
+                                    selectedApgerbsIDs.removeAll()
                                 }
-                            )
-                            .sheet(isPresented: $showApgerbsDetail) {
-                                if let apgerbs = selectedApgerbs {
-                                    ApgerbsDetailView(
-                                        apgerbs: apgerbs,
-                                        onEdit: {
-                                            // Handle editing if needed
-                                            showApgerbsDetail = false
-                                        },
-                                        onDelete: {
-                                            deleteSelectedApgerbs(apgerbs)
-                                            showApgerbsDetail = false
-                                        }
-                                    )
+                            }
+                        
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
+                            ForEach(filteredApgerbi, id: \.id) { apgerbs in
+                                VStack {
+                                    AsyncImageView(apgerbs: apgerbs)
+                                        .frame(width: 80, height: 80)
+                                        .padding(.top, 5)
+                                        .padding(.bottom, -10)
+                                    
+                                    Text(apgerbs.nosaukums)
+                                        .frame(width: 80, height: 30)
+                                        .multilineTextAlignment(.center)
+                                }
+                                .frame(width: 90, height: 120)
+                                .background(selectedApgerbsIDs.contains(apgerbs.id) ? Color.blue.opacity(0.3) : Color(.systemGray6))
+                                .cornerRadius(8)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if isSelectionModeActive {
+                                        // If in selection mode, tap toggles selection
+                                        toggleApgerbsSelection(apgerbs)
+                                    } else {
+                                        // If not in selection mode, show detail
+                                        selectedApgerbs = apgerbs
+                                        showApgerbsDetail = true
+                                    }
+                                }
+                                .onLongPressGesture {
+                                    // Long press enters selection mode if not active, then toggles selection
+                                    if !isSelectionModeActive {
+                                        isSelectionModeActive = true
+                                    }
+                                    toggleApgerbsSelection(apgerbs)
                                 }
                             }
                         }
+                        .padding()
                     }
-                    .padding()
+                    .sheet(isPresented: $showApgerbsDetail) {
+                        if let apgerbs = selectedApgerbs {
+                            ApgerbsDetailView(
+                                apgerbs: apgerbs,
+                                onEdit: {
+                                    showApgerbsDetail = false
+                                },
+                                onDelete: {
+                                    deleteSelectedApgerbs(apgerbs)
+                                    showApgerbsDetail = false
+                                }
+                            )
+                        } else {
+                            Text("No Apgerbs Selected")
+                        }
+                    }
                 }
             }
             .actionSheet(isPresented: $showActionSheet) {
@@ -157,7 +184,13 @@ struct NetirieApgerbiView: View {
         } else {
             selectedApgerbsIDs.insert(apgerbs.id)
         }
+
+        // Exit selection mode if empty
+        if selectedApgerbsIDs.isEmpty {
+            isSelectionModeActive = false
+        }
     }
+
 
     private func updateApgerbsStatus(to status: String) {
         for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
