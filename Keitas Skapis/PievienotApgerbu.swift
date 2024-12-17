@@ -52,32 +52,39 @@ struct PievienotApgerbuView: View {
     var existingApgerbs: Apgerbs?
     
     var displayedImage: UIImage? {
-        if removeBackground, let selectedImage = selectedImage {
-            return removeBackground(from: selectedImage)
+        if removeBackground {
+            return backgroundRemovedImage ?? selectedImage
         }
         return selectedImage
     }
 
     
     init(existingApgerbs: Apgerbs? = nil) {
-           self.existingApgerbs = existingApgerbs
-           if let apgerbs = existingApgerbs {
-               _apgerbaNosaukums = State(initialValue: apgerbs.nosaukums)
-               _apgerbaPiezimes = State(initialValue: apgerbs.piezimes)
-               _apgerbaKategorijas = State(initialValue: Set(apgerbs.kategorijas))
-               _izveletaKrasa = State(initialValue: apgerbs.krasa.color)  // Use the color from `apgerbaKrasa`
-               _apgerbaStavoklis = State(initialValue: apgerbs.stavoklis)
-               _apgerbsGludinams = State(initialValue: apgerbs.gludinams)
-               _apgerbaIzmers = State(initialValue: apgerbs.izmers)
-               _apgerbaSezona = State(initialValue: Set(apgerbs.sezona))
-               _apgerbsPedejoreizVilkts = State(initialValue: apgerbs.pedejoreizVilkts)
-               
-               // If there is an image, set it as well
-               if let imageData = apgerbs.attels, let image = UIImage(data: imageData) {
-                   _selectedImage = State(initialValue: image)
-               }
-           }
-       }
+        self.existingApgerbs = existingApgerbs
+        if let apgerbs = existingApgerbs {
+            _apgerbaNosaukums = State(initialValue: apgerbs.nosaukums)
+            _apgerbaPiezimes = State(initialValue: apgerbs.piezimes)
+            _apgerbaKategorijas = State(initialValue: Set(apgerbs.kategorijas))
+            _izveletaKrasa = State(initialValue: apgerbs.krasa.color)
+            _apgerbaStavoklis = State(initialValue: apgerbs.netirs ? 1 : (apgerbs.mazgajas ? 2 : 0))
+            _apgerbsGludinams = State(initialValue: apgerbs.gludinams)
+            _apgerbaIzmers = State(initialValue: apgerbs.izmers)
+            _apgerbaSezona = State(initialValue: Set(apgerbs.sezona))
+            _apgerbsPedejoreizVilkts = State(initialValue: apgerbs.pedejoreizVilkts)
+            _removeBackground = State(initialValue: apgerbs.removeBackground)
+
+            // Load and process the image
+            if let imageData = apgerbs.attels, let image = UIImage(data: imageData) {
+                if apgerbs.removeBackground {
+                    _selectedImage = State(initialValue: image)
+                    _backgroundRemovedImage = State(initialValue: removeBackground(from: image))
+                } else {
+                    _selectedImage = State(initialValue: image)
+                }
+            }
+        }
+    }
+
     
     struct ImagePicker: UIViewControllerRepresentable {
         @Environment(\.presentationMode) private var presentationMode
@@ -174,12 +181,11 @@ struct PievienotApgerbuView: View {
                     Toggle("Noņemt fonu", isOn: $removeBackground)
                         .padding(.top, 20)
                         .onChange(of: removeBackground) { _, newValue in
-                            if newValue {
-                                if let selectedImage = selectedImage {
-                                    backgroundRemovedImage = removeBackground(from: selectedImage)
-                                }
+                            if newValue, let selectedImage = selectedImage {
+                                backgroundRemovedImage = removeBackground(from: selectedImage)
                             }
                         }
+
                     
                     TextField("Nosaukums", text: $apgerbaNosaukums).textFieldStyle(.roundedBorder).padding(.top, 20)
                     TextField("Piezīmes", text: $apgerbaPiezimes).textFieldStyle(.roundedBorder).padding(.top, 10)
@@ -411,6 +417,7 @@ struct PievienotApgerbuView: View {
             modelContext.insert(jaunsApgerbs)
         }
         
+        try? modelContext.save()
         dismiss()
     }
 

@@ -289,8 +289,9 @@ struct ContentView: View {
                     performFiltering()
                 }
                 .onAppear {
-                    performFiltering()
                     allColors = Array(Set(apgerbi.map { $0.krasa }))
+                    // Apply any active filters
+                    performFiltering()
                 }
                 .preferredColorScheme(.light)
             }
@@ -429,15 +430,16 @@ struct ContentView: View {
 
     private func deleteSelectedApgerbs() {
         if let apgerbs = selectedApgerbs {
-            modelContext.delete(apgerbs) // Remove from data context
-            selectedApgerbs = nil       // Reset selection
-            try? modelContext.save()    // Persist changes
-        } else {
-            for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
+            // Clear the selection and close the detail view first
+            selectedApgerbs = nil
+            showApgerbsDetail = false
+
+            // Perform deletion on the main thread
+            DispatchQueue.main.async {
                 modelContext.delete(apgerbs)
+                try? modelContext.save()
+                performFiltering() // Refresh the filtered list to reflect changes
             }
-            selectedApgerbsIDs.removeAll()
-            try? modelContext.save()
         }
     }
 
@@ -523,7 +525,7 @@ struct ApgerbsDetailView: View {
                 AsyncImageView(apgerbs: apgerbs)
                     .frame(height: 200)
 
-                
+
                 Text(apgerbs.piezimes)
                 
                 // Categories
@@ -665,7 +667,9 @@ struct ApgerbsDetailView: View {
         default:
             break
         }
+        try? apgerbs.modelContext?.save() // Save changes to SwiftData
     }
+
 }
 
 
