@@ -12,8 +12,9 @@ import Combine
 struct NetirieApgerbiView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
+
     @Query private var apgerbi: [Apgerbs]
-    
+
     @State private var showNetirie = true
     @State private var selectedApgerbsIDs: Set<UUID> = []
     @State private var showActionSheet = false
@@ -22,10 +23,14 @@ struct NetirieApgerbiView: View {
     @State private var selectedApgerbs: Apgerbs?
     @State private var isSelectionModeActive = false
 
+    // 1) Add this state to control navigation to the edit screen:
+    @State private var isEditing = false
+
     enum ActionSheetType {
         case apgerbsOptions
     }
 
+    // Filter the Apgerbs to show either netīrs or mazgājas
     var filteredApgerbi: [Apgerbs] {
         apgerbi.filter { item in
             if showNetirie {
@@ -39,7 +44,7 @@ struct NetirieApgerbiView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                // Top toggle between "Netīrie" and "Mazgājas"
+                // Top bar with toggles between "Netīrie" and "Mazgājas"
                 HStack(spacing: 20) {
                     Text("Netīrie")
                         .font(.title)
@@ -48,20 +53,26 @@ struct NetirieApgerbiView: View {
                         .onTapGesture {
                             showNetirie = true
                         }
+
                     Text("Mazgājas")
                         .font(.title)
                         .foregroundColor(!showNetirie ? .blue : .primary)
                         .bold()
                         .onTapGesture {
                             showNetirie = false
-                        }.navigationBarBackButtonHidden(true)
+                        }
+                        .navigationBarBackButtonHidden(true)
                     
                     Spacer()
                     
+                    // “Back” button to dismiss
                     Button(action: { dismiss() }) {
-                        Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
+                        Image(systemName: "arrowshape.left.fill")
+                            .font(.title)
+                            .foregroundStyle(.black)
                     }
                     
+                    // Pencil button appears only if some Apgerbs are selected
                     if !selectedApgerbsIDs.isEmpty {
                         Button(action: {
                             actionSheetType = .apgerbsOptions
@@ -80,35 +91,44 @@ struct NetirieApgerbiView: View {
                 // Grid of Apgerbi
                 ScrollView {
                     ZStack {
+                        // Tap on empty space exits selection mode
                         Color.clear
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                // Tap on empty space exits selection mode
                                 if isSelectionModeActive {
                                     isSelectionModeActive = false
                                     selectedApgerbsIDs.removeAll()
                                 }
                             }
                         
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 90, maximum: 120))],
+                            spacing: 10
+                        ) {
                             ForEach(filteredApgerbi, id: \.id) { apgerbs in
                                 VStack {
+                                    // Show the image
                                     AsyncImageView(apgerbs: apgerbs)
                                         .frame(width: 80, height: 80)
                                         .padding(.top, 5)
                                         .padding(.bottom, -10)
                                     
+                                    // Show the title
                                     Text(apgerbs.nosaukums)
                                         .frame(width: 80, height: 30)
                                         .multilineTextAlignment(.center)
                                 }
                                 .frame(width: 90, height: 120)
-                                .background(selectedApgerbsIDs.contains(apgerbs.id) ? Color.blue.opacity(0.3) : Color(.systemGray6))
+                                .background(
+                                    selectedApgerbsIDs.contains(apgerbs.id)
+                                      ? Color.blue.opacity(0.3)
+                                      : Color(.systemGray6)
+                                )
                                 .cornerRadius(8)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
+                                    // If in selection mode, toggle selection
                                     if isSelectionModeActive {
-                                        // If in selection mode, tap toggles selection
                                         toggleApgerbsSelection(apgerbs)
                                     } else {
                                         // If not in selection mode, show detail
@@ -127,24 +147,44 @@ struct NetirieApgerbiView: View {
                         }
                         .padding()
                     }
-                    .sheet(isPresented: $showApgerbsDetail) {
-                        if let apgerbs = selectedApgerbs {
-                            ApgerbsDetailView(
-                                apgerbs: apgerbs,
-                                onEdit: {
-                                    showApgerbsDetail = false
-                                },
-                                onDelete: {
-                                    deleteSelectedApgerbs(apgerbs)
-                                    showApgerbsDetail = false
-                                }
-                            )
-                        } else {
-                            Text("No Apgerbs Selected")
-                        }
-                    }
                 }
             }
+            
+            // Present the Detail Sheet
+            .sheet(isPresented: $showApgerbsDetail) {
+                if let apgerbs = selectedApgerbs {
+                    ApgerbsDetailView(
+                        apgerbs: apgerbs,
+                        onEdit: {
+                            // 2) When “Rediģet” is pressed:
+                            // - Close the detail sheet
+                            // - Trigger the `navigationDestination` below
+                            showApgerbsDetail = false
+                            isEditing = true
+                        },
+                        onDelete: {
+                            deleteSelectedApgerbs(apgerbs)
+                            showApgerbsDetail = false
+                        }
+                    )
+                } else {
+                    Text("No Apgerbs Selected")
+                }
+            }
+
+            // 3) Here’s where we push the PievienotApgerbuView
+            .navigationDestination(isPresented: $isEditing) {
+                if let apgerbs = selectedApgerbs {
+                    PievienotApgerbuView(existingApgerbs: apgerbs)
+                        .onDisappear {
+                            // Optional cleanup
+                            isEditing = false
+                            // selectedApgerbs = nil (if desired)
+                        }
+                }
+            }
+
+            // Action Sheet for bulk updates or deletion
             .actionSheet(isPresented: $showActionSheet) {
                 switch actionSheetType {
                 case .apgerbsOptions:
@@ -184,13 +224,10 @@ struct NetirieApgerbiView: View {
         } else {
             selectedApgerbsIDs.insert(apgerbs.id)
         }
-
-        // Exit selection mode if empty
         if selectedApgerbsIDs.isEmpty {
             isSelectionModeActive = false
         }
     }
-
 
     private func updateApgerbsStatus(to status: String) {
         for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
@@ -214,18 +251,27 @@ struct NetirieApgerbiView: View {
 
     private func deleteSelectedApgerbs(_ singleApgerbs: Apgerbs? = nil) {
         if let single = singleApgerbs {
-            modelContext.delete(single)
-            try? modelContext.save()
             selectedApgerbs = nil
-        } else {
-            for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
-                modelContext.delete(apgerbs)
+            showApgerbsDetail = false
+
+            DispatchQueue.main.async {
+                modelContext.delete(single)
+                try? modelContext.save()
             }
-            selectedApgerbsIDs.removeAll()
-            try? modelContext.save()
+        }
+        else if !selectedApgerbsIDs.isEmpty {
+            DispatchQueue.main.async {
+                for item in apgerbi where selectedApgerbsIDs.contains(item.id) {
+                    modelContext.delete(item)
+                }
+                selectedApgerbsIDs.removeAll()
+                try? modelContext.save()
+            }
         }
     }
+
 }
+
 
 
 #Preview {

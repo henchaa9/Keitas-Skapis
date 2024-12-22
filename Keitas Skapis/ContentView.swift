@@ -405,6 +405,7 @@ struct ContentView: View {
             }
         }
         selectedApgerbsIDs.removeAll()
+        try? modelContext.save()   
     }
 
 
@@ -429,16 +430,29 @@ struct ContentView: View {
     }
 
     private func deleteSelectedApgerbs() {
-        if let apgerbs = selectedApgerbs {
-            // Clear the selection and close the detail view first
+        // 1) If we came from the detail view (one item)
+        if let single = selectedApgerbs {
+            // Clear single selection + dismiss
             selectedApgerbs = nil
             showApgerbsDetail = false
 
-            // Perform deletion on the main thread
+            // Delete just that one
             DispatchQueue.main.async {
-                modelContext.delete(apgerbs)
+                modelContext.delete(single)
                 try? modelContext.save()
-                performFiltering() // Refresh the filtered list to reflect changes
+                performFiltering()
+            }
+        }
+        // 2) Otherwise, if we have multi-selections:
+        else if !selectedApgerbsIDs.isEmpty {
+            DispatchQueue.main.async {
+                // Loop all Apgerbs in query, delete if in selected set
+                for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
+                    modelContext.delete(apgerbs)
+                }
+                selectedApgerbsIDs.removeAll()
+                try? modelContext.save()
+                performFiltering()
             }
         }
     }

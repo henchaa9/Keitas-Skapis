@@ -373,6 +373,8 @@ struct PievienotApgerbuView: View {
             apgerbs.piezimes = apgerbaPiezimes
             apgerbs.krasa = krasa
             apgerbs.stavoklis = apgerbaStavoklis
+            apgerbs.netirs = (apgerbaStavoklis == 1)
+            apgerbs.mazgajas = (apgerbaStavoklis == 2)
             apgerbs.gludinams = apgerbsGludinams
             apgerbs.izmers = apgerbaIzmers
             apgerbs.sezona = Array(apgerbaSezona)
