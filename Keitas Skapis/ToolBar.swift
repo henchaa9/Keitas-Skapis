@@ -45,7 +45,7 @@ struct ToolBar: View {
             .frame(maxWidth: .infinity)
             
             // Favorites Button
-            NavigationLink(destination: Text("Favorites View Coming Soon")) {
+            NavigationLink(destination: FavoritesView()) {
                 VStack {
                     Image(systemName: "heart")
                         .font(.system(size: 24))

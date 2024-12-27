@@ -180,6 +180,7 @@ class Apgerbs: Identifiable, Hashable, Codable {
     @Attribute var mazgajas: Bool
     @Attribute var netirs: Bool
     @Attribute var removeBackground: Bool = false
+    @Attribute var isFavorite: Bool = false 
     @Attribute(.externalStorage) var attels: Data?
 
     @Relationship var kategorijas: [Kategorija] = []
@@ -243,6 +244,13 @@ class Apgerbs: Identifiable, Hashable, Codable {
         }
     }
 
+    func reloadImage() {
+        // Remove from the in-memory cache
+        Apgerbs.imageCache.removeObject(forKey: self.id.uuidString as NSString)
+        
+        // Then call loadImage again to regenerate and re-cache
+        loadImage {_ in}
+    }
 
     
     // Background removal functions
@@ -369,38 +377,6 @@ class Diena: Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(datums, forKey: .datums)
-        try container.encode(piezimes, forKey: .piezimes)
-    }
-}
-
-
-@Model
-class Milakais: Codable {
-    @Attribute var nosaukums: String
-    @Attribute var piezimes: String
-
-    @Relationship var apgerbi: [Apgerbs] = []
-
-    init(nosaukums: String, piezimes: String, apgerbi: [Apgerbs] = []) {
-        self.nosaukums = nosaukums
-        self.piezimes = piezimes
-        self.apgerbi = apgerbi
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case nosaukums, piezimes
-    }
-
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.nosaukums = try container.decode(String.self, forKey: .nosaukums)
-        self.piezimes = try container.decode(String.self, forKey: .piezimes)
-        self.apgerbi = []
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(nosaukums, forKey: .nosaukums)
         try container.encode(piezimes, forKey: .piezimes)
     }
 }

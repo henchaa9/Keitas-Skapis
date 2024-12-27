@@ -17,8 +17,7 @@ struct KeitasSkapisApp: App {
         .modelContainer(for: [
             Kategorija.self,
             Apgerbs.self,
-            Diena.self,
-            Milakais.self
+            Diena.self
         ])
     }
 }

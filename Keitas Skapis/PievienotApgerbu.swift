@@ -420,6 +420,11 @@ struct PievienotApgerbuView: View {
         }
         
         try? modelContext.save()
+        
+        if let apgerbs = existingApgerbs {
+            apgerbs.reloadImage()
+        }
+        
         dismiss()
     }
 

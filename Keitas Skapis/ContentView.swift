@@ -525,12 +525,20 @@ struct ApgerbsDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                // Name
-                Text(apgerbs.nosaukums)
-                    .font(.title)
-                    .bold()
-                    .padding(.top, 20)
-
+                HStack {
+                    Text(apgerbs.nosaukums)
+                        .font(.title)
+                        .bold()
+                        .padding(.top, 20)
+                    
+                    Spacer()
+                    
+                    Button(action: toggleFavorite) {
+                        Image(systemName: apgerbs.isFavorite ? "heart.fill" : "heart")
+                            .foregroundColor(.red).font(.title).padding(.top, 15)
+                    }
+                }
+                
                 // Last Worn
                 Text("Pēdējoreiz vilkts: \(formattedDate(apgerbs.pedejoreizVilkts))")
                     .font(.subheadline)
@@ -636,6 +644,11 @@ struct ApgerbsDetailView: View {
         }
     }
 
+    private func toggleFavorite() {
+        apgerbs.isFavorite.toggle()
+        try? apgerbs.modelContext?.save()
+    }
+    
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -838,7 +851,6 @@ struct FilterSelectionView: View {
         isDirty = nil
     }
 }
-
 
     
 #Preview {
