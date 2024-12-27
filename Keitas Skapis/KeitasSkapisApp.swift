@@ -10,9 +10,12 @@ import SwiftData
 
 @main
 struct KeitasSkapisApp: App {
+    @StateObject private var chosenManager = ChosenManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(chosenManager)
         }
         .modelContainer(for: [
             Kategorija.self,

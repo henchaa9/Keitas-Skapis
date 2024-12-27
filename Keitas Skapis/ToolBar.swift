@@ -8,16 +8,17 @@
 import SwiftUI
 
 struct ToolBar: View {
+    @EnvironmentObject private var chosenManager: ChosenManager
     @State private var showChosenClothesSheet = false
 
     var body: some View {
         HStack {
-            // Chosen Clothes Button
+            // 1) Izvēlētie (Cart) Button
             Button(action: {
-                showChosenClothesSheet.toggle()
+                showChosenClothesSheet = true
             }) {
                 VStack {
-                    Image(systemName: "cart") // Basket Icon
+                    Image(systemName: "cart")
                         .font(.system(size: 24))
                         .foregroundStyle(.black)
                     Text("Izvēlētie")
@@ -26,12 +27,13 @@ struct ToolBar: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            // Show the "IzveletieView" sheet
             .sheet(isPresented: $showChosenClothesSheet) {
-                Text("Chosen Clothes Sheet Coming Soon")
+                IzveletieView()
+                    .environmentObject(chosenManager)
             }
             
-
-            // Calendar Button
+            // 2) Calendar Button
             NavigationLink(destination: Text("Calendar View Coming Soon")) {
                 VStack {
                     Image(systemName: "calendar")
@@ -44,7 +46,7 @@ struct ToolBar: View {
             }
             .frame(maxWidth: .infinity)
             
-            // Favorites Button
+            // 3) Favorites Button
             NavigationLink(destination: FavoritesView()) {
                 VStack {
                     Image(systemName: "heart")
@@ -57,7 +59,7 @@ struct ToolBar: View {
             }
             .frame(maxWidth: .infinity)
 
-            // Dirty Clothes Button
+            // 4) Dirty Clothes Button
             NavigationLink(destination: NetirieApgerbiView()) {
                 VStack {
                     Image(systemName: "washer")
@@ -70,7 +72,7 @@ struct ToolBar: View {
             }
             .frame(maxWidth: .infinity)
 
-            // Settings/Help Button
+            // 5) Settings
             NavigationLink(destination: Text("Settings/Help View Coming Soon")) {
                 VStack {
                     Image(systemName: "gear")
@@ -90,15 +92,5 @@ struct ToolBar: View {
     }
 }
 
-struct ToolBar_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationView {
-            VStack {
-                Spacer()
-                ToolBar()
-            }
-        }
-    }
-}
 
 
