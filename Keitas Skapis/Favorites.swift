@@ -47,16 +47,9 @@ struct FavoritesView: View {
                     Text("Mīļākie")
                         .font(.title)
                         .bold()
-
+                    
                     Spacer()
-
-                    // “Back” button to dismiss
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "arrowshape.left.fill")
-                            .font(.title)
-                            .foregroundStyle(.black)
-                    }
-
+                    
                     // Pencil button if there's a selection
                     if !selectedApgerbsIDs.isEmpty {
                         Button(action: {
@@ -73,6 +66,7 @@ struct FavoritesView: View {
                 }
                 .navigationBarBackButtonHidden(true)
                 .padding()
+                
 
                 // Grid of favorite Apgerbs
                 ScrollView {
@@ -134,6 +128,7 @@ struct FavoritesView: View {
                     }
                 }
             }
+            ToolBar()
             .sheet(isPresented: $showApgerbsDetail) {
                 if let apgerbs = selectedApgerbs {
                     ApgerbsDetailView(

@@ -65,13 +65,6 @@ struct NetirieApgerbiView: View {
                     
                     Spacer()
                     
-                    // “Back” button to dismiss
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "arrowshape.left.fill")
-                            .font(.title)
-                            .foregroundStyle(.black)
-                    }
-                    
                     // Pencil button appears only if some Apgerbs are selected
                     if !selectedApgerbsIDs.isEmpty {
                         Button(action: {
@@ -149,6 +142,7 @@ struct NetirieApgerbiView: View {
                     }
                 }
             }
+            ToolBar()
             
             // Present the Detail Sheet
             .sheet(isPresented: $showApgerbsDetail) {

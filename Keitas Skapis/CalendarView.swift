@@ -10,6 +10,7 @@ import SwiftData
 
 struct CalendarView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) var dismiss
     
     // All saved days
     @Query private var dienas: [Diena]
@@ -27,6 +28,11 @@ struct CalendarView: View {
     var body: some View {
         NavigationStack {
             VStack {
+                HStack {
+                    Text("Kalendārs").font(.title).bold()
+                    Spacer()
+                }.padding()
+                
                 monthHeader
                 LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 7), spacing: 10) {
                     ForEach(daysInDisplayedMonth(), id: \.self) { day in
@@ -37,7 +43,7 @@ struct CalendarView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Kalendārs")
+            ToolBar()
             .sheet(isPresented: $showDaySheet, onDismiss: { selectedDiena = nil }) {
                 if let diena = selectedDiena {
                     DaySheetView(diena: diena)
@@ -45,6 +51,7 @@ struct CalendarView: View {
                     Text("Loading day...") // Fallback
                 }
             }
+            .navigationBarBackButtonHidden(true)
         }
     }
 

@@ -84,7 +84,7 @@ struct ContentView: View {
             VStack {
                 // Header
                 HStack {
-                    Text("Keitas Skapis").font(.title).bold()
+                    Text("Keitas Skapis").font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     Spacer()
                     if !selectedApgerbsIDs.isEmpty {
                         Button(action: {
@@ -96,6 +96,7 @@ struct ContentView: View {
                                 .frame(width: 20, height: 20)
                                 .bold()
                                 .foregroundStyle(.black)
+                                .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         }
                     }
                     
@@ -108,10 +109,22 @@ struct ContentView: View {
                             .frame(width: 20, height: 20)
                             .bold()
                             .foregroundStyle(.black)
+                            .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     }
-                }
-                    .padding()
-                    
+                }.padding().background(Color(.systemGray6)).cornerRadius(12).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+
+                
+                HStack {
+                    Text("Kategorijas").padding(.vertical, 5)
+                        .padding(.horizontal, 10)
+                        .bold()
+                        .background(Color(.white))
+                        .cornerRadius(10)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.black), lineWidth: 1))
+                        .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                    Spacer()
+                }.padding(.leading, 15)
+                
                     // Categories Section
                     ScrollView(.horizontal) {
                         HStack {
@@ -128,15 +141,28 @@ struct ContentView: View {
                                     toggleSelection: toggleKategorijaSelection
                                 )
                             }
-                        }
+                        }.padding(5)
                     }
                     .padding(.horizontal, 10)
+                
+                HStack {
+                    Text("Apģērbi").padding(.vertical, 5)
+                        .padding(.horizontal, 10)
+                        .bold()
+                        .background(Color(.white))
+                        .cornerRadius(10)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.black), lineWidth: 1))
+                        .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                    Spacer()
+                }.padding(.leading, 15)
                     
                     // Search Bar with Filter Button
                     HStack {
                         TextField("Meklēt apģērbu...", text: $searchTextObservable.searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.black), lineWidth: 1))
                             .padding(.horizontal)
+                            .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         
                         Button(action: {
                             showFilterSheet = true
@@ -151,6 +177,7 @@ struct ContentView: View {
                                     .resizable()
                                     .frame(width: 25, height: 20)
                                     .foregroundColor(isFilterActive ? .blue : .black)
+                                    .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                             }
                         }.padding(.trailing)
 
@@ -212,8 +239,10 @@ struct ContentView: View {
                             Text("No Apgerbs Selected")
                         }
                     }
-                }
+            }.background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
                 ToolBar()
+                .background(Color(.systemGray5)).padding(.top, -10)
+                .navigationBarBackButtonHidden(true)
                 .actionSheet(isPresented: $showActionSheet) {
                     switch actionSheetType {
                     case .kategorija:
