@@ -34,7 +34,7 @@ struct ToolBar: View {
             }
             
             // 2) Calendar Button
-            NavigationLink(destination: Text("Calendar View Coming Soon")) {
+            NavigationLink(destination: CalendarView()) {
                 VStack {
                     Image(systemName: "calendar")
                         .font(.system(size: 24))

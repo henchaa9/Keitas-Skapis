@@ -16,6 +16,8 @@ struct IzveletieView: View {
 
     @State private var selectedDate: Date = Date()
     @State private var piezimes: String = ""
+    
+    @Query private var dienas: [Diena]
 
     var body: some View {
         NavigationStack {
@@ -74,21 +76,51 @@ struct IzveletieView: View {
     }
 
     private func apstiprinat() {
-        // Create or fetch a Diena for the chosen date
-        let newDiena = Diena(datums: selectedDate, piezimes: piezimes)
-        // Add the chosen Apgerbs
-        for apgerbs in chosenManager.chosenApgerbi {
-            newDiena.apgerbi.append(apgerbs)
+        // 1) Check if there's a day already in DB for `selectedDate`
+        if let existingDay = dienas.first(where: { sameDate($0.datums, selectedDate) }) {
+            // Add the chosen Apgerbs to the existing day
+            for apg in chosenManager.chosenApgerbi {
+                if !existingDay.apgerbi.contains(apg) {
+                    existingDay.apgerbi.append(apg)
+                }
+                if !apg.dienas.contains(existingDay) {
+                    apg.dienas.append(existingDay)
+                }
+            }
+            
+            // Option A: Overwrite the existing notes with the new text:
+            // existingDay.piezimes = piezimes
+            
+            // Option B: Append the new text if not empty:
+            if !piezimes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                existingDay.piezimes += "\n\(piezimes)"
+            }
+            
+            // Then save
+            try? modelContext.save()
+        }
+        else {
+            // 2) No day exists => create a new one
+            let newDiena = Diena(datums: selectedDate, piezimes: piezimes)
+            
+            for apg in chosenManager.chosenApgerbi {
+                newDiena.apgerbi.append(apg)
+                apg.dienas.append(newDiena)
+            }
+            
+            modelContext.insert(newDiena)
+            try? modelContext.save()
         }
         
-        // Insert + save
-        modelContext.insert(newDiena)
-        try? modelContext.save()
-
-        // Clear + dismiss
+        // 3) Clear the cart + dismiss
         chosenManager.clear()
         dismiss()
     }
+    
+    private func sameDate(_ d1: Date, _ d2: Date) -> Bool {
+        Calendar.current.isDate(d1, inSameDayAs: d2)
+    }
+
 }
 
 
