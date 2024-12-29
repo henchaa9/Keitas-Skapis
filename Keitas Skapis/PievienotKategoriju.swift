@@ -138,6 +138,7 @@ struct PievienotKategorijuView: View {
             }
             .padding(.top, 50)
             .padding(.horizontal, 20)
+            
 
             Spacer()
 
@@ -148,8 +149,7 @@ struct PievienotKategorijuView: View {
                 Spacer()
             }
             .padding()
-        }
-        .preferredColorScheme(.light)
+        }.preferredColorScheme(.light).hideKeyboardOnTap()
     }
 
     func pievienotFoto() {

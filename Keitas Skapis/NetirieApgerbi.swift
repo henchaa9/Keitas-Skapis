@@ -22,8 +22,6 @@ struct NetirieApgerbiView: View {
     @State private var showApgerbsDetail = false
     @State private var selectedApgerbs: Apgerbs?
     @State private var isSelectionModeActive = false
-
-    // 1) Add this state to control navigation to the edit screen:
     @State private var isEditing = false
 
     enum ActionSheetType {
@@ -47,17 +45,15 @@ struct NetirieApgerbiView: View {
                 // Top bar with toggles between "Netīrie" and "Mazgājas"
                 HStack(spacing: 20) {
                     Text("Netīrie")
-                        .font(.title)
+                        .font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         .foregroundColor(showNetirie ? .blue : .primary)
-                        .bold()
                         .onTapGesture {
                             showNetirie = true
                         }
 
                     Text("Mazgājas")
-                        .font(.title)
+                        .font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         .foregroundColor(!showNetirie ? .blue : .primary)
-                        .bold()
                         .onTapGesture {
                             showNetirie = false
                         }
@@ -80,8 +76,13 @@ struct NetirieApgerbiView: View {
                     }
                 }
                 .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1))
+                .padding(.horizontal, 10)
+                .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
-                // Grid of Apgerbi
+                // Grid of Apgerbi using ApgerbsButton
                 ScrollView {
                     ZStack {
                         // Tap on empty space exits selection mode
@@ -99,60 +100,40 @@ struct NetirieApgerbiView: View {
                             spacing: 10
                         ) {
                             ForEach(filteredApgerbi, id: \.id) { apgerbs in
-                                VStack {
-                                    // Show the image
-                                    AsyncImageView(apgerbs: apgerbs)
-                                        .frame(width: 80, height: 80)
-                                        .padding(.top, 5)
-                                        .padding(.bottom, -10)
-                                    
-                                    // Show the title
-                                    Text(apgerbs.nosaukums)
-                                        .frame(width: 80, height: 30)
-                                        .multilineTextAlignment(.center)
-                                }
-                                .frame(width: 90, height: 120)
-                                .background(
-                                    selectedApgerbsIDs.contains(apgerbs.id)
-                                      ? Color.blue.opacity(0.3)
-                                      : Color(.systemGray6)
-                                )
-                                .cornerRadius(8)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    // If in selection mode, toggle selection
-                                    if isSelectionModeActive {
+                                ApgerbsButton(
+                                    apgerbs: apgerbs,
+                                    isSelected: selectedApgerbsIDs.contains(apgerbs.id),
+                                    onTap: {
+                                        if isSelectionModeActive {
+                                            toggleApgerbsSelection(apgerbs)
+                                        } else {
+                                            selectedApgerbs = apgerbs
+                                            showApgerbsDetail = true
+                                        }
+                                    },
+                                    onLongPress: {
+                                        if !isSelectionModeActive {
+                                            isSelectionModeActive = true
+                                        }
                                         toggleApgerbsSelection(apgerbs)
-                                    } else {
-                                        // If not in selection mode, show detail
-                                        selectedApgerbs = apgerbs
-                                        showApgerbsDetail = true
                                     }
-                                }
-                                .onLongPressGesture {
-                                    // Long press enters selection mode if not active, then toggles selection
-                                    if !isSelectionModeActive {
-                                        isSelectionModeActive = true
-                                    }
-                                    toggleApgerbsSelection(apgerbs)
-                                }
+                                )
                             }
                         }
                         .padding()
                     }
                 }
             }
+            .background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
             ToolBar()
-            
-            // Present the Detail Sheet
+            .background(Color(.systemGray5)).padding(.top, -10)
+
+            // Detail Sheet
             .sheet(isPresented: $showApgerbsDetail) {
                 if let apgerbs = selectedApgerbs {
                     ApgerbsDetailView(
                         apgerbs: apgerbs,
                         onEdit: {
-                            // 2) When “Rediģet” is pressed:
-                            // - Close the detail sheet
-                            // - Trigger the `navigationDestination` below
                             showApgerbsDetail = false
                             isEditing = true
                         },
@@ -166,19 +147,17 @@ struct NetirieApgerbiView: View {
                 }
             }
 
-            // 3) Here’s where we push the PievienotApgerbuView
+            // Edit Screen Navigation
             .navigationDestination(isPresented: $isEditing) {
                 if let apgerbs = selectedApgerbs {
                     PievienotApgerbuView(existingApgerbs: apgerbs)
                         .onDisappear {
-                            // Optional cleanup
                             isEditing = false
-                            // selectedApgerbs = nil (if desired)
                         }
                 }
             }
 
-            // Action Sheet for bulk updates or deletion
+            // Action Sheet
             .actionSheet(isPresented: $showActionSheet) {
                 switch actionSheetType {
                 case .apgerbsOptions:
@@ -252,8 +231,7 @@ struct NetirieApgerbiView: View {
                 modelContext.delete(single)
                 try? modelContext.save()
             }
-        }
-        else if !selectedApgerbsIDs.isEmpty {
+        } else if !selectedApgerbsIDs.isEmpty {
             DispatchQueue.main.async {
                 for item in apgerbi where selectedApgerbsIDs.contains(item.id) {
                     modelContext.delete(item)
@@ -263,8 +241,8 @@ struct NetirieApgerbiView: View {
             }
         }
     }
-
 }
+
 
 
 

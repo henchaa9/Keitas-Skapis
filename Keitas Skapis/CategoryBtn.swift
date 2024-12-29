@@ -35,10 +35,10 @@ struct CategoryButton: View {
                 .frame(width: 80, height: 30)
         }
         .frame(width: 90, height: 120)
-        .background(isSelected ? Color.blue.opacity(0.3) : Color(.systemGray5))
+        .background(isSelected ? Color.blue.opacity(0.3) : Color(.white))
         .cornerRadius(8)
         .contentShape(Rectangle()) // Ensures the entire frame is tappable
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray2), lineWidth: 1))
+//        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray2), lineWidth: 1))
         .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
         .onTapGesture {
             toggleSelection(kategorija)

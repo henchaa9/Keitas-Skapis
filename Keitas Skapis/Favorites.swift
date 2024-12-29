@@ -44,9 +44,7 @@ struct FavoritesView: View {
             VStack {
                 // Top bar
                 HStack {
-                    Text("Mīļākie")
-                        .font(.title)
-                        .bold()
+                    Text("Mīļākie").font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     
                     Spacer()
                     
@@ -65,10 +63,10 @@ struct FavoritesView: View {
                     }
                 }
                 .navigationBarBackButtonHidden(true)
-                .padding()
+                .padding().background(Color(.systemGray6)).cornerRadius(12).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 
 
-                // Grid of favorite Apgerbs
+                // Grid of favorite Apgerbs using ApgerbsButton
                 ScrollView {
                     ZStack {
                         // Detect tap on empty space to exit selection
@@ -86,49 +84,33 @@ struct FavoritesView: View {
                             spacing: 10
                         ) {
                             ForEach(favoriteApgerbi, id: \.id) { apgerbs in
-                                VStack {
-                                    // Image
-                                    AsyncImageView(apgerbs: apgerbs)
-                                        .frame(width: 80, height: 80)
-                                        .padding(.top, 5)
-                                        .padding(.bottom, -10)
-
-                                    // Title
-                                    Text(apgerbs.nosaukums)
-                                        .frame(width: 80, height: 30)
-                                        .multilineTextAlignment(.center)
-                                }
-                                .frame(width: 90, height: 120)
-                                .background(
-                                    selectedApgerbsIDs.contains(apgerbs.id)
-                                        ? Color.blue.opacity(0.3)
-                                        : Color(.systemGray6)
-                                )
-                                .cornerRadius(8)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    if isSelectionModeActive {
+                                ApgerbsButton(
+                                    apgerbs: apgerbs,
+                                    isSelected: selectedApgerbsIDs.contains(apgerbs.id),
+                                    onTap: {
+                                        if isSelectionModeActive {
+                                            toggleApgerbsSelection(apgerbs)
+                                        } else {
+                                            selectedApgerbs = apgerbs
+                                            showApgerbsDetail = true
+                                        }
+                                    },
+                                    onLongPress: {
+                                        if !isSelectionModeActive {
+                                            isSelectionModeActive = true
+                                        }
                                         toggleApgerbsSelection(apgerbs)
-                                    } else {
-                                        // Show detail
-                                        selectedApgerbs = apgerbs
-                                        showApgerbsDetail = true
                                     }
-                                }
-                                .onLongPressGesture {
-                                    // Enter selection mode on long press
-                                    if !isSelectionModeActive {
-                                        isSelectionModeActive = true
-                                    }
-                                    toggleApgerbsSelection(apgerbs)
-                                }
+                                )
                             }
                         }
                         .padding()
                     }
                 }
             }
+            .background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
             ToolBar()
+            .background(Color(.systemGray5)).padding(.top, -10)
             .sheet(isPresented: $showApgerbsDetail) {
                 if let apgerbs = selectedApgerbs {
                     ApgerbsDetailView(
@@ -220,9 +202,7 @@ struct FavoritesView: View {
         try? modelContext.save()
     }
 
-    // Delete from the DB (same logic as in NetirieApgerbiView)
     private func deleteSelectedApgerbs(_ singleApgerbs: Apgerbs? = nil) {
-        // Single item deletion
         if let single = singleApgerbs {
             selectedApgerbs = nil
             showApgerbsDetail = false
@@ -230,9 +210,7 @@ struct FavoritesView: View {
                 modelContext.delete(single)
                 try? modelContext.save()
             }
-        }
-        // Bulk deletion
-        else if !selectedApgerbsIDs.isEmpty {
+        } else if !selectedApgerbsIDs.isEmpty {
             DispatchQueue.main.async {
                 for item in favoriteApgerbi where selectedApgerbsIDs.contains(item.id) {
                     modelContext.delete(item)
@@ -243,5 +221,6 @@ struct FavoritesView: View {
         }
     }
 }
+
 
 

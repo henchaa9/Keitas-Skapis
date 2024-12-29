@@ -35,13 +35,17 @@ struct AddApgerbsToDayView: View {
                                     .foregroundColor(.gray)
                             }
                             
+                            Spacer()
+                            
                             // Show some image + name
+                            Text(apgerbs.nosaukums)
+                                .font(.headline)
+                            
+                            Spacer()
+                            
                             AsyncImageView(apgerbs: apgerbs)
                                 .frame(width: 40, height: 40)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                            
-                            Text(apgerbs.nosaukums)
-                                .font(.headline)
                         }
                     }
                 }

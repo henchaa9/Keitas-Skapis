@@ -24,11 +24,8 @@ struct DaySheetView: View {
                     Text(formattedDate(diena.datums))
                 }
                 
-                Section("Piezīmes") {
-                    TextField("Piezīmes", text: $diena.piezimes)
-                }
                 
-                Section("Apģērbi šai dienai") {
+                Section("Apģērbi") {
                     if diena.apgerbi.isEmpty {
                         Text("Nav apģērbu.")
                             .foregroundColor(.gray)
@@ -36,20 +33,26 @@ struct DaySheetView: View {
                         List {
                             ForEach(diena.apgerbi, id: \.id) { apgerbs in
                                 HStack(spacing: 15) {
+                                    Text(apgerbs.nosaukums)
+                                        .font(.headline)
+                                    
+                                    Spacer()
+                                    
                                     AsyncImageView(apgerbs: apgerbs)
                                         .frame(width: 50, height: 50)
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    
-                                    Text(apgerbs.nosaukums)
-                                        .font(.headline)
                                 }
                             }
                             .onDelete { offsets in
                                 removeApgerbs(at: offsets)
                             }
                         }
-                        .frame(minHeight: 100)
+                        .frame(minHeight: 50)
                     }
+                }
+                
+                Section("Piezīmes") {
+                    TextField("Piezīmes", text: $diena.piezimes)
                 }
                 
                 Section {
@@ -58,7 +61,8 @@ struct DaySheetView: View {
                     }
                 }
             }
-            .navigationTitle("Dienas Info")
+            .hideKeyboardOnTap()
+            .navigationTitle("Dienas Pārskats")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Aizvērt") {

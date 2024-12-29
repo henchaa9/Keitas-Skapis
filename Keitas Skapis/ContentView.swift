@@ -158,9 +158,9 @@ struct ContentView: View {
                     
                     // Search Bar with Filter Button
                     HStack {
-                        TextField("Meklēt apģērbu...", text: $searchTextObservable.searchText)
+                        TextField("Meklēt", text: $searchTextObservable.searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.black), lineWidth: 1))
+//                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.black), lineWidth: 1))
                             .padding(.horizontal)
                             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         
@@ -239,7 +239,7 @@ struct ContentView: View {
                             Text("No Apgerbs Selected")
                         }
                     }
-            }.background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
+            }.background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3)).hideKeyboardOnTap()
                 ToolBar()
                 .background(Color(.systemGray5)).padding(.top, -10)
                 .navigationBarBackButtonHidden(true)

@@ -29,21 +29,26 @@ struct CalendarView: View {
         NavigationStack {
             VStack {
                 HStack {
-                    Text("Kalendārs").font(.title).bold()
+                    Text("Kalendārs").font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     Spacer()
-                }.padding()
+                }.padding().background(Color(.systemGray6)).cornerRadius(12).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 
-                monthHeader
-                LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 7), spacing: 10) {
-                    ForEach(daysInDisplayedMonth(), id: \.self) { day in
-                        dayCell(for: day)
+                VStack {
+                    monthHeader.bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                    LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 7), spacing: 10) {
+                        ForEach(daysInDisplayedMonth(), id: \.self) { day in
+                            dayCell(for: day).bold()
+                        }
                     }
-                }
-                .padding(.horizontal)
+                    .padding(.horizontal).padding(.bottom, 5)
+                }.background(Color.white).cornerRadius(10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10)
+
                 
                 Spacer()
-            }
+            }.background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
             ToolBar()
+            .background(Color(.systemGray5)).padding(.top, -10)
             .sheet(isPresented: $showDaySheet, onDismiss: { selectedDiena = nil }) {
                 if let diena = selectedDiena {
                     DaySheetView(diena: diena)

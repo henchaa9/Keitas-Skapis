@@ -48,7 +48,7 @@ struct IzveletieView: View {
                 }
 
                 Section(header: Text("Piezīmes")) {
-                    TextField("Pievieno piezīmes", text: $piezimes)
+                    TextField("Pievienot piezīmes", text: $piezimes)
                 }
 
                 Section {
@@ -57,6 +57,7 @@ struct IzveletieView: View {
                     }
                 }
             }
+            .hideKeyboardOnTap()
             .navigationTitle("Izvēlētie")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

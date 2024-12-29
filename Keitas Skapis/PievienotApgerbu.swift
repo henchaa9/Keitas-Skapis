@@ -128,12 +128,12 @@ struct PievienotApgerbuView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("Pievienot Apģērbu").font(.title).bold()
+                Text("Pievienot Apģērbu").font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 Spacer()
                 Button(action: {dismiss()}) {
-                    Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
+                    Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 }.navigationBarBackButtonHidden(true)
-            }.padding()
+            }.padding().background(Color(.systemGray6)).cornerRadius(12).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
             Spacer()
             ScrollView {
                 VStack (alignment: .leading) {
@@ -161,6 +161,7 @@ struct PievienotApgerbuView: View {
                                 }
                             }
                         }
+                        .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         .confirmationDialog("Pievienot attēlu", isPresented: $showingOption) {
                             Button("Kamera") {
                                 sourceType = .camera
@@ -201,6 +202,7 @@ struct PievienotApgerbuView: View {
                             .padding(10)
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
+                            .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         }
                         
                         if isExpandedKategorijas {
@@ -263,6 +265,7 @@ struct PievienotApgerbuView: View {
                             .padding(10)
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
+                            .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         }
                         
                         if isExpandedSezona {
@@ -308,7 +311,7 @@ struct PievienotApgerbuView: View {
                     
                 }
             }.padding()
-        }.preferredColorScheme(.light)
+        }.background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3)).preferredColorScheme(.light).hideKeyboardOnTap()
     }
     
     private func removeBackground(from image: UIImage) -> UIImage {
