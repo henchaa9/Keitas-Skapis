@@ -76,6 +76,12 @@ struct IzveletieView: View {
     }
 
     private func apstiprinat() {
+        // Check if there are no chosen items and no notes
+        if chosenManager.chosenApgerbi.isEmpty && piezimes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            dismiss()
+            return
+        }
+
         // 1) Check if there's a day already in DB for `selectedDate`
         if let existingDay = dienas.first(where: { sameDate($0.datums, selectedDate) }) {
             // Add the chosen Apgerbs to the existing day
@@ -93,10 +99,7 @@ struct IzveletieView: View {
                 }
             }
 
-            // Option A: Overwrite the existing notes with the new text:
-            // existingDay.piezimes = piezimes
-            
-            // Option B: Append the new text if not empty:
+            // Append the new text to existing notes if not empty
             if !piezimes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 existingDay.piezimes += "\n\(piezimes)"
             }
@@ -127,12 +130,10 @@ struct IzveletieView: View {
         dismiss()
     }
 
-
     
     private func sameDate(_ d1: Date, _ d2: Date) -> Bool {
         Calendar.current.isDate(d1, inSameDayAs: d2)
     }
-
 }
 
 

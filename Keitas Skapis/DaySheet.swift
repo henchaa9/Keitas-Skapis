@@ -24,7 +24,6 @@ struct DaySheetView: View {
                     Text(formattedDate(diena.datums))
                 }
                 
-                
                 Section("Apģērbi") {
                     if diena.apgerbi.isEmpty {
                         Text("Nav apģērbu.")
@@ -77,6 +76,9 @@ struct DaySheetView: View {
             .sheet(isPresented: $showAddApgerbsSheet) {
                 AddApgerbsToDayView(diena: $diena)
             }
+            .onDisappear {
+                saveAndClose() // Autosave when the view disappears
+            }
         }
     }
     
@@ -106,7 +108,6 @@ struct DaySheetView: View {
                 modelContext.delete(diena) // remove empty day
             }
             try? modelContext.save()
-            dismiss()
             return
         }
         
@@ -116,12 +117,9 @@ struct DaySheetView: View {
             try? modelContext.save()
         }
         // If nothing was added, do not insert => no leftover day
-        
-        dismiss()
     }
-
-
 }
+
 
 
 
