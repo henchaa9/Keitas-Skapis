@@ -53,16 +53,12 @@ struct ContentView: View {
     
     @State private var isAddingKategorija = false
     @State private var isAddingApgerbs = false
-    
     @State private var selectedApgerbsIDs: Set<UUID> = [] // Tracks selected Apgerbs
-    
     @State private var showApgerbsDetail = false
-
     @State private var filteredApgerbi: [Apgerbs] = []
-    
     @StateObject private var searchTextObservable = SearchTextObservable()
-    
     @State private var isSelectionModeActive = false
+    @State private var showHelpView = false // State to control the display of HelpView
     
     enum ActionSheetType {
         case apgerbsOptions, kategorija, apgerbs, addOptions
@@ -110,7 +106,23 @@ struct ContentView: View {
                             .bold()
                             .foregroundStyle(.black)
                             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                            .padding(.horizontal, 5)
                     }
+                    
+                    Button(action: {
+                        showHelpView = true
+                    }) {
+                        Image(systemName: "questionmark")
+                            .resizable()
+                            .frame(width: 14, height: 20)
+                            .bold()
+                            .foregroundStyle(.black)
+                            .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                    }
+                    .sheet(isPresented: $showHelpView) {
+                        HelpView()
+                    }
+                    
                 }.padding().background(Color(.systemGray6)).cornerRadius(12).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
                 

@@ -61,7 +61,6 @@ struct DaySheetView: View {
                     }
                 }
             }
-            .hideKeyboardOnTap()
             .navigationTitle("Dienas Pārskats")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

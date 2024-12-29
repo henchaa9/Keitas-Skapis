@@ -22,7 +22,7 @@ struct IzveletieView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Izvēlētie Apģērbi")) {
+                Section(header: Text("Apģērbi")) {
                     if chosenManager.chosenApgerbi.isEmpty {
                         Text("Nav izvēlētu apģērbu.")
                     } else {
@@ -57,8 +57,7 @@ struct IzveletieView: View {
                     }
                 }
             }
-            .hideKeyboardOnTap()
-            .navigationTitle("Izvēlētie")
+            .navigationTitle("Izvēlētie apģērbi")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Aizvērt") {
@@ -87,8 +86,13 @@ struct IzveletieView: View {
                 if !apg.dienas.contains(existingDay) {
                     apg.dienas.append(existingDay)
                 }
+
+                // Update `pedejoreizVilkts` if the selected date is later
+                if selectedDate > apg.pedejoreizVilkts {
+                    apg.pedejoreizVilkts = selectedDate
+                }
             }
-            
+
             // Option A: Overwrite the existing notes with the new text:
             // existingDay.piezimes = piezimes
             
@@ -96,19 +100,24 @@ struct IzveletieView: View {
             if !piezimes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 existingDay.piezimes += "\n\(piezimes)"
             }
-            
-            // Then save
+
+            // Save changes
             try? modelContext.save()
-        }
-        else {
+        } else {
             // 2) No day exists => create a new one
             let newDiena = Diena(datums: selectedDate, piezimes: piezimes)
             
             for apg in chosenManager.chosenApgerbi {
                 newDiena.apgerbi.append(apg)
                 apg.dienas.append(newDiena)
+
+                // Update `pedejoreizVilkts` if the selected date is later
+                if selectedDate > apg.pedejoreizVilkts {
+                    apg.pedejoreizVilkts = selectedDate
+                }
             }
             
+            // Insert the new day into the model context and save
             modelContext.insert(newDiena)
             try? modelContext.save()
         }
@@ -117,6 +126,8 @@ struct IzveletieView: View {
         chosenManager.clear()
         dismiss()
     }
+
+
     
     private func sameDate(_ d1: Date, _ d2: Date) -> Bool {
         Calendar.current.isDate(d1, inSameDayAs: d2)
