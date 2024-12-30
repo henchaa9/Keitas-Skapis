@@ -22,7 +22,7 @@ struct IzveletieView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Apģērbi")) {
+                Section("") {
                     if chosenManager.chosenApgerbi.isEmpty {
                         Text("Nav izvēlētu apģērbu.")
                     } else {
@@ -43,20 +43,22 @@ struct IzveletieView: View {
                     }
                 }
 
-                Section(header: Text("Datums")) {
+                Section {
                     DatePicker("Izvēlēties datumu", selection: $selectedDate, displayedComponents: .date)
                 }
 
-                Section(header: Text("Piezīmes")) {
+                Section("Piezīmes") {
                     TextField("Pievienot piezīmes", text: $piezimes)
                 }
 
-                Section {
-                    Button("Apstiprināt") {
-                        apstiprinat()
-                    }
-                }
+                Button {
+                    apstiprinat()
+                } label: {
+                    Text("Apstiprināt").frame(maxWidth: .infinity)
+                }.shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                
             }
+            .hideKeyboardOnTap()
             .navigationTitle("Izvēlētie apģērbi")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

@@ -51,14 +51,20 @@ struct DaySheetView: View {
                 }
                 
                 Section("Piezīmes") {
-                    TextField("Piezīmes", text: $diena.piezimes)
+                    TextField("Pievienot piezīmes", text: $diena.piezimes)
                 }
                 
-                Section {
-                    Button("Pievienot Apģērbu") {
-                        showAddApgerbsSheet = true
-                    }
-                }
+//                Section {
+//                    Button("Pievienot Apģērbu") {
+//                        showAddApgerbsSheet = true
+//                    }
+//                }
+                Button {
+                    showAddApgerbsSheet = true
+                } label: {
+                    Text("Pievienot Apģērbu").frame(maxWidth: .infinity)
+                }.shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                
             }
             .navigationTitle("Dienas Pārskats")
             .toolbar {

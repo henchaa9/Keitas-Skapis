@@ -137,7 +137,6 @@ struct PievienotApgerbuView: View {
             Spacer()
             ScrollView {
                 VStack (alignment: .leading) {
-                    
                     VStack (alignment: .leading) {
                         Button(action: pievienotFoto) {
                             ZStack {
@@ -188,8 +187,8 @@ struct PievienotApgerbuView: View {
                         }
 
                     
-                    TextField("Nosaukums", text: $apgerbaNosaukums).textFieldStyle(.roundedBorder).padding(.top, 20)
-                    TextField("Piezīmes", text: $apgerbaPiezimes).textFieldStyle(.roundedBorder).padding(.top, 10)
+                    TextField("Nosaukums", text: $apgerbaNosaukums).textFieldStyle(.roundedBorder).padding(.top, 20).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                    TextField("Piezīmes", text: $apgerbaPiezimes).textFieldStyle(.roundedBorder).padding(.top, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     
                     
                     VStack(alignment: .leading) {
@@ -302,16 +301,27 @@ struct PievienotApgerbuView: View {
                         Text("Gludināms")
                     }.padding(.top, 15).padding(.horizontal, 5)
                     
-                    HStack {
-                        Button (action: apstiprinat) {
-                            Text("Apstiprināt").bold()
-                        }
-                        Spacer()
-                    }.padding(.top, 20).padding(.leading, 5)
+//                    HStack {
+//                        Button (action: apstiprinat) {
+//                            Text("Apstiprināt").bold()
+//                        }
+//                        Spacer()
+//                    }.padding(.top, 20).padding(.leading, 5)
                     
-                }
-            }.padding()
-        }.background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3)).preferredColorScheme(.light).hideKeyboardOnTap()
+                    Button {
+                        apstiprinat()
+                    } label: {
+                        Text("Apstiprināt")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(.white)
+                            .foregroundColor(.blue)
+                            .cornerRadius(10)
+                    }.shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2).padding(.vertical, 15).padding(.horizontal, 5)
+                    
+                }.padding(20)
+            }
+        }.preferredColorScheme(.light).hideKeyboardOnTap()
     }
     
     private func removeBackground(from image: UIImage) -> UIImage {

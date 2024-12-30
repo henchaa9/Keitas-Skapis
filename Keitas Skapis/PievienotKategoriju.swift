@@ -82,13 +82,12 @@ struct PievienotKategorijuView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("Pievienot Kategoriju").font(.title).bold()
+                Text("Pievienot Kategoriju").font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 Spacer()
                 Button(action: { dismiss() }) {
                     Image(systemName: "arrowshape.left.fill").font(.title).foregroundStyle(.black)
                 }.navigationBarBackButtonHidden(true)
-            }
-            .padding()
+            }.padding().background(Color(.systemGray6)).cornerRadius(12).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
             VStack(alignment: .leading) {
                 Button(action: pievienotFoto) {
@@ -112,6 +111,7 @@ struct PievienotKategorijuView: View {
                         }
                     }
                 }
+                .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 .confirmationDialog("Pievienot attēlu", isPresented: $showingOption) {
                     Button("Kamera") {
                         sourceType = .camera
@@ -135,6 +135,7 @@ struct PievienotKategorijuView: View {
                 TextField("Nosaukums", text: $kategorijasNosaukums)
                     .textFieldStyle(.roundedBorder)
                     .padding(.top, 20)
+                    .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
             }
             .padding(.top, 50)
             .padding(.horizontal, 20)
@@ -142,13 +143,25 @@ struct PievienotKategorijuView: View {
 
             Spacer()
 
-            HStack {
-                Button(action: apstiprinat) {
-                    Text("Apstiprināt").bold()
-                }
-                Spacer()
-            }
-            .padding()
+//            HStack {
+//                Button(action: apstiprinat) {
+//                    Text("Apstiprināt").bold()
+//                }
+//                Spacer()
+//            }
+//            .padding()
+            
+            Button {
+                apstiprinat()
+            } label: {
+                Text("Apstiprināt")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(.white)
+                    .foregroundColor(.blue)
+                    .cornerRadius(10)
+            }.shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2).padding(.vertical, 15).padding(.horizontal, 20)
+            
         }.preferredColorScheme(.light).hideKeyboardOnTap()
     }
 
