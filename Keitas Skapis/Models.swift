@@ -182,7 +182,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
     @Attribute(.externalStorage) var picture: Data?
 
     @Relationship var clothingItemCategories: [ClothingCategory] = []
-    @Relationship var clothingItemDays: [Day] = []
+    @Relationship(inverse: \Day.dayClothingItems) var clothingItemDays: [Day] = []
     
     static var imageCache = NSCache<NSString, UIImage>()
 
@@ -307,7 +307,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, notes, color, status, ironable, size, season, lastWorn, washing, dirty, picture, removeBackground
+        case id, name, notes, color, status, ironable, size, season, lastWorn, washing, dirty, picture, removeBackground, clothingItemDays
     }
 
     required init(from decoder: Decoder) throws {
@@ -344,12 +344,14 @@ class ClothingItem: Identifiable, Hashable, Codable {
         try container.encode(dirty, forKey: .dirty)
         try container.encodeIfPresent(picture, forKey: .picture)
         try container.encode(removeBackground, forKey: .removeBackground)
+        try container.encode(clothingItemDays, forKey: .clothingItemDays)
     }
 }
 
 
 @Model
 class Day: Codable {
+    @Attribute var id: UUID = UUID()
     @Attribute var date: Date
     @Attribute var notes: String
 
@@ -362,11 +364,12 @@ class Day: Codable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case date, notes
+        case id, date, notes, dayClothingItems
     }
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
         self.date = try container.decode(Date.self, forKey: .date)
         self.notes = try container.decode(String.self, forKey: .notes)
         self.dayClothingItems = []
@@ -374,8 +377,10 @@ class Day: Codable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
         try container.encode(date, forKey: .date)
         try container.encode(notes, forKey: .notes)
+        try container.encode(dayClothingItems, forKey: .dayClothingItems)
     }
 }
 
