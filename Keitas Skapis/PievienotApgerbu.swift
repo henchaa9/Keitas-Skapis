@@ -12,44 +12,31 @@ import Vision
 
 struct PievienotApgerbuView: View {
     
-    @Query private var kategorijas: [Kategorija]
-    @Query private var apgerbi: [Apgerbs]
+    @Query private var categories: [ClothingCategory]
+    @Query private var clothingItems: [ClothingItem]
     
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
-    
-    @State var apgerbaNosaukums = ""
-    @State var apgerbaPiezimes = ""
-    
-    @State private var isExpandedKategorijas = false
-    @State private var isExpandedSezona = false
-
-    @State var apgerbaKategorijas: Set<Kategorija> = []
-    
-    @State var izveletaKrasa: Color = .white
-    @State var apgerbaKrasa: Krasa?
-    
-    @State var apgerbaStavoklis = 0
-    @State var apgerbsGludinams = true
-    @State var apgerbaIzmers = 0
-    
-    let sezonaIzvele = [Sezona.vasara, Sezona.rudens, Sezona.ziema, Sezona.pavasaris]
-    @State var apgerbaSezona: Set<Sezona> = []
-    
-    
-    @State var apgerbsPedejoreizVilkts = Date.now
-    
-    // foto pievienosanai
+    @State var clothingItemName = ""
+    @State var clothingItemNotes = ""
+    @State private var isExpandedCategories = false
+    @State private var isExpandedSeason = false
+    @State var clothingItemCategories: Set<ClothingCategory> = []
+    @State var chosenColor: Color = .white
+    @State var clothingItemColor: CustomColor?
+    @State var clothingItemStatus = 0
+    @State var clothingItemIronable = true
+    @State var clothingItemSize = 0
+    let seasonChoise = [Season.summer, Season.fall, Season.winter, Season.spring]
+    @State var clothingItemSeason: Set<Season> = []
+    @State var clothingItemLastWorn = Date.now
     @State private var selectedImage: UIImage?
     @State private var isPickerPresented = false
     @State private var sourceType: UIImagePickerController.SourceType?
-    
     @State private var showingOption = false
-    
     @State private var removeBackground = false // User preference for background removal
     @State private var backgroundRemovedImage: UIImage? // Stores the image with background removed
-
-    var existingApgerbs: Apgerbs?
+    var existingClothingItem: ClothingItem?
     
     var displayedImage: UIImage? {
         if removeBackground {
@@ -59,23 +46,23 @@ struct PievienotApgerbuView: View {
     }
 
     
-    init(existingApgerbs: Apgerbs? = nil) {
-        self.existingApgerbs = existingApgerbs
-        if let apgerbs = existingApgerbs {
-            _apgerbaNosaukums = State(initialValue: apgerbs.nosaukums)
-            _apgerbaPiezimes = State(initialValue: apgerbs.piezimes)
-            _apgerbaKategorijas = State(initialValue: Set(apgerbs.kategorijas))
-            _izveletaKrasa = State(initialValue: apgerbs.krasa.color)
-            _apgerbaStavoklis = State(initialValue: apgerbs.netirs ? 1 : (apgerbs.mazgajas ? 2 : 0))
-            _apgerbsGludinams = State(initialValue: apgerbs.gludinams)
-            _apgerbaIzmers = State(initialValue: apgerbs.izmers)
-            _apgerbaSezona = State(initialValue: Set(apgerbs.sezona))
-            _apgerbsPedejoreizVilkts = State(initialValue: apgerbs.pedejoreizVilkts)
-            _removeBackground = State(initialValue: apgerbs.removeBackground)
+    init(existingClothingItem: ClothingItem? = nil) {
+        self.existingClothingItem = existingClothingItem
+        if let item = existingClothingItem {
+            _clothingItemName = State(initialValue: item.name)
+            _clothingItemNotes = State(initialValue: item.notes)
+            _clothingItemCategories = State(initialValue: Set(item.clothingItemCategories))
+            _chosenColor = State(initialValue: item.color.color)
+            _clothingItemStatus = State(initialValue: item.dirty ? 1 : (item.washing ? 2 : 0))
+            _clothingItemIronable = State(initialValue: item.ironable)
+            _clothingItemSize = State(initialValue: item.size)
+            _clothingItemSeason = State(initialValue: Set(item.season))
+            _clothingItemLastWorn = State(initialValue: item.lastWorn)
+            _removeBackground = State(initialValue: item.removeBackground)
 
             // Load and process the image
-            if let imageData = apgerbs.attels, let image = UIImage(data: imageData) {
-                if apgerbs.removeBackground {
+            if let imageData = item.picture, let image = UIImage(data: imageData) {
+                if item.removeBackground {
                     _selectedImage = State(initialValue: image)
                     _backgroundRemovedImage = State(initialValue: removeBackground(from: image))
                 } else {
@@ -138,7 +125,7 @@ struct PievienotApgerbuView: View {
             ScrollView {
                 VStack (alignment: .leading) {
                     VStack (alignment: .leading) {
-                        Button(action: pievienotFoto) {
+                        Button(action: addPhoto) {
                             ZStack {
                                 if let displayedImage = displayedImage {
                                     // Display the image dynamically based on the toggle
@@ -187,16 +174,16 @@ struct PievienotApgerbuView: View {
                         }
 
                     
-                    TextField("Nosaukums", text: $apgerbaNosaukums).textFieldStyle(.roundedBorder).padding(.top, 20).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                    TextField("Piezīmes", text: $apgerbaPiezimes).textFieldStyle(.roundedBorder).padding(.top, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                    TextField("Nosaukums", text: $clothingItemName).textFieldStyle(.roundedBorder).padding(.top, 20).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+                    TextField("Piezīmes", text: $clothingItemNotes).textFieldStyle(.roundedBorder).padding(.top, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     
                     
                     VStack(alignment: .leading) {
-                        Button(action: { isExpandedKategorijas.toggle() }) {
+                        Button(action: { isExpandedCategories.toggle() }) {
                             HStack {
                                 Text("Kategorijas").foregroundStyle(.black)
                                 Spacer()
-                                Image(systemName: isExpandedKategorijas ? "chevron.up" : "chevron.down").foregroundStyle(.black)
+                                Image(systemName: isExpandedCategories ? "chevron.up" : "chevron.down").foregroundStyle(.black)
                             }
                             .padding(10)
                             .background(Color(.systemGray6))
@@ -204,22 +191,22 @@ struct PievienotApgerbuView: View {
                             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         }
                         
-                        if isExpandedKategorijas {
+                        if isExpandedCategories {
                             VStack {
-                                ForEach(kategorijas, id: \.self) { kategorija in
+                                ForEach(categories, id: \.self) { category in
                                     HStack {
-                                        Text(kategorija.nosaukums)
+                                        Text(category.name)
                                         Spacer()
-                                        if apgerbaKategorijas.contains(kategorija) {
+                                        if clothingItemCategories.contains(category) {
                                             Image(systemName: "checkmark")
                                         }
                                     }
                                     .padding()
                                     .onTapGesture {
-                                        if apgerbaKategorijas.contains(kategorija) {
-                                            apgerbaKategorijas.remove(kategorija)
+                                        if clothingItemCategories.contains(category) {
+                                            clothingItemCategories.remove(category)
                                         } else {
-                                            apgerbaKategorijas.insert(kategorija)
+                                            clothingItemCategories.insert(category)
                                         }
                                     }
                                 }
@@ -232,14 +219,14 @@ struct PievienotApgerbuView: View {
                     .padding(.top, 10)
                     
                     ColorPicker("Krāsa", selection: Binding(
-                        get: { izveletaKrasa },
-                        set: { jaunaKrasa in
-                            izveletaKrasa = jaunaKrasa
-                            apgerbaKrasa = Krasa(color: jaunaKrasa)
+                        get: { chosenColor },
+                        set: { newColor in
+                            chosenColor = newColor
+                            clothingItemColor = CustomColor(color: newColor)
                         }
                     )).padding(8)
                     
-                    Picker("Izmērs", selection: $apgerbaIzmers) {
+                    Picker("Izmērs", selection: $clothingItemSize) {
                         Text("XS").tag(0)
                         Text("S").tag(1)
                         Text("M").tag(2)
@@ -247,7 +234,7 @@ struct PievienotApgerbuView: View {
                         Text("XL").tag(4)
                     }.pickerStyle(.segmented).padding(.top, 10)
                     
-                    Picker("Stāvoklis", selection: $apgerbaStavoklis) {
+                    Picker("Stāvoklis", selection: $clothingItemStatus) {
                         Text("Tīrs").tag(0)
                         Text("Netīrs").tag(1)
                         Text("Mazgājas").tag(2)
@@ -255,11 +242,11 @@ struct PievienotApgerbuView: View {
                     
                     
                     VStack(alignment: .leading) {
-                        Button(action: { isExpandedSezona.toggle() }) {
+                        Button(action: { isExpandedSeason.toggle() }) {
                             HStack {
                                 Text("Sezona").foregroundStyle(.black)
                                 Spacer()
-                                Image(systemName: isExpandedSezona ? "chevron.up" : "chevron.down").foregroundStyle(.black)
+                                Image(systemName: isExpandedSeason ? "chevron.up" : "chevron.down").foregroundStyle(.black)
                             }
                             .padding(10)
                             .background(Color(.systemGray6))
@@ -267,22 +254,22 @@ struct PievienotApgerbuView: View {
                             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                         }
                         
-                        if isExpandedSezona {
+                        if isExpandedSeason {
                             VStack {
-                                ForEach(sezonaIzvele, id: \.self) { sezona in
+                                ForEach(seasonChoise, id: \.self) { season in
                                     HStack {
-                                        Text(sezona.rawValue)
+                                        Text(season.rawValue)
                                         Spacer()
-                                        if apgerbaSezona.contains(sezona) {
+                                        if clothingItemSeason.contains(season) {
                                             Image(systemName: "checkmark")
                                         }
                                     }
                                     .padding()
                                     .onTapGesture {
-                                        if apgerbaSezona.contains(sezona) {
-                                            apgerbaSezona.remove(sezona)
+                                        if clothingItemSeason.contains(season) {
+                                            clothingItemSeason.remove(season)
                                         } else {
-                                            apgerbaSezona.insert(sezona)
+                                            clothingItemSeason.insert(season)
                                         }
                                     }
                                 }
@@ -295,9 +282,9 @@ struct PievienotApgerbuView: View {
                     .padding(.top, 10)
                     
                     
-                    DatePicker("Pēdējoreiz vilkts", selection: $apgerbsPedejoreizVilkts, displayedComponents: [.date]).padding(.top, 15).padding(.horizontal, 5)
+                    DatePicker("Pēdējoreiz vilkts", selection: $clothingItemLastWorn, displayedComponents: [.date]).padding(.top, 15).padding(.horizontal, 5)
                     
-                    Toggle(isOn: $apgerbsGludinams) {
+                    Toggle(isOn: $clothingItemIronable) {
                         Text("Gludināms")
                     }.padding(.top, 15).padding(.horizontal, 5)
                     
@@ -309,7 +296,7 @@ struct PievienotApgerbuView: View {
 //                    }.padding(.top, 20).padding(.leading, 5)
                     
                     Button {
-                        apstiprinat()
+                        Confirm()
                     } label: {
                         Text("Apstiprināt")
                             .frame(maxWidth: .infinity)
@@ -373,96 +360,86 @@ struct PievienotApgerbuView: View {
     }
 
     
-    func pievienotFoto () {
+    func addPhoto () {
         showingOption = true
     }
     
-    func apstiprinat() {
-        let krasa = Krasa(color: izveletaKrasa)
-        
-        if let apgerbs = existingApgerbs {
+    func Confirm() {
+        let color = CustomColor(color: chosenColor)
+
+        if let clothingItem = existingClothingItem {
             // Update existing item
-            apgerbs.nosaukums = apgerbaNosaukums
-            apgerbs.piezimes = apgerbaPiezimes
-            apgerbs.krasa = krasa
-            apgerbs.stavoklis = apgerbaStavoklis
-            apgerbs.netirs = (apgerbaStavoklis == 1)
-            apgerbs.mazgajas = (apgerbaStavoklis == 2)
-            apgerbs.gludinams = apgerbsGludinams
-            apgerbs.izmers = apgerbaIzmers
-            apgerbs.sezona = Array(apgerbaSezona)
-            apgerbs.pedejoreizVilkts = apgerbsPedejoreizVilkts
-            apgerbs.removeBackground = removeBackground // Save the toggle state
-            
-            if let originalImage = selectedImage, let imageData = originalImage.pngData() {
-                apgerbs.attels = imageData // Save the original image
+            clothingItem.name = clothingItemName
+            clothingItem.notes = clothingItemNotes
+            clothingItem.color = color
+            clothingItem.status = clothingItemStatus
+            clothingItem.dirty = (clothingItemStatus == 1)
+            clothingItem.washing = (clothingItemStatus == 2)
+            clothingItem.ironable = clothingItemIronable
+            clothingItem.size = clothingItemSize
+            clothingItem.season = Array(clothingItemSeason)
+            clothingItem.lastWorn = clothingItemLastWorn
+
+            // Save image
+            if let originalImage = displayedImage, let imageData = originalImage.pngData() {
+                clothingItem.picture = imageData
             }
-            
-            // Update Kategorijas relationships
-            updateKategorijaRelationships(for: apgerbs, newKategorijas: Array(apgerbaKategorijas))
         } else {
-            // Create a new item
-            let jaunsApgerbs = Apgerbs(
-                nosaukums: apgerbaNosaukums,
-                piezimes: apgerbaPiezimes,
-                krasa: krasa,
-                stavoklis: apgerbaStavoklis,
-                gludinams: apgerbsGludinams,
-                sezona: Array(apgerbaSezona),
-                izmers: apgerbaIzmers,
-                pedejoreizVilkts: apgerbsPedejoreizVilkts,
-                netirs: apgerbaStavoklis == 1,
-                mazgajas: apgerbaStavoklis == 2
+            // Create new item
+            let newClothingItem = ClothingItem(
+                name: clothingItemName,
+                notes: clothingItemNotes,
+                color: color,
+                status: clothingItemStatus,
+                ironable: clothingItemIronable,
+                season: Array(clothingItemSeason),
+                size: clothingItemSize,
+                lastWorn: clothingItemLastWorn,
+                dirty: clothingItemStatus == 1,
+                washing: clothingItemStatus == 2
             )
-            jaunsApgerbs.removeBackground = removeBackground // Save the toggle state
-            
-            if let originalImage = selectedImage, let imageData = originalImage.pngData() {
-                jaunsApgerbs.attels = imageData // Save the original image
+
+            // Save image
+            if let originalImage = displayedImage, let imageData = originalImage.pngData() {
+                newClothingItem.picture = imageData
             }
-            
-            // Establish relationships
-            jaunsApgerbs.kategorijas = Array(apgerbaKategorijas)
-            for kategorija in apgerbaKategorijas {
-                if !kategorija.apgerbi.contains(jaunsApgerbs) {
-                    kategorija.apgerbi.append(jaunsApgerbs)
-                }
-            }
-            
-            // Insert new item into the model context
-            modelContext.insert(jaunsApgerbs)
+
+            // Insert into model
+            modelContext.insert(newClothingItem)
         }
-        
-        try? modelContext.save()
-        
-        if let apgerbs = existingApgerbs {
-            apgerbs.reloadImage()
+
+        // Save changes
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            print("Failed to save clothing item: \(error)")
         }
-        
-        dismiss()
     }
 
 
-    private func updateKategorijaRelationships(for apgerbs: Apgerbs, newKategorijas: [Kategorija]) {
+
+    private func updateKategorijaRelationships(for clothingItem: ClothingItem, newCategories: [ClothingCategory]) {
         // Remove Apgerbs from old Kategorijas
-        for kategorija in apgerbs.kategorijas {
-            kategorija.apgerbi.removeAll { $0 == apgerbs }
+        for category in clothingItem.clothingItemCategories {
+            category.categoryClothingItems.removeAll { $0 == clothingItem }
         }
         
         // Assign new Kategorijas and update their Apgerbi
-        apgerbs.kategorijas = newKategorijas
-        for kategorija in newKategorijas {
-            if !kategorija.apgerbi.contains(apgerbs) {
-                kategorija.apgerbi.append(apgerbs)
+        clothingItem.clothingItemCategories = newCategories
+        for category in newCategories {
+            if !category.categoryClothingItems.contains(clothingItem) {
+                category.categoryClothingItems.append(clothingItem)
             }
         }
     }
 
     
-    private func atjaunotSezonu(izveletaSezona: Sezona, izvele: Bool) {
-        if izvele {
-            apgerbaSezona.insert(izveletaSezona)
+    private func atjaunotSezonu(chosenSeason: Season, choice: Bool) {
+        if choice {
+            clothingItemSeason.insert(chosenSeason)
         } else {
-            apgerbaSezona.remove(izveletaSezona)
+            clothingItemSeason.remove(chosenSeason)
         }
     }
 }

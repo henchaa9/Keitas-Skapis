@@ -13,12 +13,12 @@ struct CalendarView: View {
     @Environment(\.dismiss) var dismiss
     
     // All saved days
-    @Query private var dienas: [Diena]
+    @Query private var days: [Day]
     
     @State private var displayedMonth: Date = Date()
     
     // The chosen day to show in a sheet
-    @State private var selectedDiena: Diena?
+    @State private var selectedDay: Day?
     @State private var showDaySheet = false
     
     @State private var isTapLocked = false
@@ -49,9 +49,9 @@ struct CalendarView: View {
             }.background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
             ToolBar()
             .background(Color(.systemGray5)).padding(.top, -10)
-            .sheet(isPresented: $showDaySheet, onDismiss: { selectedDiena = nil }) {
-                if let diena = selectedDiena {
-                    DaySheetView(diena: diena)
+            .sheet(isPresented: $showDaySheet, onDismiss: { selectedDay = nil }) {
+                if let day = selectedDay {
+                    DaySheetView(day: day)
                 } else {
                     Text("Loading day...") // Fallback
                 }
@@ -79,7 +79,7 @@ struct CalendarView: View {
 
     // MARK: - Day Cell
     private func dayCell(for date: Date) -> some View {
-        let existingDiena = dienas.first { calendar.isDate($0.datums, inSameDayAs: date) }
+        let existingDiena = days.first { calendar.isDate($0.date, inSameDayAs: date) }
 
         return Button {
             // 1) If we’re already locked, ignore quick taps
@@ -89,12 +89,12 @@ struct CalendarView: View {
             // 2) Actually do your dayCell logic
             if let found = existingDiena {
                 // Use existing
-                selectedDiena = found
+                selectedDay = found
             } else {
                 // Create ephemeral, in-memory
-                let tmpDay = Diena(datums: date, piezimes: "")
+                let tmpDay = Day(date: date, notes: "")
                 // DON’T insert or save yet
-                selectedDiena = tmpDay
+                selectedDay = tmpDay
             }
             showDaySheet = true
 

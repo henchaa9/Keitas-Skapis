@@ -18,9 +18,9 @@ struct KeitasSkapisApp: App {
                 .environmentObject(chosenManager)
         }
         .modelContainer(for: [
-            Kategorija.self,
-            Apgerbs.self,
-            Diena.self
+            ClothingCategory.self,
+            ClothingItem.self,
+            Day.self
         ])
     }
 }

@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct CategoryButton: View {
-    let kategorija: Kategorija
+    let clothingCategory: ClothingCategory
     let isSelected: Bool
-    let onLongPress: (Kategorija) -> Void
-    let toggleSelection: (Kategorija) -> Void
+    let onLongPress: (ClothingCategory) -> Void
+    let toggleSelection: (ClothingCategory) -> Void
 
     var body: some View {
         VStack {
-            if let image = kategorija.displayedImage {
+            if let image = clothingCategory.displayedImage {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
@@ -31,7 +31,7 @@ struct CategoryButton: View {
                     .padding(.bottom, 10)
             }
 
-            Text(kategorija.nosaukums)
+            Text(clothingCategory.name)
                 .frame(width: 80, height: 30)
         }
         .frame(width: 90, height: 120)
@@ -41,11 +41,11 @@ struct CategoryButton: View {
 //        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray2), lineWidth: 1))
         .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
         .onTapGesture {
-            toggleSelection(kategorija)
+            toggleSelection(clothingCategory)
         }
         .simultaneousGesture(
             LongPressGesture().onEnded { _ in
-                onLongPress(kategorija)
+                onLongPress(clothingCategory)
             }
         )
     }

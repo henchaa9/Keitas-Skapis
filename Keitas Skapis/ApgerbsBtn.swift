@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ApgerbsButton: View {
-    let apgerbs: Apgerbs
+    let clothingItem: ClothingItem
     let isSelected: Bool
     let onTap: () -> Void
     let onLongPress: () -> Void
@@ -33,7 +33,7 @@ struct ApgerbsButton: View {
                     .padding(.bottom, 10)
             }
 
-            Text(apgerbs.nosaukums)
+            Text(clothingItem.name)
                 .frame(width: 80, height: 30)
                 .multilineTextAlignment(.center)
         }
@@ -55,7 +55,7 @@ struct ApgerbsButton: View {
     }
 
     private func loadImage() {
-        apgerbs.loadImage { loadedImage in
+        clothingItem.loadImage { loadedImage in
             self.image = loadedImage
         }
     }

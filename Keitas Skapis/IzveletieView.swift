@@ -15,26 +15,26 @@ struct IzveletieView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedDate: Date = Date()
-    @State private var piezimes: String = ""
+    @State private var notes: String = ""
     
-    @Query private var dienas: [Diena]
+    @Query private var days: [Day]
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("") {
-                    if chosenManager.chosenApgerbi.isEmpty {
+                    if chosenManager.chosenClothingItems.isEmpty {
                         Text("Nav izvēlētu apģērbu.")
                     } else {
                         // Display each chosen Apgerbs with image + name in an HStack
-                        ForEach(chosenManager.chosenApgerbi, id: \.id) { apgerbs in
+                        ForEach(chosenManager.chosenClothingItems, id: \.id) { clothingItem in
                             HStack(spacing: 15) {
-                                Text(apgerbs.nosaukums)
+                                Text(clothingItem.name)
                                     .font(.headline)
                                 
                                 Spacer()
                                 
-                                AsyncImageView(apgerbs: apgerbs)
+                                AsyncImageView(clothingItem: clothingItem)
                                     .frame(width: 50, height: 50)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
@@ -48,17 +48,16 @@ struct IzveletieView: View {
                 }
 
                 Section("Piezīmes") {
-                    TextField("Pievienot piezīmes", text: $piezimes)
+                    TextField("Pievienot piezīmes", text: $notes)
                 }
-
-                Button {
-                    apstiprinat()
-                } label: {
-                    Text("Apstiprināt").frame(maxWidth: .infinity)
-                }.shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 
+                Button {
+                    Confirm()
+                } label: {
+                    Text("Apstiprināt")
+                }.shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2).frame(maxWidth: .infinity)
+
             }
-            .hideKeyboardOnTap()
             .navigationTitle("Izvēlētie apģērbi")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -72,65 +71,59 @@ struct IzveletieView: View {
 
     private func removeFromChosen(at offsets: IndexSet) {
         for index in offsets {
-            let apgerbs = chosenManager.chosenApgerbi[index]
-            chosenManager.remove(apgerbs)
+            let clothingItem = chosenManager.chosenClothingItems[index]
+            chosenManager.remove(clothingItem)
         }
     }
+    
 
-    private func apstiprinat() {
-        // Check if there are no chosen items and no notes
-        if chosenManager.chosenApgerbi.isEmpty && piezimes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+    private func Confirm() {
+        guard !chosenManager.chosenClothingItems.isEmpty || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             dismiss()
             return
         }
 
-        // 1) Check if there's a day already in DB for `selectedDate`
-        if let existingDay = dienas.first(where: { sameDate($0.datums, selectedDate) }) {
-            // Add the chosen Apgerbs to the existing day
-            for apg in chosenManager.chosenApgerbi {
-                if !existingDay.apgerbi.contains(apg) {
-                    existingDay.apgerbi.append(apg)
-                }
-                if !apg.dienas.contains(existingDay) {
-                    apg.dienas.append(existingDay)
-                }
-
-                // Update `pedejoreizVilkts` if the selected date is later
-                if selectedDate > apg.pedejoreizVilkts {
-                    apg.pedejoreizVilkts = selectedDate
-                }
-            }
-
-            // Append the new text to existing notes if not empty
-            if !piezimes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                existingDay.piezimes += "\n\(piezimes)"
-            }
-
-            // Save changes
-            try? modelContext.save()
+        let currentDay: Day
+        if let existingDay = days.first(where: { sameDate($0.date, selectedDate) }) {
+            currentDay = existingDay
         } else {
-            // 2) No day exists => create a new one
-            let newDiena = Diena(datums: selectedDate, piezimes: piezimes)
-            
-            for apg in chosenManager.chosenApgerbi {
-                newDiena.apgerbi.append(apg)
-                apg.dienas.append(newDiena)
-
-                // Update `pedejoreizVilkts` if the selected date is later
-                if selectedDate > apg.pedejoreizVilkts {
-                    apg.pedejoreizVilkts = selectedDate
-                }
-            }
-            
-            // Insert the new day into the model context and save
-            modelContext.insert(newDiena)
-            try? modelContext.save()
+            let newDay = Day(date: selectedDate, notes: notes)
+            modelContext.insert(newDay) // Insert new day into context
+            try? modelContext.save()   // Save immediately to assign an ID
+            currentDay = newDay
         }
-        
-        // 3) Clear the cart + dismiss
-        chosenManager.clear()
-        dismiss()
+
+        // Add chosen clothing items and update relationships
+        for item in chosenManager.chosenClothingItems {
+            if !currentDay.dayClothingItems.contains(item) {
+                currentDay.dayClothingItems.append(item)
+            }
+            if !item.clothingItemDays.contains(currentDay) {
+                item.clothingItemDays.append(currentDay)
+            }
+
+            // Update `lastWorn` only if the date is today or earlier
+            if selectedDate <= Date() {
+                item.lastWorn = max(item.lastWorn, selectedDate)
+            }
+        }
+
+        // Add notes to the day
+        if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            currentDay.notes += currentDay.notes.isEmpty ? notes : "\n\(notes)"
+        }
+
+        // Save changes
+        do {
+            try modelContext.save()
+            chosenManager.clear()
+            dismiss()
+        } catch {
+            print("Failed to save changes: \(error)")
+        }
     }
+
+
 
     
     private func sameDate(_ d1: Date, _ d2: Date) -> Bool {

@@ -28,40 +28,40 @@ class SearchTextObservable: ObservableObject {
 
 
 struct ContentView: View {
-    @Query private var kategorijas: [Kategorija]
-    @Query private var apgerbi: [Apgerbs]
+    @Query private var clothingCategories: [ClothingCategory]
+    @Query private var clothingItems: [ClothingItem]
     @Environment(\.modelContext) private var modelContext
 
-    @State private var selectedKategorijas: Set<UUID> = [] // Tracks selected Kategorijas
+    @State private var selectedCategories: Set<UUID> = [] // Tracks selected Kategorijas
     @State private var searchText: String = ""
     @State private var showFilterSheet = false
     @State private var showActionSheet = false
     @State private var actionSheetType: ActionSheetType?
     @State private var isEditing = false
 
-    @State private var selectedKategorija: Kategorija? // For long-press actions
-    @State private var selectedApgerbs: Apgerbs? // For long-press actions
+    @State private var selectedCategory: ClothingCategory? // For long-press actions
+    @State private var selectedClothingItem: ClothingItem? // For long-press actions
 
-    @State private var selectedColors: Set<Krasa> = []
+    @State private var selectedColors: Set<CustomColor> = []
     @State private var selectedSizes: Set<Int> = [] // Multiple sizes
-    @State private var selectedSeasons: Set<Sezona> = []
+    @State private var selectedSeasons: Set<Season> = []
     @State private var selectedLastWorn: Date? = nil
     @State private var isIronable: Bool? = nil
-    @State private var isLaundering: Bool? = nil
+    @State private var isWashing: Bool? = nil
     @State private var isDirty: Bool? = nil
-    @State private var allColors: [Krasa] = [] // Caches colors from unfiltered Apgerbs
+    @State private var allColors: [CustomColor] = [] // Caches colors from unfiltered Apgerbs
     
-    @State private var isAddingKategorija = false
-    @State private var isAddingApgerbs = false
-    @State private var selectedApgerbsIDs: Set<UUID> = [] // Tracks selected Apgerbs
-    @State private var showApgerbsDetail = false
-    @State private var filteredApgerbi: [Apgerbs] = []
+    @State private var isAddingCategory = false
+    @State private var isAddingClothingItem = false
+    @State private var selectedClothingItemsIDs: Set<UUID> = [] // Tracks selected Apgerbs
+    @State private var showClothingItemDetail = false
+    @State private var filteredClothingItems: [ClothingItem] = []
     @StateObject private var searchTextObservable = SearchTextObservable()
     @State private var isSelectionModeActive = false
     @State private var showHelpView = false // State to control the display of HelpView
     
     enum ActionSheetType {
-        case apgerbsOptions, kategorija, apgerbs, addOptions
+        case clothingItemOptions, category, clothingItem, addOptions
     }
     
     var isFilterActive: Bool {
@@ -70,7 +70,7 @@ struct ContentView: View {
         !selectedSeasons.isEmpty ||
         selectedLastWorn != nil ||
         isIronable != nil ||
-        isLaundering != nil ||
+        isWashing != nil ||
         isDirty != nil
     }
 
@@ -82,9 +82,9 @@ struct ContentView: View {
                 HStack {
                     Text("Keitas Skapis").font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     Spacer()
-                    if !selectedApgerbsIDs.isEmpty {
+                    if !selectedClothingItemsIDs.isEmpty {
                         Button(action: {
-                            actionSheetType = .apgerbsOptions
+                            actionSheetType = .clothingItemOptions
                             showActionSheet = true
                         }) {
                             Image(systemName: "pencil")
@@ -140,17 +140,17 @@ struct ContentView: View {
                     // Categories Section
                     ScrollView(.horizontal) {
                         HStack {
-                            ForEach(kategorijas, id: \.id) { kategorija in
+                            ForEach(clothingCategories, id: \.id) { category in
                                 CategoryButton(
-                                    kategorija: kategorija,
-                                    isSelected: selectedKategorijas.contains(kategorija.id),
+                                    clothingCategory: category,
+                                    isSelected: selectedCategories.contains(category.id),
                                     onLongPress: { selected in
-                                        selectedKategorija = selected
-                                        selectedApgerbs = nil // Reset other selection
-                                        actionSheetType = .kategorija
+                                        selectedCategory = selected
+                                        selectedClothingItem = nil // Reset other selection
+                                        actionSheetType = .category
                                         showActionSheet = true
                                     },
-                                    toggleSelection: toggleKategorijaSelection
+                                    toggleSelection: toggleCategorySelection
                                 )
                             }
                         }.padding(5)
@@ -204,29 +204,29 @@ struct ContentView: View {
                                 .onTapGesture {
                                     if isSelectionModeActive {
                                         isSelectionModeActive = false
-                                        selectedApgerbsIDs.removeAll()
+                                        selectedClothingItemsIDs.removeAll()
                                     }
                                 }
 
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
-                                ForEach(filteredApgerbi, id: \.id) { apgerbs in
+                                ForEach(filteredClothingItems, id: \.id) { item in
                                     ApgerbsButton(
-                                        apgerbs: apgerbs,
-                                        isSelected: selectedApgerbsIDs.contains(apgerbs.id),
+                                        clothingItem: item,
+                                        isSelected: selectedClothingItemsIDs.contains(item.id),
                                         onTap: {
                                             if isSelectionModeActive {
-                                                toggleApgerbsSelection(apgerbs)
+                                                toggleClothingItemSelection(item)
                                             } else {
                                                 // Show detail when not in selection mode
-                                                selectedApgerbs = apgerbs
-                                                showApgerbsDetail = true
+                                                selectedClothingItem = item
+                                                showClothingItemDetail = true
                                             }
                                         },
                                         onLongPress: {
                                             if !isSelectionModeActive {
                                                 isSelectionModeActive = true
                                             }
-                                            toggleApgerbsSelection(apgerbs)
+                                            toggleClothingItemSelection(item)
                                         }
                                     )
                                 }
@@ -234,17 +234,17 @@ struct ContentView: View {
                             .padding()
                         }
                     }
-                    .sheet(isPresented: $showApgerbsDetail) {
-                        if let apgerbs = selectedApgerbs {
+                    .sheet(isPresented: $showClothingItemDetail) {
+                        if let item = selectedClothingItem {
                             ApgerbsDetailView(
-                                apgerbs: apgerbs,
+                                clothingItem: item,
                                 onEdit: {
                                     isEditing = true
-                                    showApgerbsDetail = false
+                                    showClothingItemDetail = false
                                 },
                                 onDelete: {
-                                    deleteSelectedApgerbs()
-                                    showApgerbsDetail = false
+                                    deleteSelectedClothingItem()
+                                    showClothingItemDetail = false
                                 }
                             )
                         } else {
@@ -256,18 +256,7 @@ struct ContentView: View {
                 .background(Color(.systemGray5)).padding(.top, -10)
                 .navigationBarBackButtonHidden(true)
                 .actionSheet(isPresented: $showActionSheet) {
-                    switch actionSheetType {
-                    case .kategorija:
-                        return kategorijaActionSheet()
-                    case .apgerbs:
-                        return apgerbsActionSheet()
-                    case .addOptions:
-                        return addOptionsActionSheet()
-                    case .apgerbsOptions:
-                        return apgerbsActionSheet()
-                    case .none:
-                        return ActionSheet(title: Text("No Action"))
-                    }
+                    getActionSheet()
                 }
                 .sheet(isPresented: $showFilterSheet) {
                     FilterSelectionView(
@@ -276,36 +265,36 @@ struct ContentView: View {
                         selectedSeasons: $selectedSeasons,
                         selectedLastWorn: $selectedLastWorn,
                         isIronable: $isIronable,
-                        isLaundering: $isLaundering,
+                        isWashing: $isWashing,
                         isDirty: $isDirty,
-                        allColors: allColors // Pass cached colors
+                        allColors: allColors
                     )
                 }
-                .navigationDestination(isPresented: $isAddingKategorija) {
+                .navigationDestination(isPresented: $isAddingCategory) {
                     PievienotKategorijuView()
                 }
-                .navigationDestination(isPresented: $isAddingApgerbs) {
+                .navigationDestination(isPresented: $isAddingClothingItem) {
                     PievienotApgerbuView()
                 }
                 .navigationDestination(isPresented: $isEditing) {
-                    if let kategorija = selectedKategorija {
-                        PievienotKategorijuView(existingKategorija: kategorija)
+                    if let category = selectedCategory {
+                        PievienotKategorijuView(existingCategory: category)
                             .onDisappear {
                                 isEditing = false
-                                selectedKategorija = nil
+                                selectedCategory = nil
                             }
-                    } else if let apgerbs = selectedApgerbs {
-                        PievienotApgerbuView(existingApgerbs: apgerbs)
+                    } else if let item = selectedClothingItem {
+                        PievienotApgerbuView(existingClothingItem: item)
                             .onDisappear {
                                 isEditing = false
-                                selectedApgerbs = nil
+                                selectedClothingItem = nil
                             }
                     }
                 }
                 .onChange(of: searchTextObservable.debouncedSearchText) { oldValue, newValue in
                     performFiltering()
                 }
-                .onChange(of: selectedKategorijas) { oldValue, newValue in
+                .onChange(of: selectedCategories) { oldValue, newValue in
                     performFiltering()
                 }
                 .onChange(of: selectedColors) { oldValue, newValue in
@@ -323,37 +312,53 @@ struct ContentView: View {
                 .onChange(of: isIronable) { oldValue, newValue in
                     performFiltering()
                 }
-                .onChange(of: isLaundering) { oldValue, newValue in
+                .onChange(of: isWashing) { oldValue, newValue in
                     performFiltering()
                 }
                 .onChange(of: isDirty) { oldValue, newValue in
                     performFiltering()
                 }
                 .onAppear {
-                    allColors = Array(Set(apgerbi.map { $0.krasa }))
-                    // Apply any active filters
+                    allColors = Array(Set(clothingItems.map { $0.color }))
                     performFiltering()
                 }
                 .preferredColorScheme(.light)
             }
         }
+    
+    
+    private func getActionSheet() -> ActionSheet {
+        switch actionSheetType {
+        case .category:
+            return categoryActionSheet()
+        case .clothingItem:
+            return clothingItemActionSheet()
+        case .addOptions:
+            return addOptionsActionSheet()
+        case .clothingItemOptions:
+            return clothingItemActionSheet()
+        case .none:
+            return ActionSheet(title: Text("No Action"))
+        }
+    }
+
 
     func performFiltering() {
         DispatchQueue.global(qos: .userInitiated).async {
-            let result = apgerbi.filter { apgerbs in
+            let result = clothingItems.filter { item in
                 // Your existing filtering conditions
-                (selectedKategorijas.isEmpty || apgerbs.kategorijas.contains { selectedKategorijas.contains($0.id) }) &&
-                (selectedColors.isEmpty || selectedColors.contains(apgerbs.krasa)) &&
-                (selectedSizes.isEmpty || selectedSizes.contains(apgerbs.izmers)) &&
-                (selectedSeasons.isEmpty || !Set(apgerbs.sezona).intersection(selectedSeasons).isEmpty) &&
-                (selectedLastWorn == nil || apgerbs.pedejoreizVilkts <= selectedLastWorn!) &&
-                (isIronable == nil || apgerbs.gludinams == isIronable) &&
-                (isLaundering == nil || apgerbs.mazgajas == isLaundering) &&
-                (isDirty == nil || apgerbs.netirs == isDirty) &&
-                (searchTextObservable.debouncedSearchText.isEmpty || apgerbs.nosaukums.localizedCaseInsensitiveContains(searchTextObservable.debouncedSearchText))
+                (selectedCategories.isEmpty || item.clothingItemCategories.contains { selectedCategories.contains($0.id) }) &&
+                (selectedColors.isEmpty || selectedColors.contains(item.color)) &&
+                (selectedSizes.isEmpty || selectedSizes.contains(item.size)) &&
+                (selectedSeasons.isEmpty || !Set(item.season).intersection(selectedSeasons).isEmpty) &&
+                (selectedLastWorn == nil || item.lastWorn <= selectedLastWorn!) &&
+                (isIronable == nil || item.ironable == isIronable) &&
+                (isWashing == nil || item.washing == isWashing) &&
+                (isDirty == nil || item.dirty == isDirty) &&
+                (searchTextObservable.debouncedSearchText.isEmpty || item.name.localizedCaseInsensitiveContains(searchTextObservable.debouncedSearchText))
             }
             DispatchQueue.main.async {
-                self.filteredApgerbi = result
+                self.filteredClothingItems = result
             }
         }
     }
@@ -364,10 +369,10 @@ struct ContentView: View {
             title: Text("Pievienot"),
             buttons: [
                 .default(Text("Pievienot apģērbu")) {
-                    isAddingApgerbs = true
+                    isAddingClothingItem = true
                 },
                 .default(Text("Pievienot kategoriju")) {
-                    isAddingKategorija = true
+                    isAddingCategory = true
                 },
                 .cancel(Text("Atcelt"))
             ]
@@ -375,107 +380,107 @@ struct ContentView: View {
     }
 
 
-    private func kategorijaActionSheet() -> ActionSheet {
+    private func categoryActionSheet() -> ActionSheet {
         ActionSheet(
-            title: Text("Pārvaldīt \(selectedKategorija?.nosaukums ?? "")"),
-            message: Text("Šī kategorija satur \(selectedKategorija?.apgerbi.count ?? 0) apģērbu(s)."),
+            title: Text("Pārvaldīt \(selectedCategory?.name ?? "")"),
+            message: Text("Šī kategorija satur \(selectedCategory?.categoryClothingItems.count ?? 0) apģērbu(s)."),
             buttons: [
                 .default(Text("Rediģēt")) {
                     isEditing = true
                 },
                 .default(Text("Dzēst tikai kategoriju")) {
-                    removeKategorijaOnly()
+                    removeCategoryOnly()
                 },
                 .destructive(Text("Dzēst kategoriju un apģērbus")) {
-                    deleteKategorijaAndItems()
+                    deleteCategoryAndItems()
                 },
                 .cancel()
             ]
         )
     }
 
-    private func apgerbsActionSheet() -> ActionSheet {
+    private func clothingItemActionSheet() -> ActionSheet {
         ActionSheet(
             title: Text("Pārvaldīt apģērbus"),
             buttons: [
                 .default(Text("Mainīt uz Tīrs")) {
-                    updateApgerbsStatus(to: "tirs")
+                    updateClothingItemStatus(to: "tirs")
                 },
                 .default(Text("Mainīt uz Netīrs")) {
-                    updateApgerbsStatus(to: "netirs")
+                    updateClothingItemStatus(to: "netirs")
                 },
                 .default(Text("Mainīt uz Mazgājas")) {
-                    updateApgerbsStatus(to: "mazgajas")
+                    updateClothingItemStatus(to: "mazgajas")
                 },
                 .destructive(Text("Dzēst")) {
-                    deleteSelectedApgerbs()
+                    deleteSelectedClothingItem()
                 },
                 .cancel()
             ]
         )
     }
 
-    private func toggleApgerbsSelection(_ apgerbs: Apgerbs) {
-        if selectedApgerbsIDs.contains(apgerbs.id) {
-            selectedApgerbsIDs.remove(apgerbs.id)
+    private func toggleClothingItemSelection(_ clothingItem: ClothingItem) {
+        if selectedClothingItemsIDs.contains(clothingItem.id) {
+            selectedClothingItemsIDs.remove(clothingItem.id)
         } else {
-            selectedApgerbsIDs.insert(apgerbs.id)
+            selectedClothingItemsIDs.insert(clothingItem.id)
         }
 
         // Exit selection mode if no items remain selected
-        if selectedApgerbsIDs.isEmpty {
+        if selectedClothingItemsIDs.isEmpty {
             isSelectionModeActive = false
         }
     }
 
 
-    private func updateApgerbsStatus(to status: String) {
-        for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
+    private func updateClothingItemStatus(to status: String) {
+        for item in clothingItems where selectedClothingItemsIDs.contains(item.id) {
             switch status {
             case "tirs":
-                apgerbs.netirs = false
-                apgerbs.mazgajas = false
+                item.dirty = false
+                item.washing = false
             case "netirs":
-                apgerbs.netirs = true
-                apgerbs.mazgajas = false
+                item.dirty = true
+                item.washing = false
             case "mazgajas":
-                apgerbs.netirs = false
-                apgerbs.mazgajas = true
+                item.dirty = false
+                item.washing = true
             default:
                 break
             }
         }
-        selectedApgerbsIDs.removeAll()
+        selectedClothingItemsIDs.removeAll()
         try? modelContext.save()   
     }
 
 
-    private func removeKategorijaOnly() {
-        if let kategorija = selectedKategorija {
-            for apgerbs in kategorija.apgerbi {
-                apgerbs.kategorijas.removeAll { $0 == kategorija }
+    private func removeCategoryOnly() {
+        if let category = selectedCategory {
+            for item in category.categoryClothingItems {
+                item.clothingItemCategories.removeAll { $0 == category }
             }
-            modelContext.delete(kategorija)
-            selectedKategorija = nil
+            modelContext.delete(category)
+            selectedCategory = nil
         }
     }
 
-    private func deleteKategorijaAndItems() {
-        if let kategorija = selectedKategorija {
-            for apgerbs in kategorija.apgerbi {
-                modelContext.delete(apgerbs)
+    private func deleteCategoryAndItems() {
+        if let category = selectedCategory {
+            for item in category.categoryClothingItems {
+                modelContext.delete(item)
             }
-            modelContext.delete(kategorija)
-            selectedKategorija = nil
+            modelContext.delete(category)
+            selectedCategory = nil
         }
     }
 
-    private func deleteSelectedApgerbs() {
+    private func deleteSelectedClothingItem() {
         // 1) If we came from the detail view (one item)
-        if let single = selectedApgerbs {
+        if let single = selectedClothingItem {
             // Clear single selection + dismiss
-            selectedApgerbs = nil
-            showApgerbsDetail = false
+            selectedClothingItem = nil
+            showClothingItemDetail = false
 
             // Delete just that one
             DispatchQueue.main.async {
@@ -485,13 +490,13 @@ struct ContentView: View {
             }
         }
         // 2) Otherwise, if we have multi-selections:
-        else if !selectedApgerbsIDs.isEmpty {
+        else if !selectedClothingItemsIDs.isEmpty {
             DispatchQueue.main.async {
                 // Loop all Apgerbs in query, delete if in selected set
-                for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
-                    modelContext.delete(apgerbs)
+                for item in clothingItems where selectedClothingItemsIDs.contains(item.id) {
+                    modelContext.delete(item)
                 }
-                selectedApgerbsIDs.removeAll()
+                selectedClothingItemsIDs.removeAll()
                 try? modelContext.save()
                 performFiltering()
             }
@@ -500,11 +505,11 @@ struct ContentView: View {
 
 
     // Toggle Kategorija Selection
-    private func toggleKategorijaSelection(_ kategorija: Kategorija) {
-        if selectedKategorijas.contains(kategorija.id) {
-            selectedKategorijas.remove(kategorija.id)
+    private func toggleCategorySelection(_ kategorija: ClothingCategory) {
+        if selectedCategories.contains(kategorija.id) {
+            selectedCategories.remove(kategorija.id)
         } else {
-            selectedKategorijas.insert(kategorija.id)
+            selectedCategories.insert(kategorija.id)
         }
     }
 }
@@ -512,15 +517,15 @@ struct ContentView: View {
 class ImageLoader: ObservableObject {
     @Published var image: UIImage?
 
-    private let apgerbs: Apgerbs
+    private let clothingItem: ClothingItem
 
-    init(apgerbs: Apgerbs) {
-        self.apgerbs = apgerbs
+    init(clothingItem: ClothingItem) {
+        self.clothingItem = clothingItem
         self.loadImage()
     }
 
     func loadImage() {
-        apgerbs.loadImage { [weak self] loadedImage in
+        clothingItem.loadImage { [weak self] loadedImage in
             self?.image = loadedImage
         }
     }
@@ -530,8 +535,8 @@ class ImageLoader: ObservableObject {
 struct AsyncImageView: View {
     @ObservedObject private var loader: ImageLoader
 
-    init(apgerbs: Apgerbs) {
-        self.loader = ImageLoader(apgerbs: apgerbs)
+    init(clothingItem: ClothingItem) {
+        self.loader = ImageLoader(clothingItem: clothingItem)
     }
 
     var body: some View {
@@ -546,164 +551,4 @@ struct AsyncImageView: View {
             }
         }
     }
-}
-
-
-
-
-struct FilterSelectionView: View {
-    @Binding var selectedColors: Set<Krasa> // For color filtering
-    @Binding var selectedSizes: Set<Int> // For size filtering
-    @Binding var selectedSeasons: Set<Sezona> // For season filtering
-    @Binding var selectedLastWorn: Date? // For last worn filtering
-    @Binding var isIronable: Bool? // For `gludinams`
-    @Binding var isLaundering: Bool? // For `mazgajas`
-    @Binding var isDirty: Bool? // For `netirs`
-
-    let allColors: [Krasa] // Static list of colors based on unfiltered Apgerbs
-    let allSizes = ["XS", "S", "M", "L", "XL"]
-    let allSeasons = Sezona.allCases
-
-    @Environment(\.dismiss) var dismiss
-    @State private var isSeasonDropdownExpanded = false
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                // Colors Filter
-                Section(header: Text("Krāsa")) {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 40))]) {
-                        ForEach(allColors, id: \.self) { color in
-                            Circle()
-                                .fill(color.color)
-                                .frame(width: 40, height: 40)
-                                .overlay(
-                                    Circle()
-                                        .stroke(selectedColors.contains(color) ? Color.blue : Color.black, lineWidth: selectedColors.contains(color) ? 3 : 1)
-
-                                )
-                                
-                                .onTapGesture {
-                                    toggleColorSelection(color)
-                                }
-                        }
-                    }
-                }
-
-                // Size Filter
-                Section(header: Text("Izmērs")) {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))]) {
-                        ForEach(0..<allSizes.count, id: \.self) { index in
-                            Text(allSizes[index])
-                                .frame(width: 50, height: 30)
-                                .background(selectedSizes.contains(index) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.2))
-                                .cornerRadius(8)
-                                .onTapGesture {
-                                    toggleSizeSelection(index)
-                                }
-                        }
-                    }
-                }
-
-                // Seasons Filter (Dropdown)
-                Section(header: Text("Sezona")) {
-                    DisclosureGroup(isExpanded: $isSeasonDropdownExpanded) {
-                        ForEach(allSeasons, id: \.self) { season in
-                            Toggle(season.rawValue, isOn: Binding(
-                                get: { selectedSeasons.contains(season) },
-                                set: { isSelected in toggleSeasonSelection(season, isSelected: isSelected) }
-                            ))
-                        }
-                    } label: {
-                        Text("Izvēlieties sezonu")
-                    }
-                }
-
-                // Last Worn Filter
-                Section(header: Text("Pēdējoreiz vilkts")) {
-                    DatePicker("Vilkts pirms", selection: Binding(
-                        get: { selectedLastWorn ?? Date() },
-                        set: { newValue in selectedLastWorn = newValue }
-                    ), displayedComponents: .date)
-                }
-
-                // Laundering and Dirty Filters
-                Section(header: Text("Apģērba stāvoklis")) {
-                    Toggle("Gludināms", isOn: Binding(
-                        get: { isIronable ?? false },
-                        set: { newValue in isIronable = newValue }
-                    ))
-                    Toggle("Mazgājas", isOn: Binding(
-                        get: { isLaundering ?? false },
-                        set: { newValue in isLaundering = newValue }
-                    ))
-                    Toggle("Netīrs", isOn: Binding(
-                        get: { isDirty ?? false },
-                        set: { newValue in isDirty = newValue }
-                    ))
-                }
-
-                // Clear Filters Button
-                Section {
-                    Button(action: clearFilters) {
-                        Text("Notīrīt filtrus")
-                            .foregroundColor(.red)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
-            }
-            .navigationTitle("Filtri")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Aizvērt") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Pielietot") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-
-    private func toggleColorSelection(_ color: Krasa) {
-        if selectedColors.contains(color) {
-            selectedColors.remove(color)
-        } else {
-            selectedColors.insert(color)
-        }
-    }
-
-    private func toggleSizeSelection(_ size: Int) {
-        if selectedSizes.contains(size) {
-            selectedSizes.remove(size)
-        } else {
-            selectedSizes.insert(size)
-        }
-    }
-
-    private func toggleSeasonSelection(_ season: Sezona, isSelected: Bool) {
-        if isSelected {
-            selectedSeasons.insert(season)
-        } else {
-            selectedSeasons.remove(season)
-        }
-    }
-
-    private func clearFilters() {
-        selectedColors.removeAll()
-        selectedSizes.removeAll()
-        selectedSeasons.removeAll()
-        selectedLastWorn = nil
-        isIronable = nil
-        isLaundering = nil
-        isDirty = nil
-    }
-}
-
-    
-#Preview {
-    ContentView()
 }

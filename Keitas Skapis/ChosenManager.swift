@@ -9,20 +9,20 @@ import SwiftUI
 import SwiftData
 
 class ChosenManager: ObservableObject {
-    @Published var chosenApgerbi: [Apgerbs] = []
+    @Published var chosenClothingItems: [ClothingItem] = []
     
-    func add(_ apgerbs: Apgerbs) {
+    func add(_ clothingItem: ClothingItem) {
         // Avoid duplicates
-        if !chosenApgerbi.contains(where: { $0.id == apgerbs.id }) {
-            chosenApgerbi.append(apgerbs)
+        if !chosenClothingItems.contains(where: { $0.id == clothingItem.id }) {
+            chosenClothingItems.append(clothingItem)
         }
     }
 
-    func remove(_ apgerbs: Apgerbs) {
-        chosenApgerbi.removeAll { $0.id == apgerbs.id }
+    func remove(_ clothingItem: ClothingItem) {
+        chosenClothingItems.removeAll { $0.id == clothingItem.id }
     }
 
     func clear() {
-        chosenApgerbi.removeAll()
+        chosenClothingItems.removeAll()
     }
 }

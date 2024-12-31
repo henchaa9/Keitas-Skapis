@@ -9,24 +9,24 @@ import SwiftUI
 import SwiftData
 
 struct ApgerbsDetailView: View {
-    let apgerbs: Apgerbs
+    let clothingItem: ClothingItem
     var onEdit: () -> Void
     var onDelete: () -> Void
 
     @EnvironmentObject private var chosenManager: ChosenManager
-    @State private var selectedStavoklis: String
+    @State private var selectedStatus: String
     @Environment(\.dismiss) var dismiss
     @State private var image: UIImage? // State to hold the loaded image
 
-    init(apgerbs: Apgerbs, onEdit: @escaping () -> Void, onDelete: @escaping () -> Void) {
-        self.apgerbs = apgerbs
+    init(clothingItem: ClothingItem, onEdit: @escaping () -> Void, onDelete: @escaping () -> Void) {
+        self.clothingItem = clothingItem
         self.onEdit = onEdit
         self.onDelete = onDelete
-        _selectedStavoklis = State(initialValue: apgerbs.netirs ? "Netīrs" : (apgerbs.mazgajas ? "Mazgājas" : "Tīrs"))
+        _selectedStatus = State(initialValue: clothingItem.dirty ? "Netīrs" : (clothingItem.washing ? "Mazgājas" : "Tīrs"))
     }
 
     private var isChosen: Bool {
-        chosenManager.chosenApgerbi.contains { $0.id == apgerbs.id }
+        chosenManager.chosenClothingItems.contains { $0.id == clothingItem.id }
     }
     
     var body: some View {
@@ -37,7 +37,7 @@ struct ApgerbsDetailView: View {
                 }
                 
                 HStack {
-                    Text(apgerbs.nosaukums)
+                    Text(clothingItem.name)
                         .font(.title)
                         .bold()
                         .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
@@ -45,14 +45,14 @@ struct ApgerbsDetailView: View {
                     Spacer()
                     
                     Button(action: toggleFavorite) {
-                        Image(systemName: apgerbs.isFavorite ? "heart.fill" : "heart")
+                        Image(systemName: clothingItem.isFavorite ? "heart.fill" : "heart")
                             .foregroundColor(.red).font(.title)
                             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     }
                 }
                 
                 // Last Worn
-                Text("Pēdējoreiz vilkts: \(formattedDate(apgerbs.pedejoreizVilkts))")
+                Text("Pēdējoreiz vilkts: \(formattedDate(clothingItem.lastWorn))")
                     .font(.subheadline)
 
                 // Image or Fallback
@@ -77,9 +77,9 @@ struct ApgerbsDetailView: View {
 
                 Button {
                     if isChosen {
-                        chosenManager.remove(apgerbs)
+                        chosenManager.remove(clothingItem)
                     } else {
-                        chosenManager.add(apgerbs)
+                        chosenManager.add(clothingItem)
                     }
                 } label: {
                     Text(isChosen ? "Izvēlēts" : "Izvēlēties")
@@ -93,27 +93,27 @@ struct ApgerbsDetailView: View {
                 // Stavoklis
                 HStack {
                     Text("Stāvoklis: ").bold()
-                    Text("\(selectedStavoklis)")
+                    Text("\(selectedStatus)")
                         .bold()
-                        .foregroundColor(colorForStavoklis(selectedStavoklis))
+                        .foregroundColor(colorForStatus(selectedStatus))
                 }
                 
-                Picker("Stāvoklis", selection: $selectedStavoklis) {
+                Picker("Stāvoklis", selection: $selectedStatus) {
                     Text("Tīrs").tag("Tīrs")
                     Text("Netīrs").tag("Netīrs")
                     Text("Mazgājas").tag("Mazgājas")
                 }
                 .pickerStyle(SegmentedPickerStyle())
-                .onChange(of: selectedStavoklis) { _, newValue in
-                    updateStavoklis(newValue)
+                .onChange(of: selectedStatus) { _, newValue in
+                    updateStatus(newValue)
                 }
 
                 // Categories
                 Text("Kategorijas")
                     .font(.headline)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 5)], spacing: 5) {
-                    ForEach(apgerbs.kategorijas, id: \.id) { kategorija in
-                        Text(kategorija.nosaukums)
+                    ForEach(clothingItem.clothingItemCategories, id: \.id) { category in
+                        Text(category.name)
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .padding(8)
@@ -127,8 +127,8 @@ struct ApgerbsDetailView: View {
                 Text("Sezonas")
                     .font(.headline)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 5)], spacing: 5) {
-                    ForEach(apgerbs.sezona, id: \.self) { sezona in
-                        Text(sezona.rawValue)
+                    ForEach(clothingItem.season, id: \.self) { season in
+                        Text(season.rawValue)
                             .padding(8)
                             .background(Color.gray.opacity(0.2))
                             .cornerRadius(8)
@@ -140,21 +140,21 @@ struct ApgerbsDetailView: View {
                     HStack {
                         Text("Krāsa: ").bold()
                         Circle()
-                            .fill(apgerbs.krasa.color)
+                            .fill(clothingItem.color.color)
                             .frame(width: 24, height: 24)
                             .overlay(Circle().stroke(Color(.black), lineWidth: 1))
                     }
                     Spacer()
-                    Text("Izmērs: \(sizeLetter(for: apgerbs.izmers))")
+                    Text("Izmērs: \(sizeLetter(for: clothingItem.size))")
                         .bold()
                     Spacer()
-                    Text(apgerbs.gludinams ? "Gludināms" : "Negludināms")
-                        .foregroundColor(apgerbs.gludinams ? .green : .red).bold()
+                    Text(clothingItem.ironable ? "Gludināms" : "Negludināms")
+                        .foregroundColor(clothingItem.ironable ? .green : .red).bold()
                 }
 
                 // Piezīmes
                 Text("Piezīmes").bold()
-                Text(apgerbs.piezimes)
+                Text(clothingItem.notes)
 
                 // Edit and Delete Buttons
                 Button(action: onEdit) {
@@ -184,12 +184,12 @@ struct ApgerbsDetailView: View {
     }
 
     private func toggleFavorite() {
-        apgerbs.isFavorite.toggle()
-        try? apgerbs.modelContext?.save()
+        clothingItem.isFavorite.toggle()
+        try? clothingItem.modelContext?.save()
     }
     
     private func loadImage() {
-        apgerbs.loadImage { loadedImage in
+        clothingItem.loadImage { loadedImage in
             self.image = loadedImage
         }
     }
@@ -211,8 +211,8 @@ struct ApgerbsDetailView: View {
         }
     }
 
-    private func colorForStavoklis(_ stavoklis: String) -> Color {
-        switch stavoklis {
+    private func colorForStatus(_ status: String) -> Color {
+        switch status {
         case "Tīrs":
             return .green
         case "Netīrs":
@@ -224,21 +224,21 @@ struct ApgerbsDetailView: View {
         }
     }
 
-    private func updateStavoklis(_ newValue: String) {
+    private func updateStatus(_ newValue: String) {
         switch newValue {
         case "Tīrs":
-            apgerbs.netirs = false
-            apgerbs.mazgajas = false
+            clothingItem.dirty = false
+            clothingItem.washing = false
         case "Netīrs":
-            apgerbs.netirs = true
-            apgerbs.mazgajas = false
+            clothingItem.dirty = true
+            clothingItem.washing = false
         case "Mazgājas":
-            apgerbs.netirs = false
-            apgerbs.mazgajas = true
+            clothingItem.dirty = false
+            clothingItem.washing = true
         default:
             break
         }
-        try? apgerbs.modelContext?.save()
+        try? clothingItem.modelContext?.save()
     }
 }
 

@@ -13,28 +13,28 @@ struct NetirieApgerbiView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    @Query private var apgerbi: [Apgerbs]
+    @Query private var clothingItems: [ClothingItem]
 
-    @State private var showNetirie = true
-    @State private var selectedApgerbsIDs: Set<UUID> = []
+    @State private var showDirty = true
+    @State private var selectedClothingItemsIDs: Set<UUID> = []
     @State private var showActionSheet = false
     @State private var actionSheetType: ActionSheetType?
-    @State private var showApgerbsDetail = false
-    @State private var selectedApgerbs: Apgerbs?
+    @State private var showClothingItemDetail = false
+    @State private var selectedClothingItem: ClothingItem?
     @State private var isSelectionModeActive = false
     @State private var isEditing = false
 
     enum ActionSheetType {
-        case apgerbsOptions
+        case clothingItemOptions
     }
 
     // Filter the Apgerbs to show either netīrs or mazgājas
-    var filteredApgerbi: [Apgerbs] {
-        apgerbi.filter { item in
-            if showNetirie {
-                return item.netirs == true
+    var filteredClothingItems: [ClothingItem] {
+        clothingItems.filter { item in
+            if showDirty {
+                return item.dirty == true
             } else {
-                return item.mazgajas == true
+                return item.washing == true
             }
         }
     }
@@ -46,25 +46,25 @@ struct NetirieApgerbiView: View {
                 HStack(spacing: 20) {
                     Text("Netīrie")
                         .font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                        .foregroundColor(showNetirie ? .blue : .primary)
+                        .foregroundColor(showDirty ? .blue : .primary)
                         .onTapGesture {
-                            showNetirie = true
+                            showDirty = true
                         }
 
                     Text("Mazgājas")
                         .font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                        .foregroundColor(!showNetirie ? .blue : .primary)
+                        .foregroundColor(!showDirty ? .blue : .primary)
                         .onTapGesture {
-                            showNetirie = false
+                            showDirty = false
                         }
                         .navigationBarBackButtonHidden(true)
                     
                     Spacer()
                     
                     // Pencil button appears only if some Apgerbs are selected
-                    if !selectedApgerbsIDs.isEmpty {
+                    if !selectedClothingItemsIDs.isEmpty {
                         Button(action: {
-                            actionSheetType = .apgerbsOptions
+                            actionSheetType = .clothingItemOptions
                             showActionSheet = true
                         }) {
                             Image(systemName: "pencil")
@@ -91,7 +91,7 @@ struct NetirieApgerbiView: View {
                             .onTapGesture {
                                 if isSelectionModeActive {
                                     isSelectionModeActive = false
-                                    selectedApgerbsIDs.removeAll()
+                                    selectedClothingItemsIDs.removeAll()
                                 }
                             }
                         
@@ -99,23 +99,23 @@ struct NetirieApgerbiView: View {
                             columns: [GridItem(.adaptive(minimum: 90, maximum: 120))],
                             spacing: 10
                         ) {
-                            ForEach(filteredApgerbi, id: \.id) { apgerbs in
+                            ForEach(filteredClothingItems, id: \.id) { item in
                                 ApgerbsButton(
-                                    apgerbs: apgerbs,
-                                    isSelected: selectedApgerbsIDs.contains(apgerbs.id),
+                                    clothingItem: item,
+                                    isSelected: selectedClothingItemsIDs.contains(item.id),
                                     onTap: {
                                         if isSelectionModeActive {
-                                            toggleApgerbsSelection(apgerbs)
+                                            toggleClothingItemSelection(item)
                                         } else {
-                                            selectedApgerbs = apgerbs
-                                            showApgerbsDetail = true
+                                            selectedClothingItem = item
+                                            showClothingItemDetail = true
                                         }
                                     },
                                     onLongPress: {
                                         if !isSelectionModeActive {
                                             isSelectionModeActive = true
                                         }
-                                        toggleApgerbsSelection(apgerbs)
+                                        toggleClothingItemSelection(item)
                                     }
                                 )
                             }
@@ -129,17 +129,17 @@ struct NetirieApgerbiView: View {
             .background(Color(.systemGray5)).padding(.top, -10)
 
             // Detail Sheet
-            .sheet(isPresented: $showApgerbsDetail) {
-                if let apgerbs = selectedApgerbs {
+            .sheet(isPresented: $showClothingItemDetail) {
+                if let item = selectedClothingItem {
                     ApgerbsDetailView(
-                        apgerbs: apgerbs,
+                        clothingItem: item,
                         onEdit: {
-                            showApgerbsDetail = false
+                            showClothingItemDetail = false
                             isEditing = true
                         },
                         onDelete: {
-                            deleteSelectedApgerbs(apgerbs)
-                            showApgerbsDetail = false
+                            deleteSelectedClothingItem(item)
+                            showClothingItemDetail = false
                         }
                     )
                 } else {
@@ -149,8 +149,8 @@ struct NetirieApgerbiView: View {
 
             // Edit Screen Navigation
             .navigationDestination(isPresented: $isEditing) {
-                if let apgerbs = selectedApgerbs {
-                    PievienotApgerbuView(existingApgerbs: apgerbs)
+                if let item = selectedClothingItem {
+                    PievienotApgerbuView(existingClothingItem: item)
                         .onDisappear {
                             isEditing = false
                         }
@@ -160,8 +160,8 @@ struct NetirieApgerbiView: View {
             // Action Sheet
             .actionSheet(isPresented: $showActionSheet) {
                 switch actionSheetType {
-                case .apgerbsOptions:
-                    return apgerbsActionSheet()
+                case .clothingItemOptions:
+                    return clothingItemActionSheet()
                 case .none:
                     return ActionSheet(title: Text("Nav darbību"))
                 }
@@ -170,80 +170,80 @@ struct NetirieApgerbiView: View {
         }
     }
 
-    private func apgerbsActionSheet() -> ActionSheet {
+    private func clothingItemActionSheet() -> ActionSheet {
         ActionSheet(
             title: Text("Pārvaldīt apģērbus"),
             buttons: [
                 .default(Text("Mainīt uz Tīrs")) {
-                    updateApgerbsStatus(to: "tirs")
+                    updateClothingItemStatus(to: "tirs")
                 },
                 .default(Text("Mainīt uz Netīrs")) {
-                    updateApgerbsStatus(to: "netirs")
+                    updateClothingItemStatus(to: "netirs")
                 },
                 .default(Text("Mainīt uz Mazgājas")) {
-                    updateApgerbsStatus(to: "mazgajas")
+                    updateClothingItemStatus(to: "mazgajas")
                 },
                 .destructive(Text("Dzēst")) {
-                    deleteSelectedApgerbs()
+                    deleteSelectedClothingItem()
                 },
                 .cancel()
             ]
         )
     }
 
-    private func toggleApgerbsSelection(_ apgerbs: Apgerbs) {
-        if selectedApgerbsIDs.contains(apgerbs.id) {
-            selectedApgerbsIDs.remove(apgerbs.id)
+    private func toggleClothingItemSelection(_ clothingItem: ClothingItem) {
+        if selectedClothingItemsIDs.contains(clothingItem.id) {
+            selectedClothingItemsIDs.remove(clothingItem.id)
         } else {
-            selectedApgerbsIDs.insert(apgerbs.id)
+            selectedClothingItemsIDs.insert(clothingItem.id)
         }
-        if selectedApgerbsIDs.isEmpty {
+        if selectedClothingItemsIDs.isEmpty {
             isSelectionModeActive = false
         }
     }
 
-    private func updateApgerbsStatus(to status: String) {
-        for apgerbs in apgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
+    private func updateClothingItemStatus(to status: String) {
+        for item in clothingItems where selectedClothingItemsIDs.contains(item.id) {
             switch status {
             case "tirs":
-                apgerbs.netirs = false
-                apgerbs.mazgajas = false
+                item.dirty = false
+                item.washing = false
             case "netirs":
-                apgerbs.netirs = true
-                apgerbs.mazgajas = false
+                item.dirty = true
+                item.washing = false
             case "mazgajas":
-                apgerbs.netirs = false
-                apgerbs.mazgajas = true
+                item.dirty = false
+                item.washing = true
             default:
                 break
             }
         }
-        selectedApgerbsIDs.removeAll()
+        selectedClothingItemsIDs.removeAll()
         try? modelContext.save()
     }
 
-    private func deleteSelectedApgerbs(_ singleApgerbs: Apgerbs? = nil) {
-        if let single = singleApgerbs {
-            selectedApgerbs = nil
-            showApgerbsDetail = false
+    private func deleteSelectedClothingItem(_ singleClothingItem: ClothingItem? = nil) {
+        if let single = singleClothingItem {
+            selectedClothingItem = nil
+            showClothingItemDetail = false
 
             DispatchQueue.main.async {
                 modelContext.delete(single)
                 try? modelContext.save()
+                isSelectionModeActive = false
             }
-        } else if !selectedApgerbsIDs.isEmpty {
+        } else if !selectedClothingItemsIDs.isEmpty {
             DispatchQueue.main.async {
-                for item in apgerbi where selectedApgerbsIDs.contains(item.id) {
+                for item in clothingItems where selectedClothingItemsIDs.contains(item.id) {
                     modelContext.delete(item)
                 }
-                selectedApgerbsIDs.removeAll()
+                selectedClothingItemsIDs.removeAll()
                 try? modelContext.save()
+                isSelectionModeActive = false
             }
         }
     }
 }
-
-
 
 
 #Preview {

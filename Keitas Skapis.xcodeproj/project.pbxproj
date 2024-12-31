@@ -29,6 +29,7 @@
 		2DA6AD392D1F078E0006031A /* ChosenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD382D1F078E0006031A /* ChosenManager.swift */; };
 		2DA6AD3B2D1F07FC0006031A /* ApgerbsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD3A2D1F07FC0006031A /* ApgerbsDetailView.swift */; };
 		2DA6AD3D2D1F09CB0006031A /* IzveletieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD3C2D1F09CB0006031A /* IzveletieView.swift */; };
+		2DF5F7D32D231FF7003559AF /* FilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF5F7D22D231FF7003559AF /* FilterSelectionView.swift */; };
 		2DFC61D72C8360B00019B63D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFC61D62C8360B00019B63D /* ContentView.swift */; };
 		2DFC61D92C8360B10019B63D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2DFC61D82C8360B10019B63D /* Assets.xcassets */; };
 		2DFC61DC2C8360B10019B63D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2DFC61DB2C8360B10019B63D /* Preview Assets.xcassets */; };
@@ -58,6 +59,7 @@
 		2DA6AD382D1F078E0006031A /* ChosenManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChosenManager.swift; sourceTree = "<group>"; };
 		2DA6AD3A2D1F07FC0006031A /* ApgerbsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApgerbsDetailView.swift; sourceTree = "<group>"; };
 		2DA6AD3C2D1F09CB0006031A /* IzveletieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IzveletieView.swift; sourceTree = "<group>"; };
+		2DF5F7D22D231FF7003559AF /* FilterSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterSelectionView.swift; sourceTree = "<group>"; };
 		2DFC61D12C8360B00019B63D /* Keitas Skapis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Keitas Skapis.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DFC61D62C8360B00019B63D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2DFC61D82C8360B10019B63D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				2D8E93152D1FF3F70015422E /* CalendarView.swift */,
 				2D8E93172D1FF4190015422E /* DaySheet.swift */,
 				2D8E931B2D2002F70015422E /* AddApgerbsToDayView.swift */,
+				2DF5F7D22D231FF7003559AF /* FilterSelectionView.swift */,
 				2D83CDFD2D0DB9A7007CF84C /* ApgerbsBtn.swift */,
 				2D83CDFB2D0DB522007CF84C /* CategoryBtn.swift */,
 				2D936A552D08C52C005DBBAE /* NetirieApgerbi.swift */,
@@ -217,6 +220,7 @@
 				2DA6AD392D1F078E0006031A /* ChosenManager.swift in Sources */,
 				2D1AF2F02CB2F59D00388469 /* PievienotKategoriju.swift in Sources */,
 				2D83CDFE2D0DB9A7007CF84C /* ApgerbsBtn.swift in Sources */,
+				2DF5F7D32D231FF7003559AF /* FilterSelectionView.swift in Sources */,
 				2D936A562D08C52C005DBBAE /* NetirieApgerbi.swift in Sources */,
 				2DA6AD3B2D1F07FC0006031A /* ApgerbsDetailView.swift in Sources */,
 				2D8E93182D1FF4190015422E /* DaySheet.swift in Sources */,

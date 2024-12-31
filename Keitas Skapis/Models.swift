@@ -12,27 +12,25 @@ import Vision
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
-
-
 @Model
-class Kategorija: Identifiable, Hashable, Codable {
+class ClothingCategory: Identifiable, Hashable, Codable {
     @Attribute var id: UUID = UUID()
-    @Attribute var nosaukums: String
-    @Attribute(.externalStorage) var attels: Data?
+    @Attribute var name: String
+    @Attribute(.externalStorage) var picture: Data?
     @Attribute var removeBackground: Bool = false
 
-    @Relationship var apgerbi: [Apgerbs] = []
+    @Relationship var categoryClothingItems: [ClothingItem] = []
 
-    init(nosaukums: String = "Jauna Kategorija", attels: Data? = nil, removeBackground: Bool = false) {
-        self.nosaukums = nosaukums
-        self.attels = attels
+    init(name: String = "Jauna Kategorija", picture: Data? = nil, removeBackground: Bool = false) {
+        self.name = name
+        self.picture = picture
         self.removeBackground = removeBackground
     }
 
     // Computed property to get the UIImage from attels
     var image: UIImage? {
-        get { attels.flatMap { UIImage(data: $0) } }
-        set { attels = newValue?.pngData() }
+        get { picture.flatMap { UIImage(data: $0) } }
+        set { picture = newValue?.pngData() }
     }
     
     // Computed property to return the displayed image with or without background
@@ -90,7 +88,7 @@ class Kategorija: Identifiable, Hashable, Codable {
         return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
 
-    static func == (lhs: Kategorija, rhs: Kategorija) -> Bool {
+    static func == (lhs: ClothingCategory, rhs: ClothingCategory) -> Bool {
         lhs.id == rhs.id
     }
 
@@ -100,29 +98,29 @@ class Kategorija: Identifiable, Hashable, Codable {
 
     // Exclude relationships from coding to prevent cyclical references
     enum CodingKeys: String, CodingKey {
-        case id, nosaukums, attels, removeBackground
+        case id, name, picture, removeBackground
     }
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
-        self.nosaukums = try container.decode(String.self, forKey: .nosaukums)
-        self.attels = try container.decodeIfPresent(Data.self, forKey: .attels)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.picture = try container.decodeIfPresent(Data.self, forKey: .picture)
         self.removeBackground = try container.decode(Bool.self, forKey: .removeBackground)
-        self.apgerbi = []
+        self.categoryClothingItems = []
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
-        try container.encode(nosaukums, forKey: .nosaukums)
-        try container.encodeIfPresent(attels, forKey: .attels)
+        try container.encode(name, forKey: .name)
+        try container.encodeIfPresent(picture, forKey: .picture)
         try container.encode(removeBackground, forKey: .removeBackground)
     }
 }
 
 
-struct Krasa: Codable, Hashable {
+struct CustomColor: Codable, Hashable {
     var red: Double
     var green: Double
     var blue: Double
@@ -158,66 +156,66 @@ struct Krasa: Codable, Hashable {
 
 
 
-enum Sezona: String, CaseIterable, Codable {
-    case vasara = "Vasara"
-    case rudens = "Rudens"
-    case ziema = "Ziema"
-    case pavasaris = "Pavasaris"
+enum Season: String, CaseIterable, Codable {
+    case summer = "Vasara"
+    case fall = "Rudens"
+    case winter = "Ziema"
+    case spring = "Pavasaris"
 }
 
 
 @Model
-class Apgerbs: Identifiable, Hashable, Codable {
+class ClothingItem: Identifiable, Hashable, Codable {
     @Attribute var id: UUID = UUID()
-    @Attribute var nosaukums: String
-    @Attribute var piezimes: String
-    @Attribute var krasa: Krasa
-    @Attribute var stavoklis: Int
-    @Attribute var gludinams: Bool
-    @Attribute var izmers: Int
-    @Attribute var sezona: [Sezona]
-    @Attribute var pedejoreizVilkts: Date
-    @Attribute var mazgajas: Bool
-    @Attribute var netirs: Bool
+    @Attribute var name: String
+    @Attribute var notes: String
+    @Attribute var color: CustomColor
+    @Attribute var status: Int
+    @Attribute var ironable: Bool
+    @Attribute var size: Int
+    @Attribute var season: [Season]
+    @Attribute var lastWorn: Date
+    @Attribute var washing: Bool
+    @Attribute var dirty: Bool
     @Attribute var removeBackground: Bool = false
     @Attribute var isFavorite: Bool = false 
-    @Attribute(.externalStorage) var attels: Data?
+    @Attribute(.externalStorage) var picture: Data?
 
-    @Relationship var kategorijas: [Kategorija] = []
-    @Relationship var dienas: [Diena] = []
+    @Relationship var clothingItemCategories: [ClothingCategory] = []
+    @Relationship var clothingItemDays: [Day] = []
     
     static var imageCache = NSCache<NSString, UIImage>()
 
     init(
-        nosaukums: String = "jauns apgerbs",
-        piezimes: String = "",
-        krasa: Krasa,
-        stavoklis: Int = 0,
-        gludinams: Bool = true,
-        sezona: [Sezona] = [],
-        izmers: Int = 0,
-        pedejoreizVilkts: Date = .now,
-        netirs: Bool = false,
-        mazgajas: Bool = false,
-        attels: Data? = nil,
+        name: String = "jauns apgerbs",
+        notes: String = "",
+        color: CustomColor,
+        status: Int = 0,
+        ironable: Bool = true,
+        season: [Season] = [],
+        size: Int = 0,
+        lastWorn: Date = .now,
+        dirty: Bool = false,
+        washing: Bool = false,
+        picture: Data? = nil,
         removeBackground: Bool = false
     ) {
-        self.nosaukums = nosaukums
-        self.piezimes = piezimes
-        self.krasa = krasa
-        self.stavoklis = stavoklis
-        self.gludinams = gludinams
-        self.sezona = sezona
-        self.izmers = izmers
-        self.pedejoreizVilkts = pedejoreizVilkts
-        self.mazgajas = mazgajas
-        self.netirs = netirs
-        self.attels = attels
+        self.name = name
+        self.notes = notes
+        self.color = color
+        self.status = status
+        self.ironable = ironable
+        self.season = season
+        self.size = size
+        self.lastWorn = lastWorn
+        self.washing = washing
+        self.dirty = dirty
+        self.picture = picture
         self.removeBackground = removeBackground
     }
     
     func loadImage(completion: @escaping (UIImage?) -> Void) {
-        if let cachedImage = Apgerbs.imageCache.object(forKey: self.id.uuidString as NSString) {
+        if let cachedImage = ClothingItem.imageCache.object(forKey: self.id.uuidString as NSString) {
             completion(cachedImage)
             return
         }
@@ -225,7 +223,7 @@ class Apgerbs: Identifiable, Hashable, Codable {
         DispatchQueue.global(qos: .background).async {
             var image: UIImage?
 
-            if let attelsData = self.attels, let uiImage = UIImage(data: attelsData) {
+            if let imageData = self.picture, let uiImage = UIImage(data: imageData) {
                 if self.removeBackground {
                     image = self.removeBackground(from: uiImage)
                 } else {
@@ -235,7 +233,7 @@ class Apgerbs: Identifiable, Hashable, Codable {
 
             // Cache the image
             if let imageToCache = image {
-                Apgerbs.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
+                ClothingItem.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
             }
 
             DispatchQueue.main.async {
@@ -246,7 +244,7 @@ class Apgerbs: Identifiable, Hashable, Codable {
 
     func reloadImage() {
         // Remove from the in-memory cache
-        Apgerbs.imageCache.removeObject(forKey: self.id.uuidString as NSString)
+        ClothingItem.imageCache.removeObject(forKey: self.id.uuidString as NSString)
         
         // Then call loadImage again to regenerate and re-cache
         loadImage {_ in}
@@ -300,7 +298,7 @@ class Apgerbs: Identifiable, Hashable, Codable {
         return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
 
-    static func == (lhs: Apgerbs, rhs: Apgerbs) -> Bool {
+    static func == (lhs: ClothingItem, rhs: ClothingItem) -> Bool {
         lhs.id == rhs.id
     }
 
@@ -309,75 +307,75 @@ class Apgerbs: Identifiable, Hashable, Codable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, nosaukums, piezimes, krasa, stavoklis, gludinams, izmers, sezona, pedejoreizVilkts, mazgajas, netirs, attels, removeBackground
+        case id, name, notes, color, status, ironable, size, season, lastWorn, washing, dirty, picture, removeBackground
     }
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
-        self.nosaukums = try container.decode(String.self, forKey: .nosaukums)
-        self.piezimes = try container.decode(String.self, forKey: .piezimes)
-        self.krasa = try container.decode(Krasa.self, forKey: .krasa)
-        self.stavoklis = try container.decode(Int.self, forKey: .stavoklis)
-        self.gludinams = try container.decode(Bool.self, forKey: .gludinams)
-        self.izmers = try container.decode(Int.self, forKey: .izmers)
-        self.sezona = try container.decode([Sezona].self, forKey: .sezona)
-        self.pedejoreizVilkts = try container.decode(Date.self, forKey: .pedejoreizVilkts)
-        self.mazgajas = try container.decode(Bool.self, forKey: .mazgajas)
-        self.netirs = try container.decode(Bool.self, forKey: .netirs)
-        self.attels = try container.decodeIfPresent(Data.self, forKey: .attels)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.notes = try container.decode(String.self, forKey: .notes)
+        self.color = try container.decode(CustomColor.self, forKey: .color)
+        self.status = try container.decode(Int.self, forKey: .status)
+        self.ironable = try container.decode(Bool.self, forKey: .ironable)
+        self.size = try container.decode(Int.self, forKey: .size)
+        self.season = try container.decode([Season].self, forKey: .season)
+        self.lastWorn = try container.decode(Date.self, forKey: .lastWorn)
+        self.washing = try container.decode(Bool.self, forKey: .washing)
+        self.dirty = try container.decode(Bool.self, forKey: .dirty)
+        self.picture = try container.decodeIfPresent(Data.self, forKey: .picture)
         self.removeBackground = try container.decode(Bool.self, forKey: .removeBackground)
-        self.kategorijas = []
-        self.dienas = []
+        self.clothingItemCategories = []
+        self.clothingItemDays = []
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
-        try container.encode(nosaukums, forKey: .nosaukums)
-        try container.encode(piezimes, forKey: .piezimes)
-        try container.encode(krasa, forKey: .krasa)
-        try container.encode(stavoklis, forKey: .stavoklis)
-        try container.encode(gludinams, forKey: .gludinams)
-        try container.encode(izmers, forKey: .izmers)
-        try container.encode(sezona, forKey: .sezona)
-        try container.encode(pedejoreizVilkts, forKey: .pedejoreizVilkts)
-        try container.encode(mazgajas, forKey: .mazgajas)
-        try container.encode(netirs, forKey: .netirs)
-        try container.encodeIfPresent(attels, forKey: .attels)
+        try container.encode(name, forKey: .name)
+        try container.encode(notes, forKey: .notes)
+        try container.encode(color, forKey: .color)
+        try container.encode(status, forKey: .status)
+        try container.encode(ironable, forKey: .ironable)
+        try container.encode(size, forKey: .size)
+        try container.encode(season, forKey: .season)
+        try container.encode(lastWorn, forKey: .lastWorn)
+        try container.encode(washing, forKey: .washing)
+        try container.encode(dirty, forKey: .dirty)
+        try container.encodeIfPresent(picture, forKey: .picture)
         try container.encode(removeBackground, forKey: .removeBackground)
     }
 }
 
 
 @Model
-class Diena: Codable {
-    @Attribute var datums: Date
-    @Attribute var piezimes: String
+class Day: Codable {
+    @Attribute var date: Date
+    @Attribute var notes: String
 
-    @Relationship var apgerbi: [Apgerbs] = []
+    @Relationship var dayClothingItems: [ClothingItem] = []
 
-    init(datums: Date, piezimes: String, apgerbi: [Apgerbs] = []) {
-        self.datums = datums
-        self.piezimes = piezimes
-        self.apgerbi = apgerbi
+    init(date: Date, notes: String, clothingItems: [ClothingItem] = []) {
+        self.date = date
+        self.notes = notes
+        self.dayClothingItems = clothingItems
     }
 
     enum CodingKeys: String, CodingKey {
-        case datums, piezimes
+        case date, notes
     }
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.datums = try container.decode(Date.self, forKey: .datums)
-        self.piezimes = try container.decode(String.self, forKey: .piezimes)
-        self.apgerbi = []
+        self.date = try container.decode(Date.self, forKey: .date)
+        self.notes = try container.decode(String.self, forKey: .notes)
+        self.dayClothingItems = []
     }
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(datums, forKey: .datums)
-        try container.encode(piezimes, forKey: .piezimes)
+        try container.encode(date, forKey: .date)
+        try container.encode(notes, forKey: .notes)
     }
 }
 

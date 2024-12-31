@@ -9,23 +9,23 @@ import SwiftUI
 import SwiftData
 
 struct AddApgerbsToDayView: View {
-    @Binding var diena: Diena
+    @Binding var day: Day
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query private var allApgerbs: [Apgerbs]
+    @Query private var allClothingItems: [ClothingItem]
 
     var body: some View {
         NavigationStack {
             List {
-                ForEach(allApgerbs, id: \.id) { apgerbs in
+                ForEach(allClothingItems, id: \.id) { item in
                     Button {
-                        toggleApgerbs(apgerbs)
+                        toggleClothingItem(item)
                     } label: {
                         HStack {
                             // Indicate if it's in the day
-                            if diena.apgerbi.contains(apgerbs) {
+                            if day.dayClothingItems.contains(item) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundColor(.green)
                             } else {
@@ -36,12 +36,12 @@ struct AddApgerbsToDayView: View {
                             Spacer()
 
                             // Show some image + name
-                            Text(apgerbs.nosaukums)
+                            Text(item.name)
                                 .font(.headline)
 
                             Spacer()
 
-                            AsyncImageView(apgerbs: apgerbs)
+                            AsyncImageView(clothingItem: item)
                                 .frame(width: 40, height: 40)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
@@ -59,26 +59,51 @@ struct AddApgerbsToDayView: View {
         }
     }
 
-    private func toggleApgerbs(_ apgerbs: Apgerbs) {
-        if diena.apgerbi.contains(apgerbs) {
-            // Remove from day
-            diena.apgerbi.removeAll { $0 == apgerbs }
-            apgerbs.dienas.removeAll { $0 == diena }
-        } else {
-            // Add to day
-            diena.apgerbi.append(apgerbs)
-            if !apgerbs.dienas.contains(diena) {
-                apgerbs.dienas.append(diena)
+    private func toggleClothingItem(_ clothingItem: ClothingItem) {
+        if day.dayClothingItems.contains(clothingItem) {
+            // Remove the clothing item from the current day
+            if let index = day.dayClothingItems.firstIndex(where: { $0.id == clothingItem.id }) {
+                day.dayClothingItems.remove(at: index)
             }
 
-            // Update `pedejoreizVilkts` only if the day’s date is later than the current value
-            if diena.datums > apgerbs.pedejoreizVilkts {
-                apgerbs.pedejoreizVilkts = diena.datums
+            // Remove the association with this day from the clothing item
+            if let index = clothingItem.clothingItemDays.firstIndex(where: { $0.id == day.id }) {
+                clothingItem.clothingItemDays.remove(at: index)
+            }
+
+            // Update `lastWorn` after removing the association
+            updateLastWorn(for: clothingItem)
+        } else {
+            // Add the clothing item to the current day
+            if !day.dayClothingItems.contains(clothingItem) {
+                day.dayClothingItems.append(clothingItem)
+            }
+            if !clothingItem.clothingItemDays.contains(day) {
+                clothingItem.clothingItemDays.append(day)
             }
         }
 
         // Save changes
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save changes: \(error)")
+        }
     }
+
+
+    private func updateLastWorn(for clothingItem: ClothingItem) {
+        // Find the latest past or today's date from associated days
+        let validDays = clothingItem.clothingItemDays.filter { $0.date <= Date() }
+        if let latestDay = validDays.max(by: { $0.date < $1.date }) {
+            clothingItem.lastWorn = latestDay.date
+        } else {
+            // Reset `lastWorn` if no valid days remain
+            clothingItem.lastWorn = Date.distantPast
+        }
+    }
+
+
+
 }
 

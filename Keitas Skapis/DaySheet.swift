@@ -10,7 +10,7 @@ import SwiftData
 
 struct DaySheetView: View {
     // The actual Diena object
-    @State var diena: Diena
+    @State var day: Day
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -21,29 +21,29 @@ struct DaySheetView: View {
         NavigationStack {
             Form {
                 Section("Datums") {
-                    Text(formattedDate(diena.datums))
+                    Text(formattedDate(day.date))
                 }
                 
                 Section("Apģērbi") {
-                    if diena.apgerbi.isEmpty {
+                    if day.dayClothingItems.isEmpty {
                         Text("Nav apģērbu.")
                             .foregroundColor(.gray)
                     } else {
                         List {
-                            ForEach(diena.apgerbi, id: \.id) { apgerbs in
+                            ForEach(day.dayClothingItems, id: \.id) { item in
                                 HStack(spacing: 15) {
-                                    Text(apgerbs.nosaukums)
+                                    Text(item.name)
                                         .font(.headline)
                                     
                                     Spacer()
                                     
-                                    AsyncImageView(apgerbs: apgerbs)
+                                    AsyncImageView(clothingItem: item)
                                         .frame(width: 50, height: 50)
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
                                 }
                             }
                             .onDelete { offsets in
-                                removeApgerbs(at: offsets)
+                                removeClothingItem(at: offsets)
                             }
                         }
                         .frame(minHeight: 50)
@@ -51,7 +51,7 @@ struct DaySheetView: View {
                 }
                 
                 Section("Piezīmes") {
-                    TextField("Pievienot piezīmes", text: $diena.piezimes)
+                    TextField("Pievienot piezīmes", text: $day.notes)
                 }
                 
 //                Section {
@@ -80,7 +80,7 @@ struct DaySheetView: View {
                 }
             }
             .sheet(isPresented: $showAddApgerbsSheet) {
-                AddApgerbsToDayView(diena: $diena)
+                AddApgerbsToDayView(day: $day)
             }
             .onDisappear {
                 saveAndClose() // Autosave when the view disappears
@@ -94,35 +94,60 @@ struct DaySheetView: View {
         return fmt.string(from: date)
     }
 
-    private func removeApgerbs(at offsets: IndexSet) {
+    private func removeClothingItem(at offsets: IndexSet) {
         for index in offsets {
-            let apg = diena.apgerbi[index]
-            // 1) remove from day
-            diena.apgerbi.removeAll { $0 == apg }
-            // 2) also remove from apg.dienas to keep the relationship in sync
-            apg.dienas.removeAll { $0 == diena }
+            let item = day.dayClothingItems[index]
+
+            // Remove the item from the current day
+            day.dayClothingItems.removeAll { $0.id == item.id }
+            item.clothingItemDays.removeAll { $0.id == day.id }
+
+            // Update `lastWorn` after removal
+            updateLastWorn(for: item)
+        }
+
+        // Save changes
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save changes: \(error)")
         }
     }
 
+
+    private func updateLastWorn(for clothingItem: ClothingItem) {
+        // Find the latest valid date in the past or today
+        let validDays = clothingItem.clothingItemDays.filter { $0.date <= Date() }
+        if let latestDay = validDays.max(by: { $0.date < $1.date }) {
+            clothingItem.lastWorn = latestDay.date
+        } else {
+            // Reset `lastWorn` if no valid days exist
+            clothingItem.lastWorn = Date.distantPast
+        }
+    }
+
+
     private func saveAndClose() {
-        let hasNotes   = !diena.piezimes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        let hasApgerbi = !diena.apgerbi.isEmpty
+        let hasNotes   = !day.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasClothingItems = !day.dayClothingItems.isEmpty
         
         // If it’s already in DB
-        if diena.modelContext != nil {
-            if !hasNotes && !hasApgerbi {
-                modelContext.delete(diena) // remove empty day
+        if day.modelContext != nil {
+            if !hasNotes && !hasClothingItems {
+                modelContext.delete(day) // remove empty day
             }
             try? modelContext.save()
+            dismiss()
             return
         }
         
         // Otherwise, brand new ephemeral day
-        if hasNotes || hasApgerbi {
-            modelContext.insert(diena)
+        if hasNotes || hasClothingItems {
+            modelContext.insert(day)
             try? modelContext.save()
         }
         // If nothing was added, do not insert => no leftover day
+        dismiss()
     }
 }
 

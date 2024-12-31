@@ -54,22 +54,22 @@ struct PievienotKategorijuView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
 
-    @State var kategorijasNosaukums = ""
+    @State var categoryName = ""
     @State private var selectedImage: UIImage?
     @State private var isPickerPresented = false
     @State private var sourceType: UIImagePickerController.SourceType?
 
     @State private var showingOption = false
     @State private var removeBackground = false // User preference for background removal
-    var existingKategorija: Kategorija?
+    var existingCategory: ClothingCategory?
 
-    init(existingKategorija: Kategorija? = nil) {
-        self.existingKategorija = existingKategorija
-        _kategorijasNosaukums = State(initialValue: existingKategorija?.nosaukums ?? "")
-        if let imageData = existingKategorija?.attels {
+    init(existingCategory: ClothingCategory? = nil) {
+        self.existingCategory = existingCategory
+        _categoryName = State(initialValue: existingCategory?.name ?? "")
+        if let imageData = existingCategory?.picture {
             _selectedImage = State(initialValue: UIImage(data: imageData))
         }
-        _removeBackground = State(initialValue: existingKategorija?.removeBackground ?? false)
+        _removeBackground = State(initialValue: existingCategory?.removeBackground ?? false)
     }
 
     var displayedImage: UIImage? {
@@ -90,7 +90,7 @@ struct PievienotKategorijuView: View {
             }.padding().background(Color(.systemGray6)).cornerRadius(12).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
             VStack(alignment: .leading) {
-                Button(action: pievienotFoto) {
+                Button(action: addPhoto) {
                     ZStack {
                         if let displayedImage = displayedImage {
                             Image(uiImage: displayedImage)
@@ -132,7 +132,7 @@ struct PievienotKategorijuView: View {
                 Toggle("Noņemt fonu", isOn: $removeBackground)
                     .padding(.top, 20)
 
-                TextField("Nosaukums", text: $kategorijasNosaukums)
+                TextField("Nosaukums", text: $categoryName)
                     .textFieldStyle(.roundedBorder)
                     .padding(.top, 20)
                     .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
@@ -152,7 +152,7 @@ struct PievienotKategorijuView: View {
 //            .padding()
             
             Button {
-                apstiprinat()
+                Save()
             } label: {
                 Text("Apstiprināt")
                     .frame(maxWidth: .infinity)
@@ -165,28 +165,28 @@ struct PievienotKategorijuView: View {
         }.preferredColorScheme(.light).hideKeyboardOnTap()
     }
 
-    func pievienotFoto() {
+    func addPhoto() {
         showingOption = true
     }
 
-    func apstiprinat() {
-        guard !kategorijasNosaukums.isEmpty else {
+    func Save() {
+        guard !categoryName.isEmpty else {
             print("Category name cannot be empty")
             return
         }
 
         Task {
             let imageData = selectedImage?.pngData()
-            if let kategorija = existingKategorija {
+            if let category = existingCategory {
                 // Update existing Kategorija
-                kategorija.nosaukums = kategorijasNosaukums
-                kategorija.attels = imageData
-                kategorija.removeBackground = removeBackground
+                category.name = categoryName
+                category.picture = imageData
+                category.removeBackground = removeBackground
             } else {
                 // Insert new Kategorija
-                let newKategorija = Kategorija(
-                    nosaukums: kategorijasNosaukums,
-                    attels: imageData,
+                let newKategorija = ClothingCategory(
+                    name: categoryName,
+                    picture: imageData,
                     removeBackground: removeBackground
                 )
                 modelContext.insert(newKategorija)

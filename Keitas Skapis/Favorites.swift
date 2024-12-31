@@ -13,10 +13,10 @@ struct FavoritesView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
 
-    @Query private var apgerbi: [Apgerbs]
+    @Query private var clothingItems: [ClothingItem]
 
     // Multi-selection
-    @State private var selectedApgerbsIDs: Set<UUID> = []
+    @State private var selectedClothingItemsIDs: Set<UUID> = []
     @State private var isSelectionModeActive = false
 
     // Action Sheet
@@ -24,19 +24,19 @@ struct FavoritesView: View {
     @State private var actionSheetType: ActionSheetType?
 
     // Detail
-    @State private var showApgerbsDetail = false
-    @State private var selectedApgerbs: Apgerbs?
+    @State private var showClothingItemDetail = false
+    @State private var selectedClothingItem: ClothingItem?
 
     // Editing flow
     @State private var isEditing = false
 
     enum ActionSheetType {
-        case apgerbsOptions
+        case clothingItemOptions
     }
 
     // Only show Apgerbs flagged as favorites
-    private var favoriteApgerbi: [Apgerbs] {
-        apgerbi.filter { $0.isFavorite }
+    private var favoriteClothingItems: [ClothingItem] {
+        clothingItems.filter { $0.isFavorite }
     }
 
     var body: some View {
@@ -49,9 +49,9 @@ struct FavoritesView: View {
                     Spacer()
                     
                     // Pencil button if there's a selection
-                    if !selectedApgerbsIDs.isEmpty {
+                    if !selectedClothingItemsIDs.isEmpty {
                         Button(action: {
-                            actionSheetType = .apgerbsOptions
+                            actionSheetType = .clothingItemOptions
                             showActionSheet = true
                         }) {
                             Image(systemName: "pencil")
@@ -75,7 +75,7 @@ struct FavoritesView: View {
                             .onTapGesture {
                                 if isSelectionModeActive {
                                     isSelectionModeActive = false
-                                    selectedApgerbsIDs.removeAll()
+                                    selectedClothingItemsIDs.removeAll()
                                 }
                             }
 
@@ -83,23 +83,23 @@ struct FavoritesView: View {
                             columns: [GridItem(.adaptive(minimum: 90, maximum: 120))],
                             spacing: 10
                         ) {
-                            ForEach(favoriteApgerbi, id: \.id) { apgerbs in
+                            ForEach(favoriteClothingItems, id: \.id) { item in
                                 ApgerbsButton(
-                                    apgerbs: apgerbs,
-                                    isSelected: selectedApgerbsIDs.contains(apgerbs.id),
+                                    clothingItem: item,
+                                    isSelected: selectedClothingItemsIDs.contains(item.id),
                                     onTap: {
                                         if isSelectionModeActive {
-                                            toggleApgerbsSelection(apgerbs)
+                                            toggleClothingItemSelection(item)
                                         } else {
-                                            selectedApgerbs = apgerbs
-                                            showApgerbsDetail = true
+                                            selectedClothingItem = item
+                                            showClothingItemDetail = true
                                         }
                                     },
                                     onLongPress: {
                                         if !isSelectionModeActive {
                                             isSelectionModeActive = true
                                         }
-                                        toggleApgerbsSelection(apgerbs)
+                                        toggleClothingItemSelection(item)
                                     }
                                 )
                             }
@@ -111,18 +111,18 @@ struct FavoritesView: View {
             .background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
             ToolBar()
             .background(Color(.systemGray5)).padding(.top, -10)
-            .sheet(isPresented: $showApgerbsDetail) {
-                if let apgerbs = selectedApgerbs {
+            .sheet(isPresented: $showClothingItemDetail) {
+                if let clothingItem = selectedClothingItem {
                     ApgerbsDetailView(
-                        apgerbs: apgerbs,
+                        clothingItem: clothingItem,
                         onEdit: {
                             // Same pattern as NetirieApgerbiView
-                            showApgerbsDetail = false
+                            showClothingItemDetail = false
                             isEditing = true
                         },
                         onDelete: {
-                            deleteSelectedApgerbs(apgerbs)
-                            showApgerbsDetail = false
+                            deleteSelectedClothingItem(clothingItem)
+                            showClothingItemDetail = false
                         }
                     )
                 } else {
@@ -130,8 +130,8 @@ struct FavoritesView: View {
                 }
             }
             .navigationDestination(isPresented: $isEditing) {
-                if let apgerbs = selectedApgerbs {
-                    PievienotApgerbuView(existingApgerbs: apgerbs)
+                if let clothingItem = selectedClothingItem {
+                    PievienotApgerbuView(existingClothingItem: clothingItem)
                         .onDisappear {
                             isEditing = false
                         }
@@ -139,8 +139,8 @@ struct FavoritesView: View {
             }
             .actionSheet(isPresented: $showActionSheet) {
                 switch actionSheetType {
-                case .apgerbsOptions:
-                    return apgerbsActionSheet()
+                case .clothingItemOptions:
+                    return clothingItemActionSheet()
                 case .none:
                     return ActionSheet(title: Text("Nav darbību"))
                 }
@@ -150,73 +150,75 @@ struct FavoritesView: View {
     }
 
     // MARK: - Action Sheet & Selection
-    private func apgerbsActionSheet() -> ActionSheet {
+    private func clothingItemActionSheet() -> ActionSheet {
         ActionSheet(
             title: Text("Pārvaldīt apģērbus"),
             buttons: [
                 .default(Text("Mainīt uz Tīrs")) {
-                    updateApgerbsStatus(to: "tirs")
+                    updateClothingItemStatus(to: "tirs")
                 },
                 .default(Text("Mainīt uz Netīrs")) {
-                    updateApgerbsStatus(to: "netirs")
+                    updateClothingItemStatus(to: "netirs")
                 },
                 .default(Text("Mainīt uz Mazgājas")) {
-                    updateApgerbsStatus(to: "mazgajas")
+                    updateClothingItemStatus(to: "mazgajas")
                 },
                 .destructive(Text("Dzēst")) {
-                    deleteSelectedApgerbs()
+                    deleteSelectedClothingItem()
                 },
                 .cancel()
             ]
         )
     }
 
-    private func toggleApgerbsSelection(_ apgerbs: Apgerbs) {
-        if selectedApgerbsIDs.contains(apgerbs.id) {
-            selectedApgerbsIDs.remove(apgerbs.id)
+    private func toggleClothingItemSelection(_ clothingItem: ClothingItem) {
+        if selectedClothingItemsIDs.contains(clothingItem.id) {
+            selectedClothingItemsIDs.remove(clothingItem.id)
         } else {
-            selectedApgerbsIDs.insert(apgerbs.id)
+            selectedClothingItemsIDs.insert(clothingItem.id)
         }
-        if selectedApgerbsIDs.isEmpty {
+        if selectedClothingItemsIDs.isEmpty {
             isSelectionModeActive = false
         }
     }
 
-    private func updateApgerbsStatus(to status: String) {
-        for apgerbs in favoriteApgerbi where selectedApgerbsIDs.contains(apgerbs.id) {
+    private func updateClothingItemStatus(to status: String) {
+        for clothingItem in favoriteClothingItems where selectedClothingItemsIDs.contains(clothingItem.id) {
             switch status {
             case "tirs":
-                apgerbs.netirs = false
-                apgerbs.mazgajas = false
+                clothingItem.dirty = false
+                clothingItem.washing = false
             case "netirs":
-                apgerbs.netirs = true
-                apgerbs.mazgajas = false
+                clothingItem.dirty = true
+                clothingItem.washing = false
             case "mazgajas":
-                apgerbs.netirs = false
-                apgerbs.mazgajas = true
+                clothingItem.dirty = false
+                clothingItem.washing = true
             default:
                 break
             }
         }
-        selectedApgerbsIDs.removeAll()
+        selectedClothingItemsIDs.removeAll()
         try? modelContext.save()
     }
 
-    private func deleteSelectedApgerbs(_ singleApgerbs: Apgerbs? = nil) {
-        if let single = singleApgerbs {
-            selectedApgerbs = nil
-            showApgerbsDetail = false
+    private func deleteSelectedClothingItem(_ singleClothingItem: ClothingItem? = nil) {
+        if let single = singleClothingItem {
+            selectedClothingItem = nil
+            showClothingItemDetail = false
             DispatchQueue.main.async {
                 modelContext.delete(single)
                 try? modelContext.save()
+                isSelectionModeActive = false
             }
-        } else if !selectedApgerbsIDs.isEmpty {
+        } else if !selectedClothingItemsIDs.isEmpty {
             DispatchQueue.main.async {
-                for item in favoriteApgerbi where selectedApgerbsIDs.contains(item.id) {
+                for item in favoriteClothingItems where selectedClothingItemsIDs.contains(item.id) {
                     modelContext.delete(item)
                 }
-                selectedApgerbsIDs.removeAll()
+                selectedClothingItemsIDs.removeAll()
                 try? modelContext.save()
+                isSelectionModeActive = false
             }
         }
     }
