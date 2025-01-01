@@ -13,6 +13,7 @@
 		2D55E1FE2C96FFCA002C18FB /* DancingScript-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2D55E1FA2C96FFCA002C18FB /* DancingScript-Medium.ttf */; };
 		2D55E1FF2C96FFCA002C18FB /* DancingScript-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2D55E1FB2C96FFCA002C18FB /* DancingScript-SemiBold.ttf */; };
 		2D55E2002C96FFCA002C18FB /* DancingScript-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 2D55E1FC2C96FFCA002C18FB /* DancingScript-Bold.ttf */; };
+		2D6381A72D25891700BAA14C /* ImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6381A62D25891700BAA14C /* ImageLoader.swift */; };
 		2D6501572CB84ED9005DB578 /* PievienotApgerbu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6501562CB84ED9005DB578 /* PievienotApgerbu.swift */; };
 		2D6A94FB2D2186CF0066FC15 /* HideKeyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6A94FA2D2186CF0066FC15 /* HideKeyboard.swift */; };
 		2D6A94FD2D218FF80066FC15 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6A94FC2D218FF80066FC15 /* HelpView.swift */; };
@@ -43,6 +44,7 @@
 		2D55E1FB2C96FFCA002C18FB /* DancingScript-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DancingScript-SemiBold.ttf"; sourceTree = "<group>"; };
 		2D55E1FC2C96FFCA002C18FB /* DancingScript-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = text; path = "DancingScript-Bold.ttf"; sourceTree = "<group>"; };
 		2D55E2022C9717DB002C18FB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2D6381A62D25891700BAA14C /* ImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoader.swift; sourceTree = "<group>"; };
 		2D6501562CB84ED9005DB578 /* PievienotApgerbu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PievienotApgerbu.swift; sourceTree = "<group>"; };
 		2D6A94FA2D2186CF0066FC15 /* HideKeyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HideKeyboard.swift; sourceTree = "<group>"; };
 		2D6A94FC2D218FF80066FC15 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 				2DA6AD3A2D1F07FC0006031A /* ApgerbsDetailView.swift */,
 				2D6A94FA2D2186CF0066FC15 /* HideKeyboard.swift */,
 				2DFC61D62C8360B00019B63D /* ContentView.swift */,
+				2D6381A62D25891700BAA14C /* ImageLoader.swift */,
 				2D6A94FC2D218FF80066FC15 /* HelpView.swift */,
 				2D8E931D2D204E1E0015422E /* ActiveView.swift */,
 				2D8E93152D1FF3F70015422E /* CalendarView.swift */,
@@ -231,6 +234,7 @@
 				2D8E931E2D204E1E0015422E /* ActiveView.swift in Sources */,
 				2D6A94FD2D218FF80066FC15 /* HelpView.swift in Sources */,
 				2D83CDFA2D0D929A007CF84C /* ToolBar.swift in Sources */,
+				2D6381A72D25891700BAA14C /* ImageLoader.swift in Sources */,
 				2DFC61D72C8360B00019B63D /* ContentView.swift in Sources */,
 				2D83CDFC2D0DB522007CF84C /* CategoryBtn.swift in Sources */,
 				2D8E931C2D2002F70015422E /* AddApgerbsToDayView.swift in Sources */,
