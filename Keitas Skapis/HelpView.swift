@@ -1,12 +1,7 @@
-//
-//  HelpView.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 29/12/2024.
-//
 
 import SwiftUI
 
+// MARK: - Skats, kas satur lietotāja instrukciju
 struct HelpView: View {
     @Environment(\.dismiss) var dismiss
 

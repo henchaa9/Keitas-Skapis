@@ -1,12 +1,9 @@
-//
-//  ActiveView.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 28/12/2024.
-//
 
 import Foundation
 
+// MARK: - ActiveView
+
+// Visu skatu uzskaitījums, kuru izmanto, lai noteiktu aktīvo skatu
 enum ActiveView: String, Hashable {
     case home
     case favorites
@@ -14,4 +11,5 @@ enum ActiveView: String, Hashable {
     case dirtyClothes
     case none
 }
+
 

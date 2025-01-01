@@ -1,13 +1,8 @@
-//
-//  ApgerbsDetailView.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 27/12/2024.
-//
 
 import SwiftUI
 import SwiftData
 
+// Apģērba detaļu skats, kas tiek attēlots uzspiežot uz kāda apģērba
 struct ApgerbsDetailView: View {
     let clothingItem: ClothingItem
     var onEdit: () -> Void
@@ -16,8 +11,9 @@ struct ApgerbsDetailView: View {
     @EnvironmentObject private var chosenManager: ChosenManager
     @State private var selectedStatus: String
     @Environment(\.dismiss) var dismiss
-    @State private var image: UIImage? // State to hold the loaded image
+    @State private var image: UIImage? // Ielādētais apģērba attēls
 
+    // Initializer, kurā tiek inicializēts apģērbs un rediģēšanas, un dzēšanas funkcijas
     init(clothingItem: ClothingItem, onEdit: @escaping () -> Void, onDelete: @escaping () -> Void) {
         self.clothingItem = clothingItem
         self.onEdit = onEdit
@@ -25,37 +21,37 @@ struct ApgerbsDetailView: View {
         _selectedStatus = State(initialValue: clothingItem.dirty ? "Netīrs" : (clothingItem.washing ? "Mazgājas" : "Tīrs"))
     }
 
+    // Mainīgais, kurš norāda vai apģērbs ir izvēlēts
     private var isChosen: Bool {
         chosenManager.chosenClothingItems.contains { $0.id == clothingItem.id }
     }
-    
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 Button("Aizvērt") {
                     dismiss()
                 }
-                
+
+                // Nosaukums un poga apģērba pievienošanai mīļākajiem
                 HStack {
                     Text(clothingItem.name)
                         .font(.title)
                         .bold()
                         .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                    
                     Spacer()
-                    
                     Button(action: toggleFavorite) {
                         Image(systemName: clothingItem.isFavorite ? "heart.fill" : "heart")
                             .foregroundColor(.red).font(.title)
                             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     }
                 }
-                
-                // Last Worn
+
+                // Pēdējoreiz vilkts
                 Text("Pēdējoreiz vilkts: \(formattedDate(clothingItem.lastWorn))")
                     .font(.subheadline)
 
-                // Image or Fallback
+                // Ja apģērbam netiek pievienots attēls, tiek izmantots noklusējuma attēls
                 HStack {
                     if let image = image {
                         Image(uiImage: image)
@@ -74,7 +70,7 @@ struct ApgerbsDetailView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
 
-
+                // Poga attēla pievienošanai izvēlētajiem attēliem, kas redzami IzveletieView
                 Button {
                     if isChosen {
                         chosenManager.remove(clothingItem)
@@ -88,16 +84,17 @@ struct ApgerbsDetailView: View {
                         .background(isChosen ? Color.yellow : Color.green)
                         .foregroundColor(isChosen ? .black : .white)
                         .cornerRadius(8)
-                }.shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                
-                // Stavoklis
+                }
+                .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+
+                // Apģērba stāvoklis
                 HStack {
                     Text("Stāvoklis: ").bold()
                     Text("\(selectedStatus)")
                         .bold()
                         .foregroundColor(colorForStatus(selectedStatus))
                 }
-                
+
                 Picker("Stāvoklis", selection: $selectedStatus) {
                     Text("Tīrs").tag("Tīrs")
                     Text("Netīrs").tag("Netīrs")
@@ -108,9 +105,8 @@ struct ApgerbsDetailView: View {
                     updateStatus(newValue)
                 }
 
-                // Categories
-                Text("Kategorijas")
-                    .font(.headline)
+                // Apģērba kategorijas
+                Text("Kategorijas").font(.headline)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 5)], spacing: 5) {
                     ForEach(clothingItem.clothingItemCategories, id: \.id) { category in
                         Text(category.name)
@@ -122,10 +118,9 @@ struct ApgerbsDetailView: View {
                             .cornerRadius(8)
                     }
                 }
-                
-                // Seasons
-                Text("Sezonas")
-                    .font(.headline)
+
+                // Apģērba sezonas
+                Text("Sezonas").font(.headline)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70), spacing: 5)], spacing: 5) {
                     ForEach(clothingItem.season, id: \.self) { season in
                         Text(season.rawValue)
@@ -134,8 +129,8 @@ struct ApgerbsDetailView: View {
                             .cornerRadius(8)
                     }
                 }
-                
-                // Color, Size, Gludinams
+
+                // Apģērba krāsa, izmērs, un gludināms statuss
                 HStack {
                     HStack {
                         Text("Krāsa: ").bold()
@@ -145,18 +140,18 @@ struct ApgerbsDetailView: View {
                             .overlay(Circle().stroke(Color(.black), lineWidth: 1))
                     }
                     Spacer()
-                    Text("Izmērs: \(sizeLetter(for: clothingItem.size))")
-                        .bold()
+                    Text("Izmērs: \(sizeLetter(for: clothingItem.size))").bold()
                     Spacer()
                     Text(clothingItem.ironable ? "Gludināms" : "Negludināms")
-                        .foregroundColor(clothingItem.ironable ? .green : .red).bold()
+                        .foregroundColor(clothingItem.ironable ? .green : .red)
+                        .bold()
                 }
 
                 // Piezīmes
                 Text("Piezīmes").bold()
                 Text(clothingItem.notes)
 
-                // Edit and Delete Buttons
+                // Rediģēšanas un dzēšanas pogas
                 Button(action: onEdit) {
                     Text("Rediģēt")
                         .frame(maxWidth: .infinity)
@@ -164,7 +159,9 @@ struct ApgerbsDetailView: View {
                         .foregroundColor(.blue)
                         .background(Color(.white))
                         .cornerRadius(8)
-                }.padding(.bottom, -10).padding(.top, 5)
+                }
+                .padding(.bottom, -10)
+                .padding(.top, 5)
 
                 Button(action: onDelete) {
                     Text("Dzēst")
@@ -183,23 +180,33 @@ struct ApgerbsDetailView: View {
         }
     }
 
+    // MARK: - Palīgfunkcijas
+
+    // Maina apģērba 'mīļākais' statusu
     private func toggleFavorite() {
         clothingItem.isFavorite.toggle()
-        try? clothingItem.modelContext?.save()
+        do {
+            try clothingItem.modelContext?.save()
+        } catch {
+            print("Failed to save favorite status: \(error.localizedDescription)")
+        }
     }
-    
+
+    // Asinhroni ielādē apģērba attēlu
     private func loadImage() {
         clothingItem.loadImage { loadedImage in
             self.image = loadedImage
         }
     }
 
+    // Formatē datumu simbolu virknes formā
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter.string(from: date)
     }
-    
+
+    // Sasaista izmēra veselo skaitli ar attiecīgo burtu
     private func sizeLetter(for size: Int) -> String {
         switch size {
         case 0: return "XS"
@@ -211,6 +218,7 @@ struct ApgerbsDetailView: View {
         }
     }
 
+    // Sasaista krāsas simbolu virkni ar attiecīgo definēto krāsu
     private func colorForStatus(_ status: String) -> Color {
         switch status {
         case "Tīrs":
@@ -224,6 +232,7 @@ struct ApgerbsDetailView: View {
         }
     }
 
+    // Atjaunina apģērba stāvokli
     private func updateStatus(_ newValue: String) {
         switch newValue {
         case "Tīrs":
@@ -238,7 +247,12 @@ struct ApgerbsDetailView: View {
         default:
             break
         }
-        try? clothingItem.modelContext?.save()
+        do {
+            try clothingItem.modelContext?.save()
+        } catch {
+            print("Failed to save status update: \(error.localizedDescription)")
+        }
     }
 }
+
 

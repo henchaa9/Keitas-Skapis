@@ -12,36 +12,56 @@ import Vision
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
+// MARK: - ClothingCategory Model
+
+/// Represents a category of clothing items with optional image and background removal capability.
 @Model
 class ClothingCategory: Identifiable, Hashable, Codable {
-    @Attribute var id: UUID = UUID()
-    @Attribute var name: String
-    @Attribute(.externalStorage) var picture: Data?
-    @Attribute var removeBackground: Bool = false
-
-    @Relationship var categoryClothingItems: [ClothingItem] = []
-
+    // MARK: - Attributes
+    
+    @Attribute var id: UUID = UUID() // Unique identifier for the category
+    @Attribute var name: String // Name of the category
+    @Attribute(.externalStorage) var picture: Data? // Optional image data stored externally
+    @Attribute var removeBackground: Bool = false // Flag to indicate if background should be removed from the image
+    
+    // MARK: - Relationships
+    
+    @Relationship var categoryClothingItems: [ClothingItem] = [] // Clothing items associated with this category
+    
+    // MARK: - Initializer
+    
+    /// Initializes a new ClothingCategory with optional parameters.
+    /// - Parameters:
+    ///   - name: The name of the category. Defaults to "Jauna Kategorija".
+    ///   - picture: Optional image data for the category.
+    ///   - removeBackground: Indicates whether to remove the background from the image. Defaults to `false`.
     init(name: String = "Jauna Kategorija", picture: Data? = nil, removeBackground: Bool = false) {
         self.name = name
         self.picture = picture
         self.removeBackground = removeBackground
     }
-
-    // Computed property to get the UIImage from attels
+    
+    // MARK: - Computed Properties
+    
+    /// Converts the stored image data to a UIImage.
     var image: UIImage? {
         get { picture.flatMap { UIImage(data: $0) } }
         set { picture = newValue?.pngData() }
     }
     
-    // Computed property to return the displayed image with or without background
+    /// Returns the displayed image, applying background removal if enabled.
     var displayedImage: UIImage? {
         if removeBackground, let image = self.image {
-            return removeBackground(from: image)
+            return removeBackground(from: image) // Helper Function
         }
         return self.image
     }
     
-    // Background removal functions
+    // MARK: - Background Removal Functions
+    
+    /// Removes the background from the provided image using Vision and CoreImage.
+    /// - Parameter image: The original UIImage from which to remove the background.
+    /// - Returns: A new UIImage with the background removed, or the original image if removal fails.
     private func removeBackground(from image: UIImage) -> UIImage? {
         guard let inputImage = CIImage(image: image) else {
             print("Failed to create CIImage")
@@ -57,6 +77,9 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
     }
 
+    /// Creates a mask image using Vision's foreground instance mask request.
+    /// - Parameter inputImage: The CIImage to process.
+    /// - Returns: A CIImage mask or nil if creation fails.
     private func createMask(from inputImage: CIImage) -> CIImage? {
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(ciImage: inputImage)
@@ -72,6 +95,11 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         return nil
     }
 
+    /// Applies the mask to the original image to remove the background.
+    /// - Parameters:
+    ///   - mask: The CIImage mask to apply.
+    ///   - image: The original CIImage.
+    /// - Returns: A new CIImage with the background removed.
     private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
         let filter = CIFilter.blendWithMask()
         filter.inputImage = image
@@ -80,6 +108,11 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         return filter.outputImage!
     }
 
+    /// Converts a CIImage back to a UIImage with the original orientation.
+    /// - Parameters:
+    ///   - ciImage: The CIImage to convert.
+    ///   - originalOrientation: The original orientation of the UIImage.
+    /// - Returns: A new UIImage created from the CIImage.
     private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage? {
         guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
             print("Failed to render CGImage")
@@ -87,20 +120,25 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         }
         return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
-
+    
+    // MARK: - Hashable & Equatable
+    
     static func == (lhs: ClothingCategory, rhs: ClothingCategory) -> Bool {
         lhs.id == rhs.id
     }
-
+    
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-
-    // Exclude relationships from coding to prevent cyclical references
+    
+    // MARK: - Codable
+    
+    /// Defines the coding keys, excluding relationships to prevent cyclical references.
     enum CodingKeys: String, CodingKey {
         case id, name, picture, removeBackground
     }
-
+    
+    /// Initializes a ClothingCategory from a decoder, excluding relationships.
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
@@ -109,7 +147,8 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         self.removeBackground = try container.decode(Bool.self, forKey: .removeBackground)
         self.categoryClothingItems = []
     }
-
+    
+    /// Encodes the ClothingCategory, excluding relationships.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
@@ -119,19 +158,26 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     }
 }
 
+// MARK: - CustomColor Struct
 
+/// Represents a color with red, green, blue, and alpha components.
 struct CustomColor: Codable, Hashable {
     var red: Double
     var green: Double
     var blue: Double
     var alpha: Double
 
-    // Computed property to get SwiftUI Color
+    /// Converts the CustomColor to a SwiftUI Color.
     var color: Color {
         Color(red: red, green: green, blue: blue, opacity: alpha)
     }
 
-    // Initializer from components
+    /// Initializes a CustomColor with specific color components.
+    /// - Parameters:
+    ///   - red: Red component (0.0 - 1.0).
+    ///   - green: Green component (0.0 - 1.0).
+    ///   - blue: Blue component (0.0 - 1.0).
+    ///   - alpha: Alpha component (0.0 - 1.0).
     init(red: Double, green: Double, blue: Double, alpha: Double) {
         self.red = red
         self.green = green
@@ -139,7 +185,8 @@ struct CustomColor: Codable, Hashable {
         self.alpha = alpha
     }
 
-    // Initializer from Color
+    /// Initializes a CustomColor from a SwiftUI Color.
+    /// - Parameter color: The SwiftUI Color to convert.
     init(color: Color) {
         let uiColor = UIColor(color)
         var redComponent: CGFloat = 0
@@ -154,8 +201,9 @@ struct CustomColor: Codable, Hashable {
     }
 }
 
+// MARK: - Season Enum
 
-
+/// Represents the seasons for which a clothing item is suitable.
 enum Season: String, CaseIterable, Codable {
     case summer = "Vasara"
     case fall = "Rudens"
@@ -163,29 +211,53 @@ enum Season: String, CaseIterable, Codable {
     case spring = "Pavasaris"
 }
 
+// MARK: - ClothingItem Model
 
+/// Represents an individual clothing item with various attributes and relationships.
 @Model
 class ClothingItem: Identifiable, Hashable, Codable {
-    @Attribute var id: UUID = UUID()
-    @Attribute var name: String
-    @Attribute var notes: String
-    @Attribute var color: CustomColor
-    @Attribute var status: Int
-    @Attribute var ironable: Bool
-    @Attribute var size: Int
-    @Attribute var season: [Season]
-    @Attribute var lastWorn: Date
-    @Attribute var washing: Bool
-    @Attribute var dirty: Bool
-    @Attribute var removeBackground: Bool = false
-    @Attribute var isFavorite: Bool = false 
-    @Attribute(.externalStorage) var picture: Data?
-
-    @Relationship var clothingItemCategories: [ClothingCategory] = []
-    @Relationship(inverse: \Day.dayClothingItems) var clothingItemDays: [Day] = []
+    // MARK: - Attributes
     
-    static var imageCache = NSCache<NSString, UIImage>()
-
+    @Attribute var id: UUID = UUID() // Unique identifier for the clothing item
+    @Attribute var name: String // Name of the clothing item
+    @Attribute var notes: String // Additional notes about the item
+    @Attribute var color: CustomColor // Color of the clothing item
+    @Attribute var status: Int // Status indicator (e.g., available, worn, etc.)
+    @Attribute var ironable: Bool // Indicates if the item can be ironed
+    @Attribute var size: Int // Size of the clothing item
+    @Attribute var season: [Season] // Seasons suitable for the item
+    @Attribute var lastWorn: Date // Date when the item was last worn
+    @Attribute var washing: Bool // Indicates if the item is being washed
+    @Attribute var dirty: Bool // Indicates if the item is dirty
+    @Attribute var removeBackground: Bool = false // Flag to remove background from the image
+    @Attribute var isFavorite: Bool = false // Indicates if the item is marked as favorite
+    @Attribute(.externalStorage) var picture: Data? // Optional image data stored externally
+    
+    // MARK: - Relationships
+    
+    @Relationship var clothingItemCategories: [ClothingCategory] = [] // Categories associated with this item
+    @Relationship(inverse: \Day.dayClothingItems) var clothingItemDays: [Day] = [] // Days when the item was worn
+    
+    // MARK: - Static Properties
+    
+    static var imageCache = NSCache<NSString, UIImage>() // In-memory cache for images
+    
+    // MARK: - Initializer
+    
+    /// Initializes a new ClothingItem with optional parameters.
+    /// - Parameters:
+    ///   - name: Name of the clothing item. Defaults to "jauns apgerbs".
+    ///   - notes: Additional notes. Defaults to an empty string.
+    ///   - color: Color of the clothing item.
+    ///   - status: Status indicator. Defaults to `0`.
+    ///   - ironable: Indicates if the item can be ironed. Defaults to `true`.
+    ///   - season: Seasons suitable for the item. Defaults to an empty array.
+    ///   - size: Size of the clothing item. Defaults to `0`.
+    ///   - lastWorn: Date when the item was last worn. Defaults to `.now`.
+    ///   - dirty: Indicates if the item is dirty. Defaults to `false`.
+    ///   - washing: Indicates if the item is being washed. Defaults to `false`.
+    ///   - picture: Optional image data. Defaults to `nil`.
+    ///   - removeBackground: Flag to remove background from the image. Defaults to `false`.
     init(
         name: String = "jauns apgerbs",
         notes: String = "",
@@ -214,44 +286,56 @@ class ClothingItem: Identifiable, Hashable, Codable {
         self.removeBackground = removeBackground
     }
     
+    // MARK: - Image Loading
+    
+    /// Loads the image associated with the clothing item, applying background removal if enabled.
+    /// Utilizes caching to improve performance.
+    /// - Parameter completion: Completion handler with the loaded UIImage.
     func loadImage(completion: @escaping (UIImage?) -> Void) {
+        // Check if the image is already cached
         if let cachedImage = ClothingItem.imageCache.object(forKey: self.id.uuidString as NSString) {
             completion(cachedImage)
             return
         }
 
+        // Load the image asynchronously
         DispatchQueue.global(qos: .background).async {
             var image: UIImage?
 
             if let imageData = self.picture, let uiImage = UIImage(data: imageData) {
                 if self.removeBackground {
-                    image = self.removeBackground(from: uiImage)
+                    image = self.removeBackground(from: uiImage) // Helper Function
                 } else {
                     image = uiImage
                 }
             }
 
-            // Cache the image
+            // Cache the image if available
             if let imageToCache = image {
                 ClothingItem.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
             }
 
+            // Return the image on the main thread
             DispatchQueue.main.async {
                 completion(image)
             }
         }
     }
-
+    
+    /// Reloads the image by removing it from the cache and reloading it.
     func reloadImage() {
-        // Remove from the in-memory cache
+        // Remove the image from the cache
         ClothingItem.imageCache.removeObject(forKey: self.id.uuidString as NSString)
         
-        // Then call loadImage again to regenerate and re-cache
-        loadImage {_ in}
+        // Reload and re-cache the image
+        loadImage { _ in }
     }
-
     
-    // Background removal functions
+    // MARK: - Background Removal Functions
+    
+    /// Removes the background from the provided image using Vision and CoreImage.
+    /// - Parameter image: The original UIImage from which to remove the background.
+    /// - Returns: A new UIImage with the background removed, or the original image if removal fails.
     private func removeBackground(from image: UIImage) -> UIImage? {
         guard let inputImage = CIImage(image: image) else {
             print("Failed to create CIImage")
@@ -267,6 +351,9 @@ class ClothingItem: Identifiable, Hashable, Codable {
         return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
     }
 
+    /// Creates a mask image using Vision's foreground instance mask request.
+    /// - Parameter inputImage: The CIImage to process.
+    /// - Returns: A CIImage mask or nil if creation fails.
     private func createMask(from inputImage: CIImage) -> CIImage? {
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(ciImage: inputImage)
@@ -282,6 +369,11 @@ class ClothingItem: Identifiable, Hashable, Codable {
         return nil
     }
 
+    /// Applies the mask to the original image to remove the background.
+    /// - Parameters:
+    ///   - mask: The CIImage mask to apply.
+    ///   - image: The original CIImage.
+    /// - Returns: A new CIImage with the background removed.
     private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
         let filter = CIFilter.blendWithMask()
         filter.inputImage = image
@@ -290,6 +382,11 @@ class ClothingItem: Identifiable, Hashable, Codable {
         return filter.outputImage!
     }
 
+    /// Converts a CIImage back to a UIImage with the original orientation.
+    /// - Parameters:
+    ///   - ciImage: The CIImage to convert.
+    ///   - originalOrientation: The original orientation of the UIImage.
+    /// - Returns: A new UIImage created from the CIImage.
     private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage? {
         guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
             print("Failed to render CGImage")
@@ -297,19 +394,25 @@ class ClothingItem: Identifiable, Hashable, Codable {
         }
         return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
-
+    
+    // MARK: - Hashable & Equatable
+    
     static func == (lhs: ClothingItem, rhs: ClothingItem) -> Bool {
         lhs.id == rhs.id
     }
-
+    
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-
+    
+    // MARK: - Codable
+    
+    /// Defines the coding keys, including relationships.
     enum CodingKeys: String, CodingKey {
         case id, name, notes, color, status, ironable, size, season, lastWorn, washing, dirty, picture, removeBackground, clothingItemDays
     }
-
+    
+    /// Initializes a ClothingItem from a decoder, excluding relationships.
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
@@ -328,7 +431,8 @@ class ClothingItem: Identifiable, Hashable, Codable {
         self.clothingItemCategories = []
         self.clothingItemDays = []
     }
-
+    
+    /// Encodes the ClothingItem, including relationships.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
@@ -348,25 +452,42 @@ class ClothingItem: Identifiable, Hashable, Codable {
     }
 }
 
+// MARK: - Day Model
 
+/// Represents a day with associated clothing items and notes.
 @Model
 class Day: Codable {
-    @Attribute var id: UUID = UUID()
-    @Attribute var date: Date
-    @Attribute var notes: String
-
-    @Relationship var dayClothingItems: [ClothingItem] = []
-
+    // MARK: - Attributes
+    
+    @Attribute var id: UUID = UUID() // Unique identifier for the day
+    @Attribute var date: Date // The date of the day
+    @Attribute var notes: String // Additional notes for the day
+    
+    // MARK: - Relationships
+    
+    @Relationship var dayClothingItems: [ClothingItem] = [] // Clothing items worn on this day
+    
+    // MARK: - Initializer
+    
+    /// Initializes a new Day with specified parameters.
+    /// - Parameters:
+    ///   - date: The date of the day.
+    ///   - notes: Additional notes for the day.
+    ///   - clothingItems: Clothing items associated with the day. Defaults to an empty array.
     init(date: Date, notes: String, clothingItems: [ClothingItem] = []) {
         self.date = date
         self.notes = notes
         self.dayClothingItems = clothingItems
     }
-
+    
+    // MARK: - Coding
+    
+    /// Defines the coding keys.
     enum CodingKeys: String, CodingKey {
         case id, date, notes, dayClothingItems
     }
-
+    
+    /// Initializes a Day from a decoder, excluding relationships.
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
@@ -374,7 +495,8 @@ class Day: Codable {
         self.notes = try container.decode(String.self, forKey: .notes)
         self.dayClothingItems = []
     }
-
+    
+    /// Encodes the Day, including relationships.
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)

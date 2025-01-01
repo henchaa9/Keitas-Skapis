@@ -10,45 +10,57 @@ import SwiftData
 import Combine
 
 struct FavoritesView: View {
-    @Environment(\.dismiss) var dismiss
-    @Environment(\.modelContext) private var modelContext
+    // MARK: - Environment Variables
 
-    @Query private var clothingItems: [ClothingItem]
+    @Environment(\.dismiss) var dismiss // Allows dismissing the view
+    @Environment(\.modelContext) private var modelContext // Provides access to the data model context
 
-    // Multi-selection
-    @State private var selectedClothingItemsIDs: Set<UUID> = []
-    @State private var isSelectionModeActive = false
+    // MARK: - Data Query
 
-    // Action Sheet
-    @State private var showActionSheet = false
-    @State private var actionSheetType: ActionSheetType?
+    @Query private var clothingItems: [ClothingItem] // Fetches all clothing items from the model
 
-    // Detail
-    @State private var showClothingItemDetail = false
-    @State private var selectedClothingItem: ClothingItem?
+    // MARK: - State Variables
 
-    // Editing flow
-    @State private var isEditing = false
+    @State private var selectedClothingItemsIDs: Set<UUID> = [] // Tracks selected clothing items by ID
+    @State private var isSelectionModeActive = false // Toggles selection mode for multi-select actions
 
+    @State private var showActionSheet = false // Controls the display of the action sheet
+    @State private var actionSheetType: ActionSheetType? // Determines the type of action sheet to display
+
+    @State private var showClothingItemDetail = false // Toggles the display of the detail sheet
+    @State private var selectedClothingItem: ClothingItem? // Tracks the currently selected clothing item for detail view
+
+    @State private var isEditing = false // Toggles editing mode
+
+    // MARK: - Enums
+
+    /// Enum to specify the type of action sheet to display
     enum ActionSheetType {
         case clothingItemOptions
     }
 
-    // Only show Apgerbs flagged as favorites
+    // MARK: - Computed Properties
+
+    /// Filters clothing items to only those marked as favorites
     private var favoriteClothingItems: [ClothingItem] {
         clothingItems.filter { $0.isFavorite }
     }
 
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             VStack {
-                // Top bar
+                // Top Bar
                 HStack {
-                    Text("Mīļākie").font(.title).bold().shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                    
+                    Text("Mīļākie")
+                        .font(.title)
+                        .bold()
+                        .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
+
                     Spacer()
-                    
-                    // Pencil button if there's a selection
+
+                    // Pencil button for actions when items are selected
                     if !selectedClothingItemsIDs.isEmpty {
                         Button(action: {
                             actionSheetType = .clothingItemOptions
@@ -63,13 +75,17 @@ struct FavoritesView: View {
                     }
                 }
                 .navigationBarBackButtonHidden(true)
-                .padding().background(Color(.systemGray6)).cornerRadius(12).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1)).padding(.horizontal, 10).shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1))
+                .padding(.horizontal, 10)
+                .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
-                // Grid of favorite Apgerbs using ApgerbsButton
+                // Grid of favorite clothing items
                 ScrollView {
                     ZStack {
-                        // Detect tap on empty space to exit selection
+                        // Tap detection to exit selection mode
                         Color.clear
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -79,17 +95,19 @@ struct FavoritesView: View {
                                 }
                             }
 
+                        // Adaptive grid for clothing items
                         LazyVGrid(
                             columns: [GridItem(.adaptive(minimum: 90, maximum: 120))],
                             spacing: 10
                         ) {
                             ForEach(favoriteClothingItems, id: \.id) { item in
+                                // Custom button for each clothing item
                                 ApgerbsButton(
                                     clothingItem: item,
                                     isSelected: selectedClothingItemsIDs.contains(item.id),
                                     onTap: {
                                         if isSelectionModeActive {
-                                            toggleClothingItemSelection(item)
+                                            toggleClothingItemSelection(item) // Helper function
                                         } else {
                                             selectedClothingItem = item
                                             showClothingItemDetail = true
@@ -99,7 +117,7 @@ struct FavoritesView: View {
                                         if !isSelectionModeActive {
                                             isSelectionModeActive = true
                                         }
-                                        toggleClothingItemSelection(item)
+                                        toggleClothingItemSelection(item) // Helper function
                                     }
                                 )
                             }
@@ -108,27 +126,35 @@ struct FavoritesView: View {
                     }
                 }
             }
-            .background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
+            .background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3)) // Background image with slight opacity
+
+            // MARK: - ToolBar
+            // Toolbar at the bottom of the view
             ToolBar()
-            .background(Color(.systemGray5)).padding(.top, -10)
+                .background(Color(.systemGray5))
+                .padding(.top, -10)
+
+            // Sheet for clothing item details
             .sheet(isPresented: $showClothingItemDetail) {
                 if let clothingItem = selectedClothingItem {
+                    // Detail view for selected clothing item
                     ApgerbsDetailView(
                         clothingItem: clothingItem,
                         onEdit: {
-                            // Same pattern as NetirieApgerbiView
                             showClothingItemDetail = false
                             isEditing = true
                         },
                         onDelete: {
-                            deleteSelectedClothingItem(clothingItem)
+                            deleteSelectedClothingItem(clothingItem) // Helper function
                             showClothingItemDetail = false
                         }
                     )
                 } else {
-                    Text("Nav izvēlēts apģērbs")
+                    Text("Nav izvēlēts apģērbs") // Message when no item is selected
                 }
             }
+
+            // Navigation to editing view
             .navigationDestination(isPresented: $isEditing) {
                 if let clothingItem = selectedClothingItem {
                     PievienotApgerbuView(existingClothingItem: clothingItem)
@@ -137,40 +163,47 @@ struct FavoritesView: View {
                         }
                 }
             }
+
+            // Action sheet for managing clothing items
             .actionSheet(isPresented: $showActionSheet) {
                 switch actionSheetType {
                 case .clothingItemOptions:
-                    return clothingItemActionSheet()
+                    return clothingItemActionSheet() // Helper function
                 case .none:
                     return ActionSheet(title: Text("Nav darbību"))
                 }
             }
-            .preferredColorScheme(.light)
+            .preferredColorScheme(.light) // Light mode preference
         }
     }
 
     // MARK: - Action Sheet & Selection
+
+    /// Creates the action sheet for managing clothing items.
+    /// - Returns: An `ActionSheet` with options to update status or delete items.
     private func clothingItemActionSheet() -> ActionSheet {
         ActionSheet(
             title: Text("Pārvaldīt apģērbus"),
             buttons: [
                 .default(Text("Mainīt uz Tīrs")) {
-                    updateClothingItemStatus(to: "tirs")
+                    updateClothingItemStatus(to: "tirs") // Helper function
                 },
                 .default(Text("Mainīt uz Netīrs")) {
-                    updateClothingItemStatus(to: "netirs")
+                    updateClothingItemStatus(to: "netirs") // Helper function
                 },
                 .default(Text("Mainīt uz Mazgājas")) {
-                    updateClothingItemStatus(to: "mazgajas")
+                    updateClothingItemStatus(to: "mazgajas") // Helper function
                 },
                 .destructive(Text("Dzēst")) {
-                    deleteSelectedClothingItem()
+                    deleteSelectedClothingItem() // Helper function
                 },
                 .cancel()
             ]
         )
     }
 
+    /// Toggles the selection state of a clothing item.
+    /// - Parameter clothingItem: The clothing item to toggle.
     private func toggleClothingItemSelection(_ clothingItem: ClothingItem) {
         if selectedClothingItemsIDs.contains(clothingItem.id) {
             selectedClothingItemsIDs.remove(clothingItem.id)
@@ -182,6 +215,8 @@ struct FavoritesView: View {
         }
     }
 
+    /// Updates the status of the selected clothing items.
+    /// - Parameter status: The new status (`tirs`, `netirs`, or `mazgajas`).
     private func updateClothingItemStatus(to status: String) {
         for clothingItem in favoriteClothingItems where selectedClothingItemsIDs.contains(clothingItem.id) {
             switch status {
@@ -199,11 +234,14 @@ struct FavoritesView: View {
             }
         }
         selectedClothingItemsIDs.removeAll()
-        try? modelContext.save()
+        try? modelContext.save() // Saves the updates to the model
     }
 
+    /// Deletes the selected clothing items or a single specified item.
+    /// - Parameter singleClothingItem: A single clothing item to delete (optional).
     private func deleteSelectedClothingItem(_ singleClothingItem: ClothingItem? = nil) {
         if let single = singleClothingItem {
+            // Deletes a single item
             selectedClothingItem = nil
             showClothingItemDetail = false
             DispatchQueue.main.async {
@@ -212,6 +250,7 @@ struct FavoritesView: View {
                 isSelectionModeActive = false
             }
         } else if !selectedClothingItemsIDs.isEmpty {
+            // Deletes multiple selected items
             DispatchQueue.main.async {
                 for item in favoriteClothingItems where selectedClothingItemsIDs.contains(item.id) {
                     modelContext.delete(item)
@@ -223,6 +262,7 @@ struct FavoritesView: View {
         }
     }
 }
+
 
 
 

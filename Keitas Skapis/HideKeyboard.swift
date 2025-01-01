@@ -1,12 +1,7 @@
-//
-//  HideKeyboard.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 29/12/2024.
-//
 
 import SwiftUI
 
+// Paplašinājums, kas atļauj lietotājam piespiest uz tukšuma, lai paslēptu tastatūru
 extension View {
     func hideKeyboardOnTap() -> some View {
         self.onTapGesture {
@@ -18,4 +13,5 @@ extension View {
 func hideKeyboard() {
     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
 }
+
 
