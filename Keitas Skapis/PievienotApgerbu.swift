@@ -384,6 +384,9 @@ struct PievienotApgerbuView: View {
             if let originalImage = displayedImage, let imageData = originalImage.pngData() {
                 clothingItem.picture = imageData
             }
+
+            // Update category relationships
+            updateCategoryRelationships(for: clothingItem, newCategories: Array(clothingItemCategories))
         } else {
             // Create new item
             let newClothingItem = ClothingItem(
@@ -404,29 +407,40 @@ struct PievienotApgerbuView: View {
                 newClothingItem.picture = imageData
             }
 
-            // Insert into model
+            // Establish relationships
+            newClothingItem.clothingItemCategories = Array(clothingItemCategories)
+            for category in clothingItemCategories {
+                if !category.categoryClothingItems.contains(newClothingItem) {
+                    category.categoryClothingItems.append(newClothingItem)
+                }
+            }
+
+            // Insert new item into the model context
             modelContext.insert(newClothingItem)
         }
 
         // Save changes
         do {
             try modelContext.save()
-            dismiss()
+            print("Changes saved successfully.")
         } catch {
-            print("Failed to save clothing item: \(error)")
+            print("Failed to save changes: \(error)")
         }
+
+        dismiss()
     }
 
 
-
-    private func updateKategorijaRelationships(for clothingItem: ClothingItem, newCategories: [ClothingCategory]) {
-        // Remove Apgerbs from old Kategorijas
+    private func updateCategoryRelationships(for clothingItem: ClothingItem, newCategories: [ClothingCategory]) {
+        // Remove the clothing item from old categories
         for category in clothingItem.clothingItemCategories {
             category.categoryClothingItems.removeAll { $0 == clothingItem }
         }
-        
-        // Assign new Kategorijas and update their Apgerbi
+
+        // Assign the new categories to the clothing item
         clothingItem.clothingItemCategories = newCategories
+
+        // Add the clothing item to the new categories
         for category in newCategories {
             if !category.categoryClothingItems.contains(clothingItem) {
                 category.categoryClothingItems.append(clothingItem)
@@ -435,7 +449,7 @@ struct PievienotApgerbuView: View {
     }
 
     
-    private func atjaunotSezonu(chosenSeason: Season, choice: Bool) {
+    private func updateSeason(chosenSeason: Season, choice: Bool) {
         if choice {
             clothingItemSeason.insert(chosenSeason)
         } else {
