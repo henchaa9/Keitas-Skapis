@@ -451,7 +451,8 @@ struct ContentView: View {
             }
         }
         selectedClothingItemsIDs.removeAll()
-        try? modelContext.save()   
+        isSelectionModeActive = false // Exit multi-selection mode
+        try? modelContext.save()
     }
 
 
@@ -497,6 +498,7 @@ struct ContentView: View {
                     modelContext.delete(item)
                 }
                 selectedClothingItemsIDs.removeAll()
+                isSelectionModeActive = false // Exit multi-selection mode
                 try? modelContext.save()
                 performFiltering()
             }
