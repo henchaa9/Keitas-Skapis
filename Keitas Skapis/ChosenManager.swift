@@ -1,43 +1,36 @@
-//
-//  ChosenManager.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 27/12/2024.
-//
 
 import SwiftUI
 import SwiftData
 
-/// A manager class to handle operations for chosen clothing items.
-/// This class conforms to `ObservableObject` to allow SwiftUI views to react to changes.
+// Klase, kas kontrolē izvēlētos apģērbus un saisītās funkcijas
+/// Klase atbilst `ObservableObject` lai ļautu SwiftUI skatiem reaģēt uz izmaiņām.
 class ChosenManager: ObservableObject {
-    // MARK: - Published Properties
+    // MARK: - Publicētie (globālie) parametri
     
-    /// An array to store the currently chosen clothing items.
-    /// Changes to this array will notify SwiftUI views observing this object.
+    // Masīvs, kas glabā izvēlētos apģērbus
+    // Par izmaiņām masīvā tiks 'informēti' visi skati, kas to izmanto
     @Published var chosenClothingItems: [ClothingItem] = []
     
-    // MARK: - Methods
+    // MARK: - Metodes
     
-    /// Adds a clothing item to the chosen list.
-    /// - Parameter clothingItem: The `ClothingItem` to add.
-    /// - Note: This method prevents duplicate items by checking their `id`.
+    /// Pievieno apģērbu masīvam
+    /// - Parameter clothingItem: Apģērbs, kuru pievienot.
+    /// - Note: Šī metode novērš dublikātus izmantojot to `id`.
     func add(_ clothingItem: ClothingItem) {
-        // Avoid duplicates
+        // Novērš dublikātus
         if !chosenClothingItems.contains(where: { $0.id == clothingItem.id }) {
             chosenClothingItems.append(clothingItem)
         }
     }
 
-    /// Removes a clothing item from the chosen list.
-    /// - Parameter clothingItem: The `ClothingItem` to remove.
-    /// - Note: It matches the clothing item by `id` to ensure the correct item is removed.
+    // Izņem apģērbu no izvēlēto masīva
+    /// - Parameter clothingItem: Apģērbs.
+    /// - Note: Tiek izmantots apģērba `id`, lai izņemtu pareizo apģērbu.
     func remove(_ clothingItem: ClothingItem) {
         chosenClothingItems.removeAll { $0.id == clothingItem.id }
     }
 
-    /// Clears all clothing items from the chosen list.
-    /// - Note: This method removes all items, leaving the list empty.
+    // Izņem visus apģērbus no izvēlēto masīva.
     func clear() {
         chosenClothingItems.removeAll()
     }

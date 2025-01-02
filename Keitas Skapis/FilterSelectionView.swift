@@ -1,141 +1,135 @@
-//
-//  FilterSelectionView.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 30/12/2024.
-//
 
 import SwiftUI
 import SwiftData
 
+// MARK: - Filtru skats sākumlapā
 struct FilterSelectionView: View {
-    // MARK: - Bindings for Filters
+    // MARK: - Filtri
     
-    @Binding var selectedColors: Set<CustomColor> // Tracks selected colors for filtering
-    @Binding var selectedSizes: Set<Int> // Tracks selected sizes for filtering
-    @Binding var selectedSeasons: Set<Season> // Tracks selected seasons for filtering
-    @Binding var selectedLastWorn: Date? // Tracks the date for last worn filtering
-    @Binding var isIronable: Bool? // Tracks if items are ironable (`gludinams`)
-    @Binding var isWashing: Bool? // Tracks if items are washable (`mazgajas`)
-    @Binding var isDirty: Bool? // Tracks if items are dirty (`netirs`)
+    @Binding var selectedColors: Set<CustomColor>
+    @Binding var selectedSizes: Set<Int>
+    @Binding var selectedSeasons: Set<Season>
+    @Binding var selectedLastWorn: Date?
+    @Binding var isIronable: Bool?
+    @Binding var isWashing: Bool?
+    @Binding var isDirty: Bool?
     
-    // MARK: - Available Options
+    // MARK: - Pieejamās opcijas sarakstiem / izvēles laukiem
     
-    let allColors: [CustomColor] // List of all available colors based on unfiltered Apgerbs
-    let allSizes = ["XS", "S", "M", "L", "XL"] // Predefined size options
-    let allSeasons = Season.allCases // All possible seasons
+    let allColors: [CustomColor]
+    let allSizes = ["XS", "S", "M", "L", "XL"]
+    let allSeasons = Season.allCases
     
-    // MARK: - Environment
+    // MARK: - Vides mainīgie
     
-    @Environment(\.dismiss) var dismiss // Provides a method to dismiss the current view
+    @Environment(\.dismiss) var dismiss
     
-    // MARK: - State Properties
-    
-    @State private var isSeasonDropdownExpanded = false // Controls the expansion of the seasons dropdown
+    // MARK: - Stāvokļu mainīgie
+    @State private var isSeasonDropdownExpanded = false
     
     var body: some View {
         NavigationStack {
             Form {
-                // MARK: - Colors Filter
+                // MARK: - Krāsu filtrs
                 Section(header: Text("Krāsa")) {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 40))]) {
                         ForEach(allColors, id: \.self) { color in
                             Circle()
-                                .fill(color.color) // Displays the color
+                                .fill(color.color)
                                 .frame(width: 40, height: 40)
                                 .overlay(
                                     Circle()
-                                        .stroke(selectedColors.contains(color) ? Color.blue : Color.black, lineWidth: selectedColors.contains(color) ? 3 : 1) // Highlights selected colors
+                                        .stroke(selectedColors.contains(color) ? Color.blue : Color.black, lineWidth: selectedColors.contains(color) ? 3 : 1) // Izvēlētā krāsa tiek iezīmēta
                                 )
                                 .onTapGesture {
-                                    toggleColorSelection(color) // Toggles color selection
+                                    toggleColorSelection(color) // Uz pieskāriena izvēlas krāsu/as
                                 }
                         }
                     }
                 }
 
-                // MARK: - Size Filter
+                // MARK: - Izmēra filtrs
                 Section(header: Text("Izmērs")) {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))]) {
                         ForEach(0..<allSizes.count, id: \.self) { index in
                             Text(allSizes[index])
                                 .frame(width: 50, height: 30)
-                                .background(selectedSizes.contains(index) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.2)) // Highlights selected sizes
+                                .background(selectedSizes.contains(index) ? Color.blue.opacity(0.3) : Color.gray.opacity(0.2)) // Izceļ izvēlēto izmēru
                                 .cornerRadius(8)
                                 .onTapGesture {
-                                    toggleSizeSelection(index) // Toggles size selection
+                                    toggleSizeSelection(index) // Uz pieskāriena izvēlas izmēru
                                 }
                         }
                     }
                 }
 
-                // MARK: - Seasons Filter (Dropdown)
+                // MARK: - Sezonu filtrs (atveras)
                 Section(header: Text("Sezona")) {
                     DisclosureGroup(isExpanded: $isSeasonDropdownExpanded) {
                         ForEach(allSeasons, id: \.self) { season in
                             Toggle(season.rawValue, isOn: Binding(
                                 get: { selectedSeasons.contains(season) },
                                 set: { isSelected in toggleSeasonSelection(season, isSelected: isSelected) }
-                            )) // Toggles season selection
+                            )) // Sezonas izvēle
                         }
                     } label: {
-                        Text("Izvēlieties sezonu") // Label for the dropdown
+                        Text("Izvēlieties sezonu")
                     }
                 }
 
-                // MARK: - Last Worn Filter
+                // MARK: - Pēdējoreiz vilkts filtrs, atver kalendāru
                 Section(header: Text("Pēdējoreiz vilkts")) {
                     DatePicker("Vilkts pirms", selection: Binding(
                         get: { selectedLastWorn ?? Date() },
                         set: { newValue in selectedLastWorn = newValue }
-                    ), displayedComponents: .date) // Allows users to pick a date
+                    ), displayedComponents: .date) // Atzīmē izvēlēto datumu
                 }
 
-                // MARK: - Laundering and Dirty Filters
+                // MARK: - Apģērba stāvokļa filtrs tīrs/netīrs/mazgājas
                 Section(header: Text("Apģērba stāvoklis")) {
                     Toggle("Gludināms", isOn: Binding(
                         get: { isIronable ?? false },
                         set: { newValue in isIronable = newValue }
-                    )) // Toggles ironable status
+                    ))
                     Toggle("Mazgājas", isOn: Binding(
                         get: { isWashing ?? false },
                         set: { newValue in isWashing = newValue }
-                    )) // Toggles washable status
+                    ))
                     Toggle("Netīrs", isOn: Binding(
                         get: { isDirty ?? false },
                         set: { newValue in isDirty = newValue }
-                    )) // Toggles dirty status
+                    ))
                 }
 
-                // MARK: - Clear Filters Button
+                // MARK: - Filtru notīrīšanas poga
                 Section {
                     Button(action: clearFilters) {
-                        Text("Notīrīt filtrus") // Button label to clear all filters
+                        Text("Notīrīt filtrus")
                             .foregroundColor(.red)
                     }
-                    .frame(maxWidth: .infinity, alignment: .center) // Centers the button
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-            .navigationTitle("Filtri") // Sets the navigation title
+            .navigationTitle("Filtri")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Aizvērt") {
-                        dismiss() // Dismisses the filter view
+                        dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Pielietot") {
-                        dismiss() // Applies the filters and dismisses the view
+                        dismiss()
                     }
                 }
             }
         }
     }
 
-    // MARK: - Helper Methods
+    // MARK: - Palīgfunkcijas
 
-    /// Toggles the selection state of a given color
-    /// - Parameter color: The CustomColor to toggle
+    // Maina krāsas izvēles statusu
+    /// - Parameter color: krāsas, kurai mainīt statusu
     private func toggleColorSelection(_ color: CustomColor) {
         if selectedColors.contains(color) {
             selectedColors.remove(color)
@@ -144,8 +138,8 @@ struct FilterSelectionView: View {
         }
     }
 
-    /// Toggles the selection state of a given size
-    /// - Parameter size: The index of the size to toggle
+    // Maina izmēra izvēles statusu
+    /// - Parameter size: izmēra indekss, kuram mainīt statusu
     private func toggleSizeSelection(_ size: Int) {
         if selectedSizes.contains(size) {
             selectedSizes.remove(size)
@@ -154,10 +148,10 @@ struct FilterSelectionView: View {
         }
     }
 
-    /// Toggles the selection state of a given season
+    // Maina sezonas izvēles statusu
     /// - Parameters:
-    ///   - season: The Season to toggle
-    ///   - isSelected: The new selection state
+    ///   - season: sezona, kurai mainīt statusu
+    ///   - isSelected: jaunais statuss
     private func toggleSeasonSelection(_ season: Season, isSelected: Bool) {
         if isSelected {
             selectedSeasons.insert(season)
@@ -166,7 +160,7 @@ struct FilterSelectionView: View {
         }
     }
 
-    /// Clears all selected filters
+    // Notīra visus filtrus
     private func clearFilters() {
         selectedColors.removeAll()
         selectedSizes.removeAll()

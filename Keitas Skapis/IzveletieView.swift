@@ -1,38 +1,33 @@
-//
-//  IzveletieView.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 27/12/2024.
-//
 
 import SwiftUI
 import SwiftData
 
+// MARK: - Izvēlēto apģerbu skats
 struct IzveletieView: View {
-    // Access the shared ChosenManager from the environment
+    // MARK: - Vides mainīgie un datu vaicājumi
     @EnvironmentObject private var chosenManager: ChosenManager
-    // Access the data model context for database operations
     @Environment(\.modelContext) private var modelContext
-    // Access the dismiss action to close the view
     @Environment(\.dismiss) private var dismiss
+    @Query private var days: [Day]
 
-    // State properties to manage user inputs
+    // MARK: - Stāvokļu mainīgie
     @State private var selectedDate: Date = Date()
     @State private var notes: String = ""
-    
-    // Query to fetch all Day entities from the data model
-    @Query private var days: [Day]
+
+    // MARK: - Kļūdu apstrādes mainīgie
+    @State private var showErrorAlert: Bool = false
+    @State private var errorMessage: String = ""
 
     var body: some View {
         NavigationStack {
             Form {
-                // Section for displaying chosen clothing items
+                // Izvēlēto apģērbu sadaļa
                 Section("") {
                     if chosenManager.chosenClothingItems.isEmpty {
-                        // Message displayed when no clothes are selected
+                        // Noklusējuma ziņa
                         Text("Nav izvēlētu apģērbu.")
                     } else {
-                        // List each selected clothing item with its image and name
+                        // Katrs attēls parādīts ar attēlu un nosaukumu
                         ForEach(chosenManager.chosenClothingItems, id: \.id) { clothingItem in
                             HStack(spacing: 15) {
                                 Text(clothingItem.name)
@@ -40,52 +35,58 @@ struct IzveletieView: View {
                                 
                                 Spacer()
                                 
-                                // Asynchronously load and display the clothing item's image
+                                // Asinhroni ielādē attēlu
                                 AsyncImageView(clothingItem: clothingItem)
                                     .frame(width: 50, height: 50)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                         }
-                        // Enable swipe-to-delete functionality
-                        .onDelete(perform: removeFromChosen) // Helper Function
+                        // Pavilkšana izdzēš attēlu
+                        .onDelete(perform: removeFromChosen)
                     }
                 }
 
-                // Section for selecting a date
+                // Datuma izvēle
                 Section {
                     DatePicker("Izvēlēties datumu", selection: $selectedDate, displayedComponents: .date)
                 }
 
-                // Section for adding notes
+                // Piezīmes
                 Section("Piezīmes") {
                     TextField("Pievienot piezīmes", text: $notes)
                 }
                 
-                // Confirmation button to save the selected clothes and notes
+                // Apstiprināšanas poga
                 Button {
-                    Confirm() // Helper Function
+                    Confirm()
                 } label: {
                     Text("Apstiprināt")
                 }
                 .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 .frame(maxWidth: .infinity)
             }
-            .navigationTitle("Izvēlētie apģērbi") // Set the navigation title
+            .navigationTitle("Izvēlētie apģērbi")
             .toolbar {
-                // Toolbar item to close the view
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Aizvērt") {
                         dismiss() // Dismiss the current view
                     }
                 }
             }
+            .alert(isPresented: $showErrorAlert) { // Added alert modifier
+                Alert(
+                    title: Text("Kļūda"),
+                    message: Text(errorMessage),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
         }
     }
 
-    // MARK: - Helper Functions
+    // MARK: - Palīgfunkcijas
 
-    /// Removes selected clothing items from the chosen list.
-    /// - Parameter offsets: The set of indices to remove.
+    // Noņem apģērbu no izvēlēto saraksta
+    /// - Parameter offsets: indeksi, kurus noņemt
     private func removeFromChosen(at offsets: IndexSet) {
         for index in offsets {
             let clothingItem = chosenManager.chosenClothingItems[index]
@@ -93,27 +94,34 @@ struct IzveletieView: View {
         }
     }
     
-    /// Confirms and saves the selected clothing items, date, and notes.
+    // Saglabā izvēlētos apģērbus norādītajam datumam ar piezīmēm
     private func Confirm() {
-        // Ensure there are selected items or notes before proceeding
+        // Pārbauda vai ir izvēlēti apģērbi un/vai piezīmes
         guard !chosenManager.chosenClothingItems.isEmpty || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             dismiss()
             return
         }
 
         let currentDay: Day
-        // Check if a Day entity with the selected date already exists
+        // Pārbauda, vai attiecīgās dienas objekts jau neeksistē
         if let existingDay = days.first(where: { sameDate($0.date, selectedDate) }) {
             currentDay = existingDay
         } else {
-            // Create a new Day entity if none exists for the selected date
+            // Izveido jaunu dienu, ja tāda neeksistē
             let newDay = Day(date: selectedDate, notes: notes)
-            modelContext.insert(newDay) // Insert new day into context
-            try? modelContext.save()   // Save immediately to assign an ID
-            currentDay = newDay
+            modelContext.insert(newDay)
+            do {
+                try modelContext.save()
+                currentDay = newDay
+            } catch {
+                // Kļūdas pārvaldība
+                errorMessage = "Neizdevās saglabāt jauno dienu."
+                showErrorAlert = true
+                return
+            }
         }
 
-        // Associate chosen clothing items with the current day
+        // Asociē dienu ar apģērbiem
         for item in chosenManager.chosenClothingItems {
             if !currentDay.dayClothingItems.contains(item) {
                 currentDay.dayClothingItems.append(item)
@@ -122,36 +130,39 @@ struct IzveletieView: View {
                 item.clothingItemDays.append(currentDay)
             }
 
-            // Update `lastWorn` date if the selected date is today or earlier
+            // Atjaunina `lastWorn` ja izvēlētais datums ir šodien vai agrāk
             if selectedDate <= Date() {
                 item.lastWorn = max(item.lastWorn, selectedDate)
             }
         }
 
-        // Append notes to the day's existing notes
+        // Pievieno piezīmes
         if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             currentDay.notes += currentDay.notes.isEmpty ? notes : "\n\(notes)"
         }
 
-        // Attempt to save all changes to the data model
+        // Mēģina saglabāt
         do {
             try modelContext.save()
-            chosenManager.clear() // Clear the chosen items after saving
-            dismiss()             // Close the view
+            chosenManager.clear()
+            dismiss()
         } catch {
-            print("Failed to save changes: \(error)")
+            // Kļūdas pārvaldība
+            errorMessage = "Neizdevās saglabāt izmaiņas."
+            showErrorAlert = true
         }
     }
 
-    /// Checks if two dates fall on the same calendar day.
+    // Pārbauda, vai divi datumi iekrīt vienā dienā
     /// - Parameters:
-    ///   - d1: The first date.
-    ///   - d2: The second date.
-    /// - Returns: `true` if both dates are on the same day; otherwise, `false`.
+    ///   - d1: pirmais datums
+    ///   - d2: otrais datums
+    /// - Returns: `true` , ja datumi vienādi, pretēji `false`.
     private func sameDate(_ d1: Date, _ d2: Date) -> Bool {
         Calendar.current.isDate(d1, inSameDayAs: d2)
     }
 }
+
 
 
 

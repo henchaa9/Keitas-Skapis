@@ -1,9 +1,3 @@
-//
-//  PievienotKategoriju.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 06/10/2024.
-//
 
 import SwiftUI
 import SwiftData
@@ -14,13 +8,14 @@ import CoreImage.CIFilterBuiltins
 
 // MARK: - ImagePicker
 
-/// A UIViewControllerRepresentable struct that wraps UIImagePickerController for use in SwiftUI.
+// A UIViewControllerRepresentable struct, kas aptver UIImagePickerController lietošanai SwiftUI.
+// Ļauj izvēlēties pievienot attēlu no galerijas vai izmantot kameru
 struct ImagePicker: UIViewControllerRepresentable {
     @Environment(\.presentationMode) private var presentationMode
     @Binding var selectedImage: UIImage?
     var sourceType: UIImagePickerController.SourceType
 
-    /// Creates and configures the UIImagePickerController.
+    // Izveido un konfigurē UIImagePickerController.
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.delegate = context.coordinator
@@ -28,15 +23,15 @@ struct ImagePicker: UIViewControllerRepresentable {
         return picker
     }
 
-    /// Updates the UIImagePickerController (not used here).
+    // Atjaunina UIImagePickerController netiek izmantots.
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 
-    /// Creates the Coordinator instance to handle UIImagePickerControllerDelegate methods.
+    // Izveido Coordinator instanci UIImagePickerControllerDelegate metožu pārvaldībai.
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 
-    /// Coordinator class to manage UIImagePickerController interactions.
+    // Coordinator klase UIImagePickerController pārvaldībai.
     class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         let parent: ImagePicker
 
@@ -44,7 +39,7 @@ struct ImagePicker: UIViewControllerRepresentable {
             self.parent = parent
         }
 
-        /// Handles the image selection and dismisses the picker.
+        // Pārvalda attēla izvēli un loga aizvēršanu
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             if let image = info[.originalImage] as? UIImage {
                 parent.selectedImage = image
@@ -52,7 +47,7 @@ struct ImagePicker: UIViewControllerRepresentable {
             parent.presentationMode.wrappedValue.dismiss()
         }
 
-        /// Handles cancellation and dismisses the picker.
+        // Pārvalda atcelšanu
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             parent.presentationMode.wrappedValue.dismiss()
         }
@@ -61,21 +56,27 @@ struct ImagePicker: UIViewControllerRepresentable {
 
 // MARK: - PievienotKategorijuView
 
-/// A SwiftUI view for adding or editing a clothing category, including name and image with optional background removal.
+// Skats kategoriju pievienošanai un rediģēšanai
 struct PievienotKategorijuView: View {
+    // MARK: - Vides mainīgie
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
 
+    // MARK: - Stāvokļu mainīgie
     @State var categoryName = ""
     @State private var selectedImage: UIImage?
     @State private var isPickerPresented = false
     @State private var sourceType: UIImagePickerController.SourceType?
-
     @State private var showingOption = false
-    @State private var removeBackground = false // User preference for background removal
+    @State private var removeBackground = false
     var existingCategory: ClothingCategory?
+    
+    // MARK: - Kļūdu apstrādes mainīgie
+    @State private var showErrorAlert: Bool = false
+    @State private var errorMessage: String = ""
 
-    /// Initializes the view with an optional existing category for editing.
+
+    // Inicializē skatu ar neobligātu kategoriju rediģēšanas režīmam
     init(existingCategory: ClothingCategory? = nil) {
         self.existingCategory = existingCategory
         _categoryName = State(initialValue: existingCategory?.name ?? "")
@@ -85,7 +86,7 @@ struct PievienotKategorijuView: View {
         _removeBackground = State(initialValue: existingCategory?.removeBackground ?? false)
     }
 
-    /// Computes the displayed image, applying background removal if enabled.
+    // Izveido attēlojamo attēlu ar noņemtu/nenoņemtu fonu pēc lietotāja izvēles
     var displayedImage: UIImage? {
         if removeBackground, let selectedImage = selectedImage {
             return removeBackground(from: selectedImage)
@@ -95,7 +96,7 @@ struct PievienotKategorijuView: View {
 
     var body: some View {
         VStack {
-            // Header with title and close button
+            // Galvene
             HStack {
                 Text("Pievienot Kategoriju")
                     .font(.title)
@@ -116,9 +117,9 @@ struct PievienotKategorijuView: View {
             .padding(.horizontal, 10)
             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
-            // Content for adding image, toggle, and name
+            // Ievades lauki
             VStack(alignment: .leading) {
-                // Button to add or change the category image
+                // Foto pievienošanas poga
                 Button(action: addPhoto) {
                     ZStack {
                         if let displayedImage = displayedImage {
@@ -141,7 +142,7 @@ struct PievienotKategorijuView: View {
                     }
                 }
                 .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                // Confirmation dialog for image source selection
+                // Dialogs ievades izvēlei
                 .confirmationDialog("Pievienot attēlu", isPresented: $showingOption) {
                     Button("Kamera") {
                         sourceType = .camera
@@ -153,18 +154,18 @@ struct PievienotKategorijuView: View {
                     }
                     Button("Atcelt", role: .cancel) {}
                 }
-                // Presents the ImagePicker sheet
+                // Attēlo ImagePicker lapu
                 .sheet(isPresented: $isPickerPresented) {
                     if let sourceType = sourceType {
                         ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
                     }
                 }
 
-                // Toggle for background removal
+                // Slēdzis fona noņemšanai
                 Toggle("Noņemt fonu", isOn: $removeBackground)
                     .padding(.top, 20)
 
-                // Text field for entering the category name
+                // Lauks kategorijas nosaukumam
                 TextField("Nosaukums", text: $categoryName)
                     .textFieldStyle(.roundedBorder)
                     .padding(.top, 20)
@@ -175,9 +176,9 @@ struct PievienotKategorijuView: View {
 
             Spacer()
 
-            // Confirmation button to save the category
+            // Saglabāšanas poga
             Button {
-                Save() // Helper Function
+                Save()
             } label: {
                 Text("Apstiprināt")
                     .frame(maxWidth: .infinity)
@@ -189,35 +190,44 @@ struct PievienotKategorijuView: View {
             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
             .padding(.vertical, 15)
             .padding(.horizontal, 20)
+
         }
         .preferredColorScheme(.light)
         .hideKeyboardOnTap()
+        .alert(isPresented: $showErrorAlert) {
+            Alert(
+                title: Text("Kļūda"),
+                message: Text(errorMessage),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 
-    // MARK: - Actions
+    // MARK: - Funkcijas
 
-    /// Presents the confirmation dialog for selecting an image source.
+    // Parāda dialogu foto avota izvēlei kamera/galerija
     func addPhoto() {
         showingOption = true
     }
 
-    /// Saves the new or updated clothing category to the data model.
+    // Saglabā jaunu/rediģētu kategoriju
     private func Save() {
-        // Ensure the category name is not empty
+        // Pārbauda, vai nosaukums nav tukšs
         guard !categoryName.isEmpty else {
-            print("Category name cannot be empty")
+            errorMessage = "Kategorijas nosaukums nevar būt tukšs."
+            showErrorAlert = true
             return
         }
 
         Task {
             let imageData = selectedImage?.pngData()
             if let category = existingCategory {
-                // Update existing category
+                // Atjaunina kategoriju
                 category.name = categoryName
                 category.picture = imageData
                 category.removeBackground = removeBackground
             } else {
-                // Insert new category
+                // Ievieto jaunu kategoriju
                 let newKategorija = ClothingCategory(
                     name: categoryName,
                     picture: imageData,
@@ -226,22 +236,24 @@ struct PievienotKategorijuView: View {
                 modelContext.insert(newKategorija)
             }
 
-            // Attempt to save the context to persist changes
+            // Mēģina saglabāt
             do {
                 try modelContext.save()
+                dismiss() // Aizver skatu, ja saglabāšana ir veiksmīga
             } catch {
-                print("Failed to save category: \(error.localizedDescription)")
+                // Kļūdas pārvaldība
+                errorMessage = "Neizdevās saglabāt kategoriju: \(error.localizedDescription)"
+                showErrorAlert = true
             }
-
-            dismiss() // Close the view after saving
         }
     }
 
-    // MARK: - Helper Functions
 
-    /// Removes the background from the provided image using Vision and CoreImage.
-    /// - Parameter image: The original UIImage from which to remove the background.
-    /// - Returns: A new UIImage with the background removed, or the original image if removal fails.
+    // MARK: - Palīgfunkcijas
+
+    // Noņem attēla fonu izmantojot Vision un CoreImage
+    /// - Parameter image: oriģinālā UIImage no kuras noņemt fonu.
+    /// - Returns: jauna UIImage ar noņemtu fonu vai ar fonu, ja noņemšana neizdodas
     private func removeBackground(from image: UIImage) -> UIImage {
         guard let inputImage = CIImage(image: image) else {
             print("Failed to create CIImage")
@@ -257,9 +269,9 @@ struct PievienotKategorijuView: View {
         return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
     }
 
-    /// Creates a mask image using Vision's foreground instance mask request.
-    /// - Parameter inputImage: The CIImage to process.
-    /// - Returns: A CIImage mask or nil if creation fails.
+    // Izveido attēla masku izmantojot Vision
+    /// - Parameter inputImage: CIImage attēls, ko apstrādāt.
+    /// - Returns: CIImage maska vai nil, ja neizdodas izveidot masku.
     private func createMask(from inputImage: CIImage) -> CIImage? {
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(ciImage: inputImage)
@@ -275,11 +287,11 @@ struct PievienotKategorijuView: View {
         return nil
     }
 
-    /// Applies the mask to the original image to remove the background.
+    // Pievieno masku oriģinālajam attēlam, lai noņemtu fonu
     /// - Parameters:
-    ///   - mask: The CIImage mask to apply.
-    ///   - image: The original CIImage.
-    /// - Returns: A new CIImage with the background removed.
+    ///   - mask: CIImage maska.
+    ///   - image: Oriģinālais CIImage attēls.
+    /// - Returns: Jauns CIImage attēls ar noņemtu fonu.
     private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
         let filter = CIFilter.blendWithMask()
         filter.inputImage = image
@@ -288,11 +300,11 @@ struct PievienotKategorijuView: View {
         return filter.outputImage!
     }
 
-    /// Converts a CIImage back to a UIImage with the original orientation.
+    // Pārvērš CIImage atpakaļ uz UIImage ar oriģinālu orientāciju.
     /// - Parameters:
-    ///   - ciImage: The CIImage to convert.
-    ///   - originalOrientation: The original orientation of the UIImage.
-    /// - Returns: A new UIImage created from the CIImage.
+    ///   - ciImage: CIImage attēls ko pārvērst.
+    ///   - originalOrientation: Oriģinālā UIImage attēla orientācija.
+    /// - Returns: Jauns UIImage attēls izveidots no CIImage.
     private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage {
         guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
             fatalError("Failed to render CGImage")

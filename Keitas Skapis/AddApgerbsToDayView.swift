@@ -1,35 +1,31 @@
-//
-//  AddApgerbsToDayView.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 28/12/2024.
-//
 
 import SwiftUI
 import SwiftData
 
+// MARK: - Skats, kurā kalendāra dienai var pievienot apģērbus
 struct AddApgerbsToDayView: View {
-    @Binding var day: Day // Binding to the Day object being edited
+    // MARK: - Dienas objekts, kuru jārediģē
+    @Binding var day: Day
 
-    @Environment(\.modelContext) private var modelContext // Accesses the data model context for data operations
-    @Environment(\.dismiss) private var dismiss // Provides a method to dismiss the current view
+    // MARK: - Datu vaicājumi un vides mainīgie
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @Query private var allClothingItems: [ClothingItem]
 
-    @Query private var allClothingItems: [ClothingItem] // Fetches all ClothingItem entities from the data store
-
-    // Error handling state variables
-    @State private var showErrorAlert = false // Controls the presentation of the error alert
-    @State private var errorMessage: String = "" // Stores the error message to display
+    // MARK: - Kļūdu apstrādes mainīgie
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String = ""
 
     var body: some View {
         NavigationStack {
             List {
-                // Iterate over all clothing items to display them in the list
+                // Saraksts ar apģērbiem
                 ForEach(allClothingItems, id: \.id) { item in
                     Button {
-                        toggleClothingItem(item) // Toggle the inclusion of the clothing item in the day
+                        toggleClothingItem(item) // Poga apģērba pievienošanai dienai
                     } label: {
                         HStack {
-                            // Indicate if the clothing item is already associated with the day
+                            // Vizuāls apstiprinājums, ka apģērbs ir/nav pievienots dienai
                             if day.dayClothingItems.contains(item) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundColor(.green)
@@ -40,13 +36,12 @@ struct AddApgerbsToDayView: View {
 
                             Spacer()
 
-                            // Display the name of the clothing item
+                            // Apģērba nosaukums un asinhrons attēls
                             Text(item.name)
                                 .font(.headline)
 
                             Spacer()
 
-                            // Display the clothing item's image asynchronously
                             AsyncImageView(clothingItem: item)
                                 .frame(width: 40, height: 40)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -54,15 +49,15 @@ struct AddApgerbsToDayView: View {
                     }
                 }
             }
-            .navigationTitle("Pievienot Apģērbu") // Sets the navigation title
+            .navigationTitle("Pievienot Apģērbu")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Aizvērt") {
-                        dismiss() // Dismisses the current view
+                        dismiss()
                     }
                 }
             }
-            // Present the error alert when an error occurs
+            // Kļūdu apstrāde
             .alert(isPresented: $showErrorAlert) {
                 Alert(
                     title: Text("Kļūda"),
@@ -73,24 +68,24 @@ struct AddApgerbsToDayView: View {
         }
     }
 
-    /// Toggles the inclusion of a clothing item in the day
-    /// - Parameter clothingItem: The ClothingItem to toggle
+    // Pievieno/noņem apģērbu dienai
+    /// - Parameter clothingItem: apģērbs, kurš tiek pievienots/noņemts
     private func toggleClothingItem(_ clothingItem: ClothingItem) {
         if day.dayClothingItems.contains(clothingItem) {
-            // Remove the clothing item from the current day
+            // Noņem apģērbu no dienas
             if let index = day.dayClothingItems.firstIndex(where: { $0.id == clothingItem.id }) {
                 day.dayClothingItems.remove(at: index)
             }
 
-            // Remove the association with this day from the clothing item
+            // Noņem dienas referenci no apģērba
             if let index = clothingItem.clothingItemDays.firstIndex(where: { $0.id == day.id }) {
                 clothingItem.clothingItemDays.remove(at: index)
             }
 
-            // Update `lastWorn` after removing the association
+            // Atjaunina apģērba `lastWorn` jeb pēdējoreiz vilkts pēc izmaiņām
             updateLastWorn(for: clothingItem)
         } else {
-            // Add the clothing item to the current day
+            // Pievieno apģērbu dienai
             if !day.dayClothingItems.contains(clothingItem) {
                 day.dayClothingItems.append(clothingItem)
             }
@@ -99,25 +94,25 @@ struct AddApgerbsToDayView: View {
             }
         }
 
-        // Attempt to save changes to the data context
+        // Mēģina saglabāt
         do {
             try modelContext.save()
         } catch {
-            // Set the error message and trigger the error alert
+            // Kļūdu apstrāde
             errorMessage = "Neizdevās saglabāt izmaiņas. Lūdzu, mēģiniet vēlreiz."
             showErrorAlert = true
         }
     }
 
-    /// Updates the `lastWorn` date for a clothing item based on associated days
-    /// - Parameter clothingItem: The ClothingItem to update
+    /// Atjaunina `lastWorn` jeb pēdējoreiz vilkts apģērbam balstoties uz piesasistītajām dienām
+    /// - Parameter clothingItem: apģērbs, kuram jāmaina lastWorn
     private func updateLastWorn(for clothingItem: ClothingItem) {
-        // Filter for days that are in the past or today
+        // Dienas, kas ir pagātnē vai šodien
         let validDays = clothingItem.clothingItemDays.filter { $0.date <= Date() }
         if let latestDay = validDays.max(by: { $0.date < $1.date }) {
-            clothingItem.lastWorn = latestDay.date // Update to the latest associated day
+            clothingItem.lastWorn = latestDay.date // Atjaunina uz tuvāko piesaistīto dienu
         } else {
-            // Reset `lastWorn` if no valid days remain
+            // Atgriež `lastWorn` ja nav atbilstošu dienu
             clothingItem.lastWorn = Date.distantPast
         }
     }

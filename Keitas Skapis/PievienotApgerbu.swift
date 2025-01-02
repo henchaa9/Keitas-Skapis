@@ -1,9 +1,3 @@
-//
-//  PievienotApgerbu.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 10/10/2024.
-//
 
 import SwiftUI
 import SwiftData
@@ -12,42 +6,47 @@ import Vision
 
 struct PievienotApgerbuView: View {
     
-    // MARK: - Data Queries
+    // MARK: - Datu vaicājumi
     
-    @Query private var categories: [ClothingCategory] // Fetches clothing categories
-    @Query private var clothingItems: [ClothingItem] // Fetches clothing items
+    @Query private var categories: [ClothingCategory]
+    @Query private var clothingItems: [ClothingItem]
     
-    // MARK: - Environment Variables
+    // MARK: - Vides mainīgie
     
-    @Environment(\.dismiss) var dismiss // Allows dismissing the view
-    @Environment(\.modelContext) private var modelContext // Provides access to the data model context
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) private var modelContext
     
-    // MARK: - State Variables
+    // MARK: - Stāvokļu mainīgie
     
-    @State var clothingItemName = "" // Stores the name of the clothing item
-    @State var clothingItemNotes = "" // Stores notes about the clothing item
-    @State private var isExpandedCategories = false // Controls the expansion of categories section
-    @State private var isExpandedSeason = false // Controls the expansion of season section
-    @State var clothingItemCategories: Set<ClothingCategory> = [] // Selected categories for the clothing item
-    @State var chosenColor: Color = .white // Selected color
-    @State var clothingItemColor: CustomColor? // Custom color object based on chosenColor
-    @State var clothingItemStatus = 0 // Status of the clothing item (e.g., clean, dirty)
-    @State var clothingItemIronable = true // Indicates if the clothing item is ironable
-    @State var clothingItemSize = 0 // Size of the clothing item
-    let seasonChoise = [Season.summer, Season.fall, Season.winter, Season.spring] // Available seasons
-    @State var clothingItemSeason: Set<Season> = [] // Selected seasons for the clothing item
-    @State var clothingItemLastWorn = Date.now // Date when the clothing item was last worn
-    @State private var selectedImage: UIImage? // Image selected by the user
-    @State private var isPickerPresented = false // Controls the presentation of the image picker
-    @State private var sourceType: UIImagePickerController.SourceType? // Source type for image picker (camera or photo library)
-    @State private var showingOption = false // Controls the presentation of image source options
-    @State private var removeBackground = false // User preference for background removal
-    @State private var backgroundRemovedImage: UIImage? // Stores the image with background removed
-    var existingClothingItem: ClothingItem? // Existing clothing item, if editing
+    @State var clothingItemName = ""
+    @State var clothingItemNotes = ""
+    @State private var isExpandedCategories = false
+    @State private var isExpandedSeason = false
+    @State var clothingItemCategories: Set<ClothingCategory> = []
+    @State var chosenColor: Color = .white
+    @State var clothingItemColor: CustomColor?
+    @State var clothingItemStatus = 0
+    @State var clothingItemIronable = true
+    @State var clothingItemSize = 0
+    let seasonChoise = [Season.summer, Season.fall, Season.winter, Season.spring]
+    @State var clothingItemSeason: Set<Season> = []
+    @State var clothingItemLastWorn = Date.now
+    @State private var selectedImage: UIImage?
+    @State private var isPickerPresented = false
+    @State private var sourceType: UIImagePickerController.SourceType?
+    @State private var showingOption = false
+    @State private var removeBackground = false
+    @State private var backgroundRemovedImage: UIImage?
+    var existingClothingItem: ClothingItem?
     
-    // MARK: - Computed Properties
+    // MARK: - Kļūdu apstrādes mainīgie
+    @State private var showErrorAlert: Bool = false
+    @State private var errorMessage: String = ""
+
     
-    /// Determines which image to display based on the removeBackground toggle
+    // MARK: - Aprēķināmie parametri
+    
+    // Determines which image to display based on the removeBackground toggle
     var displayedImage: UIImage? {
         if removeBackground {
             return backgroundRemovedImage ?? selectedImage
@@ -57,8 +56,8 @@ struct PievienotApgerbuView: View {
 
     // MARK: - Initialization
     
-    /// Initializes the view with an existing clothing item if provided
-    /// - Parameter existingClothingItem: The clothing item to edit, if any
+    // Inicializē skatu ar esošu apģērbu, ja tāds padots (rediģēšanai)
+    /// - Parameter existingClothingItem: Apģērbs, ko rediģēt (neobligāts)
     init(existingClothingItem: ClothingItem? = nil) {
         self.existingClothingItem = existingClothingItem
         if let item = existingClothingItem {
@@ -73,7 +72,7 @@ struct PievienotApgerbuView: View {
             _clothingItemLastWorn = State(initialValue: item.lastWorn)
             _removeBackground = State(initialValue: item.removeBackground)
 
-            // Load and process the image
+            // Ielādē un apstrādā attēlu
             if let imageData = item.picture, let image = UIImage(data: imageData) {
                 if item.removeBackground {
                     _selectedImage = State(initialValue: image)
@@ -85,15 +84,15 @@ struct PievienotApgerbuView: View {
         }
     }
 
-    // MARK: - Image Picker
+    // MARK: - Attēla izvēle
     
-    /// A UIViewControllerRepresentable struct to handle image picking from camera or photo library
+    // UIViewControllerRepresentable struct, kas nodrošina attēla izvēli no galerijas vai izmantojot kameru
     struct ImagePicker: UIViewControllerRepresentable {
-        @Environment(\.presentationMode) private var presentationMode // Controls presentation
-        @Binding var selectedImage: UIImage? // Binds the selected image
-        var sourceType: UIImagePickerController.SourceType // Source type for the picker
+        @Environment(\.presentationMode) private var presentationMode
+        @Binding var selectedImage: UIImage?
+        var sourceType: UIImagePickerController.SourceType
 
-        /// Creates the UIImagePickerController
+        // Izveido UIImagePickerController
         func makeUIViewController(context: Context) -> UIImagePickerController {
             let picker = UIImagePickerController()
             picker.delegate = context.coordinator
@@ -101,15 +100,15 @@ struct PievienotApgerbuView: View {
             return picker
         }
 
-        /// Updates the UIImagePickerController (not needed here)
+        // Atjaunina UIImagePickerController (šeit netiek izmantots)
         func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
 
-        /// Creates the coordinator for handling picker delegate methods
+        // Izveido koordinatoru
         func makeCoordinator() -> Coordinator {
             Coordinator(self)
         }
 
-        /// Coordinator class to handle UIImagePickerControllerDelegate methods
+        // Coordinator klase UIImagePickerControllerDelegate metožu kontrolēšanai
         class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
             let parent: ImagePicker
 
@@ -117,7 +116,7 @@ struct PievienotApgerbuView: View {
                 self.parent = parent
             }
 
-            /// Handles image selection
+            // Kontrolē attēla izvēli
             func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
                 if let image = info[.originalImage] as? UIImage {
                     parent.selectedImage = image
@@ -125,25 +124,25 @@ struct PievienotApgerbuView: View {
                 parent.presentationMode.wrappedValue.dismiss()
             }
             
-            /// Handles cancellation of image picker
+            // Kontrolē attēla izvēles atcelšanu
             func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
                 parent.presentationMode.wrappedValue.dismiss()
             }
         }
     }
     
-    // MARK: - View Body
+    // MARK: - Skata saturs
     
     var body: some View {
         VStack {
-            // Header with title and back button
+            // Galvene
             HStack {
                 Text("Pievienot Apģērbu")
                     .font(.title)
                     .bold()
                     .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 Spacer()
-                Button(action: { dismiss() }) { // Button to dismiss the view
+                Button(action: { dismiss() }) {
                     Image(systemName: "arrowshape.left.fill")
                         .font(.title)
                         .foregroundStyle(.black)
@@ -160,15 +159,15 @@ struct PievienotApgerbuView: View {
             
             Spacer()
             
-            // Scrollable content
+            // Iespējota stumšana uz leju
             ScrollView {
                 VStack (alignment: .leading) {
-                    // Image selection section
+                    // Attēla izvēle
                     VStack (alignment: .leading) {
                         Button(action: addPhoto) { // Button to add photo
                             ZStack {
                                 if let displayedImage = displayedImage {
-                                    // Display the image dynamically based on the toggle
+                                    // Parāda attēlu dinamiski balstoties uz izvēli
                                     Image(uiImage: displayedImage)
                                         .resizable()
                                         .scaledToFill()
@@ -188,7 +187,7 @@ struct PievienotApgerbuView: View {
                             }
                         }
                         .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
-                        .confirmationDialog("Pievienot attēlu", isPresented: $showingOption) { // Dialog for image source selection
+                        .confirmationDialog("Pievienot attēlu", isPresented: $showingOption) { // Attēla ievade
                             Button("Kamera") {
                                 sourceType = .camera
                                 isPickerPresented = true
@@ -200,22 +199,22 @@ struct PievienotApgerbuView: View {
                             Button("Atcelt", role: .cancel) { }
                         }
                     }
-                    .sheet(isPresented: $isPickerPresented) { // Presents the ImagePicker
+                    .sheet(isPresented: $isPickerPresented) { // Parāda dialogu attēla izvēlei
                         if let sourceType = sourceType {
                             ImagePicker(selectedImage: $selectedImage, sourceType: sourceType)
                         }
                     }
                     
-                    // Toggle for background removal
+                    // Slēdzis fona noņemšanai
                     Toggle("Noņemt fonu", isOn: $removeBackground)
                         .padding(.top, 20)
                         .onChange(of: removeBackground) { _, newValue in
                             if newValue, let selectedImage = selectedImage {
-                                backgroundRemovedImage = removeBackground(from: selectedImage) // Uses helper function
+                                backgroundRemovedImage = removeBackground(from: selectedImage) // Izmanto palīgmetodi
                             }
                         }
 
-                    // Text fields for name and notes
+                    // Nosaukuma un Piezīmju ievade
                     TextField("Nosaukums", text: $clothingItemName)
                         .textFieldStyle(.roundedBorder)
                         .padding(.top, 20)
@@ -225,9 +224,9 @@ struct PievienotApgerbuView: View {
                         .padding(.top, 10)
                         .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                     
-                    // Categories selection
+                    // Kategoriju izvēle
                     VStack(alignment: .leading) {
-                        Button(action: { isExpandedCategories.toggle() }) { // Toggle button for categories
+                        Button(action: { isExpandedCategories.toggle() }) {
                             HStack {
                                 Text("Kategorijas")
                                     .foregroundStyle(.black)
@@ -243,7 +242,7 @@ struct PievienotApgerbuView: View {
                         
                         if isExpandedCategories {
                             VStack {
-                                ForEach(categories, id: \.self) { category in // List of categories
+                                ForEach(categories, id: \.self) { category in // Izplests kategoriju saraksts
                                     HStack {
                                         Text(category.name)
                                         Spacer()
@@ -252,7 +251,7 @@ struct PievienotApgerbuView: View {
                                         }
                                     }
                                     .padding()
-                                    .onTapGesture { // Toggle category selection
+                                    .onTapGesture { // Reģistrē pieskārienu uz kategorijas
                                         if clothingItemCategories.contains(category) {
                                             clothingItemCategories.remove(category)
                                         } else {
@@ -268,7 +267,7 @@ struct PievienotApgerbuView: View {
                     }
                     .padding(.top, 10)
                     
-                    // Color picker
+                    // Krāsas izvēle
                     ColorPicker("Krāsa", selection: Binding(
                         get: { chosenColor },
                         set: { newColor in
@@ -278,7 +277,7 @@ struct PievienotApgerbuView: View {
                     ))
                     .padding(8)
                     
-                    // Size picker
+                    // Izmēra izvēle
                     Picker("Izmērs", selection: $clothingItemSize) {
                         Text("XS").tag(0)
                         Text("S").tag(1)
@@ -289,7 +288,7 @@ struct PievienotApgerbuView: View {
                     .pickerStyle(.segmented)
                     .padding(.top, 10)
                     
-                    // Status picker
+                    // Stāvokļa izvēle
                     Picker("Stāvoklis", selection: $clothingItemStatus) {
                         Text("Tīrs").tag(0)
                         Text("Netīrs").tag(1)
@@ -298,9 +297,9 @@ struct PievienotApgerbuView: View {
                     .pickerStyle(.segmented)
                     .padding(.top, 10)
                     
-                    // Season selection
+                    // Sezonas izvēle
                     VStack(alignment: .leading) {
-                        Button(action: { isExpandedSeason.toggle() }) { // Toggle button for seasons
+                        Button(action: { isExpandedSeason.toggle() }) {
                             HStack {
                                 Text("Sezona")
                                     .foregroundStyle(.black)
@@ -316,7 +315,7 @@ struct PievienotApgerbuView: View {
                         
                         if isExpandedSeason {
                             VStack {
-                                ForEach(seasonChoise, id: \.self) { season in // List of seasons
+                                ForEach(seasonChoise, id: \.self) { season in // Izplestais sezonu saraksts
                                     HStack {
                                         Text(season.rawValue)
                                         Spacer()
@@ -325,7 +324,7 @@ struct PievienotApgerbuView: View {
                                         }
                                     }
                                     .padding()
-                                    .onTapGesture { // Toggle season selection
+                                    .onTapGesture { // Reģistrē pieskārienu sezonai
                                         if clothingItemSeason.contains(season) {
                                             clothingItemSeason.remove(season)
                                         } else {
@@ -341,21 +340,21 @@ struct PievienotApgerbuView: View {
                     }
                     .padding(.top, 10)
                     
-                    // Date picker for last worn date
+                    // Pēdējoreiz vilkts datuma izvēle
                     DatePicker("Pēdējoreiz vilkts", selection: $clothingItemLastWorn, displayedComponents: [.date])
                         .padding(.top, 15)
                         .padding(.horizontal, 5)
                     
-                    // Toggle for ironable
+                    // Gludināms slēdzis
                     Toggle(isOn: $clothingItemIronable) {
                         Text("Gludināms")
                     }
                     .padding(.top, 15)
                     .padding(.horizontal, 5)
                     
-                    // Confirmation button
+                    // Apstiprināt poga
                     Button {
-                        Confirm() // Calls the Confirm function
+                        Confirm()
                     } label: {
                         Text("Apstiprināt")
                             .frame(maxWidth: .infinity)
@@ -372,38 +371,45 @@ struct PievienotApgerbuView: View {
                 .padding(20)
             }
         }
-        .preferredColorScheme(.light) // Sets the color scheme to light
-        .hideKeyboardOnTap() // Hides the keyboard when tapping outside
+        .preferredColorScheme(.light)
+        .hideKeyboardOnTap()
+        .alert(isPresented: $showErrorAlert) { // Added alert modifier
+            Alert(
+                title: Text("Kļūda"),
+                message: Text(errorMessage),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
     
-    // MARK: - Helper Functions
+    // MARK: - Palīgfunkcijas
     
-    /// Removes the background from the given image using Vision framework.
-    /// - Parameter image: The original UIImage.
-    /// - Returns: A new UIImage with the background removed.
-    /// - Note: This function is used in the initializer and when the removeBackground toggle changes.
+    // Noņem attēla fonu izmantojot Vision un CoreImage
+    /// - Parameter image: oriģinālā UIImage no kuras noņemt fonu.
+    /// - Returns: jauna UIImage ar noņemtu fonu vai ar fonu, ja noņemšana neizdodas
+    /// - Note: tiek izmantota initializer un kad removeBackground tiek mainīts.
     private func removeBackground(from image: UIImage) -> UIImage {
         guard let inputImage = CIImage(image: image) else {
             print("Failed to create CIImage")
             return image
         }
 
-        // Background removal logic
+        // Fona noņemšana
         guard let maskImage = createMask(from: inputImage) else { // Uses createMask helper function
             print("Failed to create mask")
             return image
         }
 
-        let outputImage = applyMask(mask: maskImage, to: inputImage) // Uses applyMask helper function
+        let outputImage = applyMask(mask: maskImage, to: inputImage) // izmanto applyMask palīgmetodi
 
-        // Convert the processed CIImage to UIImage while preserving the original orientation
-        return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation) // Uses convertToUIImage helper function
+        // Pārvērš apstrādāto CIImage uz UIImage saglabājot orientāciju
+        return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation) // izmanto convertToUIImage palīgmetodi
     }
 
-    /// Creates a mask for the input image using Vision framework.
-    /// - Parameter inputImage: The CIImage to create mask from.
-    /// - Returns: A CIImage mask or nil if failed.
-    /// - Note: This is a helper function used by removeBackground.
+    // Izveido attēla masku izmantojot Vision
+    /// - Parameter inputImage: CIImage attēls, ko apstrādāt.
+    /// - Returns: CIImage maska vai nil, ja neizdodas izveidot masku.
+    /// - Note: šo metodi izmanto removeBackground.
     private func createMask(from inputImage: CIImage) -> CIImage? {
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(ciImage: inputImage)
@@ -419,12 +425,12 @@ struct PievienotApgerbuView: View {
         return nil
     }
 
-    /// Applies the mask to the input image to remove the background.
+    // Pievieno masku oriģinālajam attēlam, lai noņemtu fonu
     /// - Parameters:
-    ///   - mask: The mask CIImage.
-    ///   - image: The original CIImage.
-    /// - Returns: The masked CIImage.
-    /// - Note: This is a helper function used by removeBackground.
+    ///   - mask: CIImage maska.
+    ///   - image: Oriģinālais CIImage attēls.
+    /// - Returns: Jauns CIImage attēls ar noņemtu fonu.
+    /// - Note: šo metodi izmanto removeBackground.
     private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
         let filter = CIFilter.blendWithMask()
         filter.inputImage = image
@@ -433,12 +439,12 @@ struct PievienotApgerbuView: View {
         return filter.outputImage!
     }
 
-    /// Converts a CIImage back to UIImage while preserving orientation.
+    // Pārvērš CIImage atpakaļ uz UIImage ar oriģinālu orientāciju.
     /// - Parameters:
-    ///   - ciImage: The CIImage to convert.
-    ///   - originalOrientation: The original UIImage orientation.
-    /// - Returns: The converted UIImage.
-    /// - Note: This is a helper function used by removeBackground.
+    ///   - ciImage: CIImage attēls ko pārvērst.
+    ///   - originalOrientation: Oriģinālā UIImage attēla orientācija.
+    /// - Returns: Jauns UIImage attēls izveidots no CIImage.
+    /// - Note: šo metodi izmanto removeBackground.
     private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage {
         guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
             fatalError("Failed to render CGImage")
@@ -446,101 +452,112 @@ struct PievienotApgerbuView: View {
         return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
 
-    // MARK: - User Action Functions
+    // MARK: - Lietotāja darbību funkcijas
     
-    /// Presents options to add a photo (camera or photo library)
-    /// - Note: This function is triggered when the user taps the add photo button.
+    // Piedāvā pievienot foto izmantojot kameru vai no galerijas
+    /// - Note: tiek izsaukta, kad lietotājs piespiež pievienot foto pogu
     func addPhoto () {
         showingOption = true
     }
     
-    /// Confirms and saves the clothing item to the data model.
-    /// - Note: This function handles both creating a new clothing item and updating an existing one.
-    /// It uses helper functions to manage category relationships and background removal.
+    // Saglabā apģērbu
+    /// - Note: Šī funkcija gan saglabā jaunus apģērbus, gan rediģētus
+    /// Tā izmanto palīgmetodes fona noņemšanai
     func Confirm() {
-        let color = CustomColor(color: chosenColor)
-
-        if let clothingItem = existingClothingItem {
-            // Update existing item
-            clothingItem.name = clothingItemName
-            clothingItem.notes = clothingItemNotes
-            clothingItem.color = color
-            clothingItem.status = clothingItemStatus
-            clothingItem.dirty = (clothingItemStatus == 1)
-            clothingItem.washing = (clothingItemStatus == 2)
-            clothingItem.ironable = clothingItemIronable
-            clothingItem.size = clothingItemSize
-            clothingItem.season = Array(clothingItemSeason)
-            clothingItem.lastWorn = clothingItemLastWorn
-
-            // Save image
-            if let originalImage = displayedImage, let imageData = originalImage.pngData() {
-                clothingItem.picture = imageData
-            }
-
-            // Update category relationships
-            updateCategoryRelationships(for: clothingItem, newCategories: Array(clothingItemCategories)) // Uses helper function
-        } else {
-            // Create new item
-            let newClothingItem = ClothingItem(
-                name: clothingItemName,
-                notes: clothingItemNotes,
-                color: color,
-                status: clothingItemStatus,
-                ironable: clothingItemIronable,
-                season: Array(clothingItemSeason),
-                size: clothingItemSize,
-                lastWorn: clothingItemLastWorn,
-                dirty: clothingItemStatus == 1,
-                washing: clothingItemStatus == 2
-            )
-
-            // Save image
-            if let originalImage = displayedImage, let imageData = originalImage.pngData() {
-                newClothingItem.picture = imageData
-            }
-
-            // Establish relationships
-            newClothingItem.clothingItemCategories = Array(clothingItemCategories)
-            for category in clothingItemCategories {
-                if !category.categoryClothingItems.contains(newClothingItem) {
-                    category.categoryClothingItems.append(newClothingItem)
+        // Pārbauda, vai nosaukums nav tukšs
+        guard !clothingItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            errorMessage = "Nosaukums nevar būt tukšs."
+            showErrorAlert = true
+            return
+        }
+        
+        // Saglabā apģērbu
+        Task {
+            let color = CustomColor(color: chosenColor)
+            
+            if let clothingItem = existingClothingItem {
+                // Saglabā eksistējošu apģērbu
+                clothingItem.name = clothingItemName
+                clothingItem.notes = clothingItemNotes
+                clothingItem.color = color
+                clothingItem.status = clothingItemStatus
+                clothingItem.dirty = (clothingItemStatus == 1)
+                clothingItem.washing = (clothingItemStatus == 2)
+                clothingItem.ironable = clothingItemIronable
+                clothingItem.size = clothingItemSize
+                clothingItem.season = Array(clothingItemSeason)
+                clothingItem.lastWorn = clothingItemLastWorn
+                
+                // Saglabā attēlu, ja izvēlēts
+                if let imageData = displayedImage?.pngData() {
+                    clothingItem.picture = imageData
                 }
+                
+                // Atjaunina relācijas
+                updateCategoryRelationships(for: clothingItem, newCategories: Array(clothingItemCategories))
+            } else {
+                // Izveido jaunu apģērbu
+                let newClothingItem = ClothingItem(
+                    name: clothingItemName,
+                    notes: clothingItemNotes,
+                    color: color,
+                    status: clothingItemStatus,
+                    ironable: clothingItemIronable,
+                    season: Array(clothingItemSeason),
+                    size: clothingItemSize,
+                    lastWorn: clothingItemLastWorn,
+                    dirty: clothingItemStatus == 1,
+                    washing: clothingItemStatus == 2
+                )
+                
+                // Saglabā attēlu, ja izvēlēts
+                if let imageData = displayedImage?.pngData() {
+                    newClothingItem.picture = imageData
+                }
+                
+                // Izveido relācijas
+                newClothingItem.clothingItemCategories = Array(clothingItemCategories)
+                for category in clothingItemCategories {
+                    if !category.categoryClothingItems.contains(newClothingItem) {
+                        category.categoryClothingItems.append(newClothingItem)
+                    }
+                }
+                
+                // Saglabā jauno apģērbu
+                modelContext.insert(newClothingItem)
             }
-
-            // Insert new item into the model context
-            modelContext.insert(newClothingItem)
+            
+            // Mēģina saglabāt izmaiņas
+            do {
+                try modelContext.save()
+                dismiss()
+            } catch {
+                // Kļūdas pārvaldība
+                errorMessage = "Neizdevās saglabāt apģērbu: \(error.localizedDescription)"
+                showErrorAlert = true
+            }
         }
-
-        // Save changes to the data model
-        do {
-            try modelContext.save()
-            print("Changes saved successfully.")
-        } catch {
-            print("Failed to save changes: \(error)")
-        }
-
-        dismiss() // Dismiss the view after saving
     }
 
-    // MARK: - Helper Functions for Data Management
+
+    // MARK: - Palīgfunkcijas datu pārvaldībai
     
-    /// Updates the category relationships for a clothing item.
+    // Atjaunina relācijas ar kategorijām
     /// - Parameters:
-    ///   - clothingItem: The clothing item to update.
-    ///   - newCategories: The new categories to assign to the clothing item.
-    /// - Note: This function removes the clothing item from old categories and adds it to new ones.
-    /// It is used by the Confirm() function when updating an existing clothing item.
+    ///   - clothingItem: Apģērbs.
+    ///   - newCategories: Jaunās kategorijas.
+    /// - Note: Šī funkcija noņem vecās kategorijas no apģērba un pievieno jaunās.
+    /// To izmanto Confirm() funkcija atjauninot apģērbu
     private func updateCategoryRelationships(for clothingItem: ClothingItem, newCategories: [ClothingCategory]) {
-        // Remove the clothing item from old categories
+        // Noņem apģērbu no vecām kategorijām
         for category in clothingItem.clothingItemCategories {
             category.categoryClothingItems.removeAll { $0 == clothingItem }
         }
 
-        // Assign the new categories to the clothing item
+        // Pievieno jaunās kategorijas apģērbam
         clothingItem.clothingItemCategories = newCategories
 
-        // Add the clothing item to the new categories
+        // Pievieno apģērbu jaunajām kategorijām
         for category in newCategories {
             if !category.categoryClothingItems.contains(clothingItem) {
                 category.categoryClothingItems.append(clothingItem)
@@ -548,11 +565,10 @@ struct PievienotApgerbuView: View {
         }
     }
     
-    /// Updates the selected seasons for the clothing item.
+    // Atjaunina sezonas apģērbam
     /// - Parameters:
-    ///   - chosenSeason: The season chosen by the user.
-    ///   - choice: A boolean indicating whether to add or remove the season.
-    /// - Note: This function can be expanded for additional season-related logic if needed.
+    ///   - chosenSeason: Sezona, ko izvēlas lietotājs.
+    ///   - choice: Patiesumvērtība, vai pievienot, vai noņemt sezonu.
     private func updateSeason(chosenSeason: Season, choice: Bool) {
         if choice {
             clothingItemSeason.insert(chosenSeason)

@@ -1,31 +1,25 @@
-//
-//  ApgerbsBtn.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 14/12/2024.
-//
 
 import SwiftUI
 
+// MARK: - Skats apģērba attēlošanai
 struct ApgerbsButton: View {
-    // MARK: - Properties
+    // MARK: - Parametri
     
-    let clothingItem: ClothingItem // The clothing item to display
-    let isSelected: Bool // Indicates if the clothing item is currently selected
-    let onTap: () -> Void // Action to perform on tap gesture
-    let onLongPress: () -> Void // Action to perform on long press gesture
-
-    @State private var image: UIImage? // Holds the loaded image for the clothing item
+    let clothingItem: ClothingItem
+    let isSelected: Bool
+    let onTap: () -> Void
+    let onLongPress: () -> Void
+    @State private var image: UIImage?
 
     var body: some View {
         VStack {
-            // Display the clothing item's image if available, otherwise show a placeholder
+            // Apģērba attēls, ja tas ir pievienots un ielādēts
             if let image = image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 80, height: 80)
-            } else {
+            } else { // Noklusējuma attēls
                 Image(systemName: "photo")
                     .resizable()
                     .scaledToFit()
@@ -36,34 +30,33 @@ struct ApgerbsButton: View {
                     .padding(.bottom, 10)
             }
 
-            // Display the name of the clothing item
+            // Nosaukums
             Text(clothingItem.name)
                 .frame(width: 80, height: 30)
                 .multilineTextAlignment(.center)
         }
-        .frame(width: 90, height: 120) // Sets the overall size of the button
-        .background(isSelected ? Color.blue.opacity(0.3) : Color(.white)) // Changes background based on selection
-        .cornerRadius(8) // Rounds the corners of the button
-        .contentShape(Rectangle()) // Ensures the entire frame is tappable
-//        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(.systemGray2), lineWidth: 1)) // Optional border
-        .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2) // Adds a subtle shadow for depth
+        .frame(width: 90, height: 120)
+        .background(isSelected ? Color.blue.opacity(0.3) : Color(.white))
+        .cornerRadius(8)
+        .contentShape(Rectangle())
+        .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
         .onTapGesture {
-            onTap() // Executes the tap action when the button is tapped
+            onTap() // Reģistrē pieskārienu
         }
         .onLongPressGesture {
-            onLongPress() // Executes the long press action when the button is long-pressed
+            onLongPress() // Reģistrē turēšanu
         }
         .onAppear {
-            loadImage() // Loads the image when the view appears
+            loadImage() // Ielādē attēlu, kad skats parādās
         }
     }
 
-    // MARK: - Helper Methods
+    // MARK: - Palīgfunkcijas
     
-    /// Loads the image for the clothing item asynchronously
+    // Asinhroni ielādē apģērba attēlu
     private func loadImage() {
         clothingItem.loadImage { loadedImage in
-            self.image = loadedImage // Sets the loaded image to display
+            self.image = loadedImage
         }
     }
 }

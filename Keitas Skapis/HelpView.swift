@@ -3,6 +3,7 @@ import SwiftUI
 
 // MARK: - Skats, kas satur lietotāja instrukciju
 struct HelpView: View {
+    // MARK: - Vides mainīgie
     @Environment(\.dismiss) var dismiss
 
     var body: some View {

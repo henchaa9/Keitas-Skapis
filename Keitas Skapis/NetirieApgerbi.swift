@@ -1,20 +1,16 @@
-//
-//  NetirieApgerbi.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 10/12/2024.
-//
 
 import SwiftUI
 import SwiftData
 import Combine
 
+// MARK: - Netīro un mazgāšanā esošo apģērbu skats
 struct NetirieApgerbiView: View {
+    // MARK: - Vides mainīgie un datu vaicājumi
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
-
     @Query private var clothingItems: [ClothingItem]
 
+    // MARK: - Stāvokļu mainīgie
     @State private var showDirty = true
     @State private var selectedClothingItemsIDs: Set<UUID> = []
     @State private var showActionSheet = false
@@ -23,12 +19,18 @@ struct NetirieApgerbiView: View {
     @State private var selectedClothingItem: ClothingItem?
     @State private var isSelectionModeActive = false
     @State private var isEditing = false
+    
+    // MARK: - Kļūdu apstrādes mainīgie
+    @State private var showErrorAlert: Bool = false
+    @State private var errorMessage: String = ""
 
+
+    // Lapu veidi
     enum ActionSheetType {
         case clothingItemOptions
     }
 
-    // Filters clothing items based on their dirty or washing status
+    // Filtrē apģērbus balstoties uz to stāvokli
     var filteredClothingItems: [ClothingItem] {
         clothingItems.filter { item in
             if showDirty {
@@ -42,7 +44,7 @@ struct NetirieApgerbiView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                // Top bar with toggles between "Netīrie" (Dirty) and "Mazgājas" (Washing)
+                // Augšpusē ir izvēle rādīt netīros vai mazgāšanā esošos apģērbus
                 HStack(spacing: 20) {
                     Text("Netīrie")
                         .font(.title).bold()
@@ -63,7 +65,7 @@ struct NetirieApgerbiView: View {
                     
                     Spacer()
                     
-                    // Pencil button appears only if some clothing items are selected
+                    // Poga, kas parādās atlases režīmā (turot uz kāda apģērba)
                     if !selectedClothingItemsIDs.isEmpty {
                         Button(action: {
                             actionSheetType = .clothingItemOptions
@@ -84,10 +86,10 @@ struct NetirieApgerbiView: View {
                 .padding(.horizontal, 10)
                 .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
-                // Grid of clothing items using ApgerbsButton
+                // Režģis ar apģērbiem, kuri izmanto ApgerbsBtn attēlošanai
                 ScrollView {
                     ZStack {
-                        // Tap on empty space exits selection mode
+                        // Nospiežot uz tukšuma iziet no atlases režīma
                         Color.clear
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -107,7 +109,7 @@ struct NetirieApgerbiView: View {
                                     isSelected: selectedClothingItemsIDs.contains(item.id),
                                     onTap: {
                                         if isSelectionModeActive {
-                                            toggleClothingItemSelection(item) // Helper Function
+                                            toggleClothingItemSelection(item) // Palīgfunkcija atlasei uz pieskāriena
                                         } else {
                                             selectedClothingItem = item
                                             showClothingItemDetail = true
@@ -117,7 +119,7 @@ struct NetirieApgerbiView: View {
                                         if !isSelectionModeActive {
                                             isSelectionModeActive = true
                                         }
-                                        toggleClothingItemSelection(item) // Helper Function
+                                        toggleClothingItemSelection(item) // Palīgfunkcija atlasei turot uz apģērba
                                     }
                                 )
                             }
@@ -130,7 +132,7 @@ struct NetirieApgerbiView: View {
             ToolBar()
                 .background(Color(.systemGray5)).padding(.top, -10)
 
-            // Detail Sheet for selected clothing item
+            // Detaļu lapa apģērbam
             .sheet(isPresented: $showClothingItemDetail) {
                 if let item = selectedClothingItem {
                     ApgerbsDetailView(
@@ -140,7 +142,7 @@ struct NetirieApgerbiView: View {
                             isEditing = true
                         },
                         onDelete: {
-                            deleteSelectedClothingItem(item) // Helper Function
+                            deleteSelectedClothingItem() // Palīgfunkcija apģērba dzēšanai
                             showClothingItemDetail = false
                         }
                     )
@@ -149,7 +151,7 @@ struct NetirieApgerbiView: View {
                 }
             }
 
-            // Navigation to Edit Screen
+            // Atver apģērba rediģēšanas skatu
             .navigationDestination(isPresented: $isEditing) {
                 if let item = selectedClothingItem {
                     PievienotApgerbuView(existingClothingItem: item)
@@ -158,12 +160,20 @@ struct NetirieApgerbiView: View {
                         }
                 }
             }
+            // Kļūdas paziņojums
+            .alert(isPresented: $showErrorAlert) {
+                Alert(
+                    title: Text("Kļūda!"),
+                    message: Text(errorMessage),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
 
-            // Action Sheet for managing clothing items
+            // Lapa apģērbu pārvaldībai
             .actionSheet(isPresented: $showActionSheet) {
                 switch actionSheetType {
                 case .clothingItemOptions:
-                    return clothingItemActionSheet() // Helper Function
+                    return clothingItemActionSheet() // Palīgfunkcija
                 case .none:
                     return ActionSheet(title: Text("Nav darbību"))
                 }
@@ -172,32 +182,32 @@ struct NetirieApgerbiView: View {
         }
     }
 
-    // MARK: - Helper Functions
+    // MARK: - Palīgfunkcijas
 
-    /// Creates an action sheet with options to manage selected clothing items.
+    // Izveido lapu apģērbu pārvaldībai atlases režīmā
     private func clothingItemActionSheet() -> ActionSheet {
         ActionSheet(
             title: Text("Pārvaldīt apģērbus"),
             buttons: [
                 .default(Text("Mainīt uz Tīrs")) {
-                    updateClothingItemStatus(to: "tirs") // Helper Function
+                    updateClothingItemStatus(to: "tirs")
                 },
                 .default(Text("Mainīt uz Netīrs")) {
-                    updateClothingItemStatus(to: "netirs") // Helper Function
+                    updateClothingItemStatus(to: "netirs")
                 },
                 .default(Text("Mainīt uz Mazgājas")) {
-                    updateClothingItemStatus(to: "mazgajas") // Helper Function
+                    updateClothingItemStatus(to: "mazgajas")
                 },
                 .destructive(Text("Dzēst")) {
-                    deleteSelectedClothingItem() // Helper Function
+                    deleteSelectedClothingItem()
                 },
                 .cancel()
             ]
         )
     }
 
-    /// Toggles the selection state of a clothing item.
-    /// - Parameter clothingItem: The clothing item to toggle.
+    // Maina apģērba izvēles statusu, pievienojot/noņemot to sarakstam
+    /// - Parameter clothingItem: apģērbs, kuram mainīt statusu
     private func toggleClothingItemSelection(_ clothingItem: ClothingItem) {
         if selectedClothingItemsIDs.contains(clothingItem.id) {
             selectedClothingItemsIDs.remove(clothingItem.id)
@@ -209,8 +219,8 @@ struct NetirieApgerbiView: View {
         }
     }
 
-    /// Updates the status of selected clothing items based on the provided status.
-    /// - Parameter status: The new status to apply ("tirs", "netirs", "mazgajas").
+    // Pārvalda izvēlēto apģērbu stāvokli tīrs/netīrs/mazgājas
+    /// - Parameter status: jaunais statuss ("tirs", "netirs", "mazgajas").
     private func updateClothingItemStatus(to status: String) {
         for item in clothingItems where selectedClothingItemsIDs.contains(item.id) {
             switch status {
@@ -228,32 +238,57 @@ struct NetirieApgerbiView: View {
             }
         }
         selectedClothingItemsIDs.removeAll()
-        try? modelContext.save()
+        isSelectionModeActive = false // Iziet no atlases režīma
+        do {
+            try modelContext.save()
+        } catch {
+            // Kļūdas pārvaldība
+            errorMessage = "Failed to update clothing item status."
+            showErrorAlert = true
+        }
     }
 
-    /// Deletes selected clothing items or a single specified item.
-    /// - Parameter singleClothingItem: An optional single clothing item to delete.
-    private func deleteSelectedClothingItem(_ singleClothingItem: ClothingItem? = nil) {
-        if let single = singleClothingItem {
+
+    // Izdzēš izvēlēto apģērbu(us)
+    private func deleteSelectedClothingItem() {
+        // Situācija 1: Izvēlēts viens apģērbs
+        if let single = selectedClothingItem {
             selectedClothingItem = nil
             showClothingItemDetail = false
 
             DispatchQueue.main.async {
                 modelContext.delete(single)
-                try? modelContext.save()
-                isSelectionModeActive = false
+                do {
+                    try modelContext.save()
+                    // performFiltering() // Not needed if no filtering
+                } catch {
+                    // Kļūdas pārvaldība
+                    errorMessage = "Failed to delete clothing item."
+                    showErrorAlert = true
+                }
             }
-        } else if !selectedClothingItemsIDs.isEmpty {
+        }
+        // Situācija 2: Izvēlēti vairāki apģērbi
+        else if !selectedClothingItemsIDs.isEmpty {
             DispatchQueue.main.async {
+                // Iet cauri visiem apģērbiem un dzēš izvēlētos
                 for item in clothingItems where selectedClothingItemsIDs.contains(item.id) {
                     modelContext.delete(item)
                 }
                 selectedClothingItemsIDs.removeAll()
-                try? modelContext.save()
-                isSelectionModeActive = false
+                isSelectionModeActive = false // Iziet no atlases režīma
+                do {
+                    try modelContext.save()
+                    // performFiltering() // Not needed if no filtering
+                } catch {
+                    // Kļūdas pārvaldība
+                    errorMessage = "Failed to delete selected clothing items."
+                    showErrorAlert = true
+                }
             }
         }
     }
+
 }
 
 

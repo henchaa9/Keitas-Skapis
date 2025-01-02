@@ -2,17 +2,19 @@
 import SwiftUI
 import SwiftData
 
-// Apģērba detaļu skats, kas tiek attēlots uzspiežot uz kāda apģērba
+// MARK: - Apģērba detaļu skats, kas tiek attēlots uzspiežot uz kāda apģērba
 struct ApgerbsDetailView: View {
+    // MARK: - Vides mainīgie
+    @EnvironmentObject private var chosenManager: ChosenManager
+    @Environment(\.dismiss) var dismiss
+    
+    // MARK: - Stāvokļu mainīgie
+    @State private var selectedStatus: String
+    @State private var image: UIImage?
     let clothingItem: ClothingItem
     var onEdit: () -> Void
     var onDelete: () -> Void
-
-    @EnvironmentObject private var chosenManager: ChosenManager
-    @State private var selectedStatus: String
-    @Environment(\.dismiss) var dismiss
-    @State private var image: UIImage? // Ielādētais apģērba attēls
-
+    
     // Initializer, kurā tiek inicializēts apģērbs un rediģēšanas, un dzēšanas funkcijas
     init(clothingItem: ClothingItem, onEdit: @escaping () -> Void, onDelete: @escaping () -> Void) {
         self.clothingItem = clothingItem

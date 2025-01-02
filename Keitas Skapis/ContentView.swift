@@ -31,7 +31,7 @@ class SearchTextObservable: ObservableObject {
 
 // Galvenais skats (Sākums)
 struct ContentView: View {
-    // MARK: - Datu vaicājumi
+    // MARK: - Datu vaicājumi un vides mainīgie
     @Query private var clothingCategories: [ClothingCategory]
     @Query private var clothingItems: [ClothingItem]
     @Environment(\.modelContext) private var modelContext

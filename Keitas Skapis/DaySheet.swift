@@ -1,42 +1,39 @@
-//
-//  DaySheet.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 28/12/2024.
-//
 
 import SwiftUI
 import SwiftData
 
+// MARK: - Skats, uzspiežot uz dienas kalendārā
 struct DaySheetView: View {
-    // The actual Day object being viewed or edited
+    // MARK: - Dienas objekts
     @State var day: Day
     
-    @Environment(\.modelContext) private var modelContext // Accesses the data model context for data operations
-    @Environment(\.dismiss) private var dismiss // Provides a method to dismiss the current view
+    // MARK: - Vides mainīgie
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     
-    @State private var showAddApgerbsSheet = false // Controls the presentation of the AddApgerbsToDayView sheet
+    // MARK: - Stāvokļu mainīgie
+    @State private var showAddApgerbsSheet = false
     
-    // Error handling state variables
-    @State private var showErrorAlert = false // Controls the presentation of the error alert
-    @State private var errorMessage: String = "" // Stores the error message to display
+    // MARK: - Kļūdu apstrādes mainīgie
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String = ""
 
     var body: some View {
         NavigationStack {
             Form {
-                // Section displaying the formatted date
+                // Datums
                 Section("Datums") {
                     Text(formattedDate(day.date))
                 }
                 
-                // Section displaying associated clothing items
+                // Sadaļa, kurā redzami attiecīgās dienas apģērbi
                 Section("Apģērbi") {
                     if day.dayClothingItems.isEmpty {
-                        // Shows a placeholder text if no clothing items are associated
+                        // Noklusējuma teksts, ja dienai nav pievienotu apģērbu
                         Text("Nav apģērbu.")
                             .foregroundColor(.gray)
                     } else {
-                        // Lists all associated clothing items with the ability to delete
+                        // Saraksts, kas ģenerē apģērbus
                         List {
                             ForEach(day.dayClothingItems, id: \.id) { item in
                                 HStack(spacing: 15) {
@@ -45,54 +42,54 @@ struct DaySheetView: View {
                                     
                                     Spacer()
                                     
-                                    AsyncImageView(clothingItem: item) // Displays the clothing item's image
+                                    AsyncImageView(clothingItem: item) // Apģērba attēls tiek lādēts asinhroni
                                         .frame(width: 50, height: 50)
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
                                 }
                             }
                             .onDelete { offsets in
-                                removeClothingItem(at: offsets) // Handles deletion of clothing items
+                                removeClothingItem(at: offsets) // Apģērba dzēšana
                             }
                         }
-                        .frame(minHeight: 50) // Ensures the list has a minimum height
+                        .frame(minHeight: 50)
                     }
                 }
                 
-                // Section for adding or editing notes
+                // Piezīmju sadaļa
                 Section("Piezīmes") {
-                    TextField("Pievienot piezīmes", text: $day.notes) // Allows users to add notes
+                    TextField("Pievienot piezīmes", text: $day.notes)
                 }
                 
-                // Button to present the AddApgerbsToDayView sheet
+                // Poga, kas atver skatu, kurā dienai var pievienot apģērbus
                 Button {
                     showAddApgerbsSheet = true
                 } label: {
                     Text("Pievienot Apģērbu")
-                        .frame(maxWidth: .infinity) // Makes the button span the full width
+                        .frame(maxWidth: .infinity)
                 }
-                .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2) // Adds a subtle shadow to the button
+                .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 
             }
-            .navigationTitle("Dienas Pārskats") // Sets the navigation title
+            .navigationTitle("Dienas Pārskats")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Aizvērt") {
-                        dismiss() // Dismisses the current view
+                        dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Saglabāt") {
-                        saveAndClose() // Saves changes and dismisses the view
+                        saveAndClose() // Saglabāšana var notikt manuāli, kā arī pie .onDissapear automātiski
                     }
                 }
             }
             .sheet(isPresented: $showAddApgerbsSheet) {
-                AddApgerbsToDayView(day: $day) // Presents the view to add clothing items
+                AddApgerbsToDayView(day: $day) // Lapa, kurā dienai var pievienot apģērbus
             }
             .onDisappear {
-                saveAndClose() // Automatically saves changes when the view disappears
+                saveAndClose() // Automātiska saglabāšana, aizverot dienu
             }
-            // Alert for displaying errors
+            // Kļūdu apstrāde
             .alert(isPresented: $showErrorAlert) {
                 Alert(
                     title: Text("Kļūda"),
@@ -103,40 +100,42 @@ struct DaySheetView: View {
         }
     }
     
-    // Formats the given date into a readable string
+    // Formatē datumu simbolu virknē
     private func formattedDate(_ date: Date) -> String {
         let fmt = DateFormatter()
         fmt.dateStyle = .medium
         return fmt.string(from: date)
     }
 
-    // Removes a clothing item from the day at the specified offsets
+    // Noņem apģērbu no dienas
     private func removeClothingItem(at offsets: IndexSet) {
         for index in offsets {
             let item = day.dayClothingItems[index]
 
-            // Remove the item from the current day
+            // Noņem referenci abos galos, t.i., dienas apģērbus un apģērba dienas
             day.dayClothingItems.removeAll { $0.id == item.id }
             item.clothingItemDays.removeAll { $0.id == day.id }
 
-            // Update `lastWorn` after removal
+            // Atjaunina apģērba lasWorn jeb pēdējoreiz vilkts parametru
             updateLastWorn(for: item)
         }
 
-        // Save changes to the data context
+        // Saglabā izmaiņas
         do {
             try modelContext.save()
         } catch {
-            // Set the error message and show the alert
+            // Kļūdu apstrāde
             errorMessage = "Neizdevās saglabāt izmaiņas. Lūdzu, mēģiniet vēlreiz."
             showErrorAlert = true
         }
     }
 
 
-    // Updates the `lastWorn` date for a clothing item based on associated days
+    // Atjaunina apģērba lastWorn jeb pēdējoreiz vilkts balstoties uz apģērbam asociētajām dienām
     private func updateLastWorn(for clothingItem: ClothingItem) {
-        // Find the latest valid date in the past or today
+        // Atrod tuvāko dienu, kad apģērbs patiešām ir vilkts
+        // Piemēram, ja apģērbs tiek pievienots senākam datumam, parametrs netiek atjaunināts
+        // Tāpat arī, pievienojot nākotnes datumam, tas atjauninās tikai tad, kad datums pienāk
         let validDays = clothingItem.clothingItemDays.filter { $0.date <= Date() }
         if let latestDay = validDays.max(by: { $0.date < $1.date }) {
             clothingItem.lastWorn = latestDay.date // Sets to the latest date
@@ -147,42 +146,42 @@ struct DaySheetView: View {
     }
 
 
-    // Saves changes and dismisses the view
+    // Saglabā izmaiņas un aizver lapu
     private func saveAndClose() {
         let hasNotes = !day.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let hasClothingItems = !day.dayClothingItems.isEmpty
         
-        // If the day is already persisted in the data context
+        // Ja diena jau eksistē
         if day.modelContext != nil {
             if !hasNotes && !hasClothingItems {
-                modelContext.delete(day) // Remove the day if it's empty
+                modelContext.delete(day) // Noņem, ja diena ir tukša (tiek izdzēsti dati)
             }
             do {
-                try modelContext.save() // Attempt to save changes
-                dismiss() // Dismiss the view on successful save
+                try modelContext.save() // Mēģina saglabāt
+                dismiss() // Aizver lapu
             } catch {
-                // Set the error message and show the alert
+                // Kļūdu apstrāde
                 errorMessage = "Neizdevās saglabāt izmaiņas. Lūdzu, mēģiniet vēlreiz."
                 showErrorAlert = true
             }
             return
         }
         
-        // If the day is new and has either notes or clothing items, insert it
+        // Ja diena ir tikko izveidota un tai pievienoti apģērbi un/vai piezīmes, saglabā to
         if hasNotes || hasClothingItems {
             modelContext.insert(day)
             do {
                 try modelContext.save()
             } catch {
-                // Set the error message and show the alert
+                // Kļūdu apstrāde
                 errorMessage = "Neizdevās saglabāt dienu. Lūdzu, mēģiniet vēlreiz."
                 showErrorAlert = true
-                // Optionally, remove the inserted day if save fails
+                // Ja iestājas kļūda, noņem dienu
                 modelContext.delete(day)
             }
         }
-        // If nothing was added, do not insert the day to avoid creating empty entries
-        dismiss() // Dismiss the view
+        // Ja nekas netiek pievienots, aizver lapu
+        dismiss()
     }
 }
 

@@ -1,9 +1,3 @@
-//
-//  Models.swift
-//  Keitas Skapis
-//
-//  Created by Henrijs Obolevics on 06/10/2024.
-//
 
 import Foundation
 import SwiftData
@@ -12,44 +6,46 @@ import Vision
 import CoreImage
 import CoreImage.CIFilterBuiltins
 
-// MARK: - ClothingCategory Model
+// MARK: - Datu modeļi
 
-/// Represents a category of clothing items with optional image and background removal capability.
+// MARK: - ClothingCategory Modelis
+
+// Kategorija
 @Model
 class ClothingCategory: Identifiable, Hashable, Codable {
-    // MARK: - Attributes
+    // MARK: - Atribūti
     
-    @Attribute var id: UUID = UUID() // Unique identifier for the category
-    @Attribute var name: String // Name of the category
-    @Attribute(.externalStorage) var picture: Data? // Optional image data stored externally
-    @Attribute var removeBackground: Bool = false // Flag to indicate if background should be removed from the image
+    @Attribute var id: UUID = UUID() // ID
+    @Attribute var name: String // Nosaukums
+    @Attribute(.externalStorage) var picture: Data? // Neobligāti attēla dati, saglabāti atsevišķi
+    @Attribute var removeBackground: Bool = false // Patiesumvērtība fona noņemšanas vērtības saglabāšanai
     
-    // MARK: - Relationships
+    // MARK: - Relācijas
     
-    @Relationship var categoryClothingItems: [ClothingItem] = [] // Clothing items associated with this category
+    @Relationship var categoryClothingItems: [ClothingItem] = [] // Apģērbi, kas piesaistīti kategorijai
     
     // MARK: - Initializer
     
-    /// Initializes a new ClothingCategory with optional parameters.
+    // Inicializē jaunu kategoriju ar neobligātiem parametriem
     /// - Parameters:
-    ///   - name: The name of the category. Defaults to "Jauna Kategorija".
-    ///   - picture: Optional image data for the category.
-    ///   - removeBackground: Indicates whether to remove the background from the image. Defaults to `false`.
+    ///   - name: Nosaukums, pēc noklusējuma "Jauna Kategorija".
+    ///   - picture: Neobligāti attēla dati.
+    ///   - removeBackground: Norāda, vai attēlam jānoņem fons, pēc noklusējuma `false`.
     init(name: String = "Jauna Kategorija", picture: Data? = nil, removeBackground: Bool = false) {
         self.name = name
         self.picture = picture
         self.removeBackground = removeBackground
     }
     
-    // MARK: - Computed Properties
+    // MARK: - Aprēķināmie parametri
     
-    /// Converts the stored image data to a UIImage.
+    // Pārvērš attēlu par UIImage
     var image: UIImage? {
         get { picture.flatMap { UIImage(data: $0) } }
         set { picture = newValue?.pngData() }
     }
     
-    /// Returns the displayed image, applying background removal if enabled.
+    // Atgriež attēlojamo attēlu, ar noņemtu fonu pēc vajadzības
     var displayedImage: UIImage? {
         if removeBackground, let image = self.image {
             return removeBackground(from: image) // Helper Function
@@ -57,11 +53,11 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         return self.image
     }
     
-    // MARK: - Background Removal Functions
+    // MARK: - Fona noņemšanas funkcijas
     
-    /// Removes the background from the provided image using Vision and CoreImage.
-    /// - Parameter image: The original UIImage from which to remove the background.
-    /// - Returns: A new UIImage with the background removed, or the original image if removal fails.
+    // Noņem fonu no attēla izmantojot Vision un CoreImage
+    /// - Parameter image: Oriģinālais UIImage attēls no kura noņemt fonu.
+    /// - Returns: Jauns UIImage ar noņemtu fonu vai oriģinālais attēls, ja noņemšana neizdodas.
     private func removeBackground(from image: UIImage) -> UIImage? {
         guard let inputImage = CIImage(image: image) else {
             print("Failed to create CIImage")
@@ -77,9 +73,9 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
     }
 
-    /// Creates a mask image using Vision's foreground instance mask request.
-    /// - Parameter inputImage: The CIImage to process.
-    /// - Returns: A CIImage mask or nil if creation fails.
+    // Izveido attēla masku izmantojot Vision.
+    /// - Parameter inputImage: CIImage attēls ko apstrādāt.
+    /// - Returns: CIImage maska vai nil, ja izveidošana neizdodas.
     private func createMask(from inputImage: CIImage) -> CIImage? {
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(ciImage: inputImage)
@@ -95,11 +91,11 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         return nil
     }
 
-    /// Applies the mask to the original image to remove the background.
+    // Pievieno masku oriģinālajam attēlam, lai noņemtu fonu.
     /// - Parameters:
-    ///   - mask: The CIImage mask to apply.
-    ///   - image: The original CIImage.
-    /// - Returns: A new CIImage with the background removed.
+    ///   - mask: CIImage maska, ko pievienot.
+    ///   - image: Oriģinālais CIImage attēls.
+    /// - Returns: Jauns CIImage attēls ar noņemtu fonu.
     private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
         let filter = CIFilter.blendWithMask()
         filter.inputImage = image
@@ -108,11 +104,11 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         return filter.outputImage!
     }
 
-    /// Converts a CIImage back to a UIImage with the original orientation.
+    // Pārvērš CIImage atpakaļ uz UIImage ar oriģinālu orientāciju.
     /// - Parameters:
-    ///   - ciImage: The CIImage to convert.
-    ///   - originalOrientation: The original orientation of the UIImage.
-    /// - Returns: A new UIImage created from the CIImage.
+    ///   - ciImage: CIImage attēls ko pārvērst.
+    ///   - originalOrientation: Oriģinālā UIImage attēla orientācija.
+    /// - Returns: Jauns UIImage attēls izveidots no CIImage.
     private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage? {
         guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
             print("Failed to render CGImage")
@@ -121,7 +117,7 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
     
-    // MARK: - Hashable & Equatable
+    // MARK: - Nodrošina atbilstību Hashable & Equatable, lai pareizi strādātu relācijas utt.
     
     static func == (lhs: ClothingCategory, rhs: ClothingCategory) -> Bool {
         lhs.id == rhs.id
@@ -131,14 +127,14 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         hasher.combine(id)
     }
     
-    // MARK: - Codable
+    // MARK: - Nodrošina atbilstību Codable
     
-    /// Defines the coding keys, excluding relationships to prevent cyclical references.
+    // Atslēgas, izņemot relācijas, lai nenotiktu cikliskas references
     enum CodingKeys: String, CodingKey {
         case id, name, picture, removeBackground
     }
     
-    /// Initializes a ClothingCategory from a decoder, excluding relationships.
+    // Inicializē kategoriju no Decoder (atkodē uz izmantojamām vērtībām), izņemot relācijas
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
@@ -148,7 +144,7 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         self.categoryClothingItems = []
     }
     
-    /// Encodes the ClothingCategory, excluding relationships.
+    // Kodē kategoriju, izņemot relācijas
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
@@ -160,24 +156,24 @@ class ClothingCategory: Identifiable, Hashable, Codable {
 
 // MARK: - CustomColor Struct
 
-/// Represents a color with red, green, blue, and alpha components.
+// Struct, kas attēlo krāsu, kuru var pievienot apģērbam
 struct CustomColor: Codable, Hashable {
     var red: Double
     var green: Double
     var blue: Double
     var alpha: Double
 
-    /// Converts the CustomColor to a SwiftUI Color.
+    // Pārvērš krāsu par SwiftUI krāsu.
     var color: Color {
         Color(red: red, green: green, blue: blue, opacity: alpha)
     }
 
-    /// Initializes a CustomColor with specific color components.
+    /// Inicializē krāsu ar specifiskām krāsas sastāvdaļām/kanāliem.
     /// - Parameters:
-    ///   - red: Red component (0.0 - 1.0).
-    ///   - green: Green component (0.0 - 1.0).
-    ///   - blue: Blue component (0.0 - 1.0).
-    ///   - alpha: Alpha component (0.0 - 1.0).
+    ///   - red: Red kanāls (0.0 - 1.0).
+    ///   - green: Green kanāls (0.0 - 1.0).
+    ///   - blue: Blue kanāls (0.0 - 1.0).
+    ///   - alpha: Alpha kanāls (0.0 - 1.0).
     init(red: Double, green: Double, blue: Double, alpha: Double) {
         self.red = red
         self.green = green
@@ -185,8 +181,8 @@ struct CustomColor: Codable, Hashable {
         self.alpha = alpha
     }
 
-    /// Initializes a CustomColor from a SwiftUI Color.
-    /// - Parameter color: The SwiftUI Color to convert.
+    // Inicializē krāsu no SwiftUI krāsas.
+    /// - Parameter color: SwiftUI krāsa, kuru pārvērst.
     init(color: Color) {
         let uiColor = UIColor(color)
         var redComponent: CGFloat = 0
@@ -203,7 +199,7 @@ struct CustomColor: Codable, Hashable {
 
 // MARK: - Season Enum
 
-/// Represents the seasons for which a clothing item is suitable.
+// Attēlo sezonas, kuras var pievienot apģērbam.
 enum Season: String, CaseIterable, Codable {
     case summer = "Vasara"
     case fall = "Rudens"
@@ -211,55 +207,55 @@ enum Season: String, CaseIterable, Codable {
     case spring = "Pavasaris"
 }
 
-// MARK: - ClothingItem Model
+// MARK: - ClothingItem Modelis
 
-/// Represents an individual clothing item with various attributes and relationships.
+// Apģērbs
 @Model
 class ClothingItem: Identifiable, Hashable, Codable {
-    // MARK: - Attributes
+    // MARK: - Atribūti
     
-    @Attribute var id: UUID = UUID() // Unique identifier for the clothing item
-    @Attribute var name: String // Name of the clothing item
-    @Attribute var notes: String // Additional notes about the item
-    @Attribute var color: CustomColor // Color of the clothing item
-    @Attribute var status: Int // Status indicator (e.g., available, worn, etc.)
-    @Attribute var ironable: Bool // Indicates if the item can be ironed
-    @Attribute var size: Int // Size of the clothing item
-    @Attribute var season: [Season] // Seasons suitable for the item
-    @Attribute var lastWorn: Date // Date when the item was last worn
-    @Attribute var washing: Bool // Indicates if the item is being washed
-    @Attribute var dirty: Bool // Indicates if the item is dirty
-    @Attribute var removeBackground: Bool = false // Flag to remove background from the image
-    @Attribute var isFavorite: Bool = false // Indicates if the item is marked as favorite
-    @Attribute(.externalStorage) var picture: Data? // Optional image data stored externally
+    @Attribute var id: UUID = UUID() // ID
+    @Attribute var name: String // Nosaukums
+    @Attribute var notes: String // Piezīmes
+    @Attribute var color: CustomColor // Krāsa
+    @Attribute var status: Int // Stāvoklis tīrs/netīrs/mazgājas
+    @Attribute var ironable: Bool // Gludināms/Negludināms
+    @Attribute var size: Int // Izmērs XS/S/M/L/XL
+    @Attribute var season: [Season] // Sezona vasara/rudens/ziema/pavasaris
+    @Attribute var lastWorn: Date // Pēdējoreiz vilkts datums
+    @Attribute var washing: Bool // Mazgājas
+    @Attribute var dirty: Bool // Netīrs
+    @Attribute var removeBackground: Bool = false // Patiesumvērtība fona noņemšanai
+    @Attribute var isFavorite: Bool = false // Mīļākais
+    @Attribute(.externalStorage) var picture: Data? // Neobligāti attēla dati, glabāti atsevišķi
     
-    // MARK: - Relationships
+    // MARK: - Relācijas
     
-    @Relationship var clothingItemCategories: [ClothingCategory] = [] // Categories associated with this item
-    @Relationship(inverse: \Day.dayClothingItems) var clothingItemDays: [Day] = [] // Days when the item was worn
+    @Relationship var clothingItemCategories: [ClothingCategory] = [] // Apģērbam piesaistītās kategorijas
+    @Relationship(inverse: \Day.dayClothingItems) var clothingItemDays: [Day] = [] // Apģērbam piesaistītās dienas
     
-    // MARK: - Static Properties
+    // MARK: - Statiskie parametri
     
-    static var imageCache = NSCache<NSString, UIImage>() // In-memory cache for images
+    static var imageCache = NSCache<NSString, UIImage>() // Atmiņā esošs cache priekš attēliem
     
     // MARK: - Initializer
     
-    /// Initializes a new ClothingItem with optional parameters.
+    // Inicializē apģērbu ar neobligātiem parametriem
     /// - Parameters:
-    ///   - name: Name of the clothing item. Defaults to "jauns apgerbs".
-    ///   - notes: Additional notes. Defaults to an empty string.
-    ///   - color: Color of the clothing item.
-    ///   - status: Status indicator. Defaults to `0`.
-    ///   - ironable: Indicates if the item can be ironed. Defaults to `true`.
-    ///   - season: Seasons suitable for the item. Defaults to an empty array.
-    ///   - size: Size of the clothing item. Defaults to `0`.
-    ///   - lastWorn: Date when the item was last worn. Defaults to `.now`.
-    ///   - dirty: Indicates if the item is dirty. Defaults to `false`.
-    ///   - washing: Indicates if the item is being washed. Defaults to `false`.
-    ///   - picture: Optional image data. Defaults to `nil`.
-    ///   - removeBackground: Flag to remove background from the image. Defaults to `false`.
+    ///   - name: Nosaukums, pēc noklusējuma "Jauns Apģērbs".
+    ///   - notes: Piezīmes, pēc noklusējuma tukša simbolu virkne.
+    ///   - color: Krāsa.
+    ///   - status: Stāvoklis, pēc noklusējuma `0`.
+    ///   - ironable: Gludināms/Negludināms, pēc noklusējuma `true`.
+    ///   - season: Sezonas, pēc noklusējuma tukšs masīvs.
+    ///   - size: Izmērs, pēc noklusējuma `0`.
+    ///   - lastWorn: Pēdējoreiz vilkts, pēc noklusējuma `.now`.
+    ///   - dirty: Netīrs, pēc noklusējuma `false`.
+    ///   - washing: Mazgājas, pēc noklusējuma `false`.
+    ///   - picture: Neobligāti foto dati, pēc noklusējuma `nil`.
+    ///   - removeBackground: Noņemt fonu, pēc noklusējuma `false`.
     init(
-        name: String = "jauns apgerbs",
+        name: String = "Jauns Apģērbs",
         notes: String = "",
         color: CustomColor,
         status: Int = 0,
@@ -286,56 +282,56 @@ class ClothingItem: Identifiable, Hashable, Codable {
         self.removeBackground = removeBackground
     }
     
-    // MARK: - Image Loading
+    // MARK: - Attēla ielāde
     
-    /// Loads the image associated with the clothing item, applying background removal if enabled.
-    /// Utilizes caching to improve performance.
-    /// - Parameter completion: Completion handler with the loaded UIImage.
+    // Ielādē apģērba attēlu, noņemot fonu ja nepieciešams
+    // Izmanto kešatmiņu, lai uzlabotu veiktspēju
+    /// - Parameter completion: Pabeigšanas handler ar ielādēto UIImage.
     func loadImage(completion: @escaping (UIImage?) -> Void) {
-        // Check if the image is already cached
+        // Pārbauda, vai attēls ir kešatmiņā
         if let cachedImage = ClothingItem.imageCache.object(forKey: self.id.uuidString as NSString) {
             completion(cachedImage)
             return
         }
 
-        // Load the image asynchronously
+        // Asinhroni ielādē attēlu
         DispatchQueue.global(qos: .background).async {
             var image: UIImage?
 
             if let imageData = self.picture, let uiImage = UIImage(data: imageData) {
                 if self.removeBackground {
-                    image = self.removeBackground(from: uiImage) // Helper Function
+                    image = self.removeBackground(from: uiImage) // Palīgfunkcija fona noņemšanai
                 } else {
                     image = uiImage
                 }
             }
 
-            // Cache the image if available
+            // Ievieto attēlu kešatmiņā, ja tas pieejams
             if let imageToCache = image {
                 ClothingItem.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
             }
 
-            // Return the image on the main thread
+            // Atgriež attēlu uz galvenās takts
             DispatchQueue.main.async {
                 completion(image)
             }
         }
     }
     
-    /// Reloads the image by removing it from the cache and reloading it.
+    // Pārlādē attēlu, izņemot to no cache un pārlādējot
     func reloadImage() {
-        // Remove the image from the cache
+        // Izņemt attēlu no kešatmiņas
         ClothingItem.imageCache.removeObject(forKey: self.id.uuidString as NSString)
         
-        // Reload and re-cache the image
+        // Pārlādē un atkal ievieto kešatmiņā attēlu
         loadImage { _ in }
     }
     
-    // MARK: - Background Removal Functions
+    // MARK: - Fona noņemšanas funkcijas
     
-    /// Removes the background from the provided image using Vision and CoreImage.
-    /// - Parameter image: The original UIImage from which to remove the background.
-    /// - Returns: A new UIImage with the background removed, or the original image if removal fails.
+    // Noņem fonu no attēla izmantojot Vision un CoreImage
+    /// - Parameter image: Oriģinālais UIImage attēls no kura noņemt fonu.
+    /// - Returns: Jauns UIImage ar noņemtu fonu vai oriģinālais attēls, ja noņemšana neizdodas.
     private func removeBackground(from image: UIImage) -> UIImage? {
         guard let inputImage = CIImage(image: image) else {
             print("Failed to create CIImage")
@@ -351,9 +347,9 @@ class ClothingItem: Identifiable, Hashable, Codable {
         return convertToUIImage(ciImage: outputImage, originalOrientation: image.imageOrientation)
     }
 
-    /// Creates a mask image using Vision's foreground instance mask request.
-    /// - Parameter inputImage: The CIImage to process.
-    /// - Returns: A CIImage mask or nil if creation fails.
+    // Izveido attēla masku izmantojot Vision.
+    /// - Parameter inputImage: CIImage attēls ko apstrādāt.
+    /// - Returns: CIImage maska vai nil, ja izveidošana neizdodas.
     private func createMask(from inputImage: CIImage) -> CIImage? {
         let request = VNGenerateForegroundInstanceMaskRequest()
         let handler = VNImageRequestHandler(ciImage: inputImage)
@@ -369,11 +365,11 @@ class ClothingItem: Identifiable, Hashable, Codable {
         return nil
     }
 
-    /// Applies the mask to the original image to remove the background.
+    // Pievieno masku oriģinālajam attēlam, lai noņemtu fonu.
     /// - Parameters:
-    ///   - mask: The CIImage mask to apply.
-    ///   - image: The original CIImage.
-    /// - Returns: A new CIImage with the background removed.
+    ///   - mask: CIImage maska, ko pievienot.
+    ///   - image: Oriģinālais CIImage attēls.
+    /// - Returns: Jauns CIImage attēls ar noņemtu fonu.
     private func applyMask(mask: CIImage, to image: CIImage) -> CIImage {
         let filter = CIFilter.blendWithMask()
         filter.inputImage = image
@@ -382,11 +378,11 @@ class ClothingItem: Identifiable, Hashable, Codable {
         return filter.outputImage!
     }
 
-    /// Converts a CIImage back to a UIImage with the original orientation.
+    // Pārvērš CIImage atpakaļ uz UIImage ar oriģinālu orientāciju.
     /// - Parameters:
-    ///   - ciImage: The CIImage to convert.
-    ///   - originalOrientation: The original orientation of the UIImage.
-    /// - Returns: A new UIImage created from the CIImage.
+    ///   - ciImage: CIImage attēls ko pārvērst.
+    ///   - originalOrientation: Oriģinālā UIImage attēla orientācija.
+    /// - Returns: Jauns UIImage attēls izveidots no CIImage.
     private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage? {
         guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
             print("Failed to render CGImage")
@@ -395,7 +391,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
         return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }
     
-    // MARK: - Hashable & Equatable
+    // MARK: - Nodrošina atbilstību Hashable & Equatable pareizām relācijām u.c funkcionalitātei
     
     static func == (lhs: ClothingItem, rhs: ClothingItem) -> Bool {
         lhs.id == rhs.id
@@ -405,14 +401,14 @@ class ClothingItem: Identifiable, Hashable, Codable {
         hasher.combine(id)
     }
     
-    // MARK: - Codable
+    // MARK: - Nodrošina atbilstību Codable
     
-    /// Defines the coding keys, including relationships.
+    // Definē atslēgas, iekļaujot relācijas
     enum CodingKeys: String, CodingKey {
         case id, name, notes, color, status, ironable, size, season, lastWorn, washing, dirty, picture, removeBackground, clothingItemDays
     }
     
-    /// Initializes a ClothingItem from a decoder, excluding relationships.
+    // Inicializē apģērbu no Decoder(atkodē uz lietojamām vērtībām), izņemot relācijas
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
@@ -432,7 +428,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
         self.clothingItemDays = []
     }
     
-    /// Encodes the ClothingItem, including relationships.
+    // Iekodē apģērbu, iekļaujot relācijas
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
@@ -452,42 +448,42 @@ class ClothingItem: Identifiable, Hashable, Codable {
     }
 }
 
-// MARK: - Day Model
+// MARK: - Day Modelis
 
-/// Represents a day with associated clothing items and notes.
+// Kalendāra diena
 @Model
 class Day: Codable {
-    // MARK: - Attributes
+    // MARK: - Atribūti
     
-    @Attribute var id: UUID = UUID() // Unique identifier for the day
-    @Attribute var date: Date // The date of the day
-    @Attribute var notes: String // Additional notes for the day
+    @Attribute var id: UUID = UUID() // ID
+    @Attribute var date: Date // Datums
+    @Attribute var notes: String // Piezīmes
     
-    // MARK: - Relationships
+    // MARK: - Relācijas
     
-    @Relationship var dayClothingItems: [ClothingItem] = [] // Clothing items worn on this day
+    @Relationship var dayClothingItems: [ClothingItem] = [] // Dienai piesaistītie apģērbi
     
     // MARK: - Initializer
     
-    /// Initializes a new Day with specified parameters.
+    // Inicializē dienu ar specifiskiem parametriem
     /// - Parameters:
-    ///   - date: The date of the day.
-    ///   - notes: Additional notes for the day.
-    ///   - clothingItems: Clothing items associated with the day. Defaults to an empty array.
+    ///   - date: datums.
+    ///   - notes: piezīmes.
+    ///   - clothingItems: dienai piesaistītie apģērbi, pēc noklusējuma tukšs masīvs.
     init(date: Date, notes: String, clothingItems: [ClothingItem] = []) {
         self.date = date
         self.notes = notes
         self.dayClothingItems = clothingItems
     }
     
-    // MARK: - Coding
+    // MARK: - Coding atbilstība
     
-    /// Defines the coding keys.
+    // Definē atslēgas.
     enum CodingKeys: String, CodingKey {
         case id, date, notes, dayClothingItems
     }
     
-    /// Initializes a Day from a decoder, excluding relationships.
+    // Inicializē dienu no Decoder(atkodē lai var izmantot datus), izņemot relācijas.
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = try container.decode(UUID.self, forKey: .id)
@@ -496,7 +492,7 @@ class Day: Codable {
         self.dayClothingItems = []
     }
     
-    /// Encodes the Day, including relationships.
+    // Kodē dienu, ieskaitot relācijas
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(id, forKey: .id)
