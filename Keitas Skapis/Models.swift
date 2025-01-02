@@ -244,7 +244,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
     /// - Parameters:
     ///   - name: Nosaukums, pēc noklusējuma "Jauns Apģērbs".
     ///   - notes: Piezīmes, pēc noklusējuma tukša simbolu virkne.
-    ///   - color: Krāsa.
+    ///   - color: Krāsa, pēc noklusējuma balta.
     ///   - status: Stāvoklis, pēc noklusējuma `0`.
     ///   - ironable: Gludināms/Negludināms, pēc noklusējuma `true`.
     ///   - season: Sezonas, pēc noklusējuma tukšs masīvs.
