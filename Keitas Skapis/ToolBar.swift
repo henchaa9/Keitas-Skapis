@@ -12,7 +12,7 @@ struct ToolBar: View {
     var body: some View {
         HStack {
             // 1) Sākums
-            NavigationLink(destination: ContentView()) {
+            NavigationLink(destination: HomeView()) {
                 VStack {
                     Image(systemName: "house")
                         .font(.system(size: 24))
@@ -40,7 +40,7 @@ struct ToolBar: View {
             .frame(maxWidth: .infinity)
             // Parāda lapu piespiežot pogu rīkjoslā
             .sheet(isPresented: $showChosenClothesSheet) {
-                IzveletieView()
+                chosenClothingItemsView()
                     .environmentObject(chosenManager) // padod chosenManager lapai, lai redzētu izvēlētos apģērbus
             }
 
@@ -71,7 +71,7 @@ struct ToolBar: View {
             .frame(maxWidth: .infinity)
 
             // 5) Netīrie apģērbi
-            NavigationLink(destination: NetirieApgerbiView()) {
+            NavigationLink(destination: DirtyClothingItemsView()) {
                 VStack {
                     Image(systemName: "washer")
                         .font(.system(size: 24))

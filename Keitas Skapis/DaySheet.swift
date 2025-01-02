@@ -84,7 +84,7 @@ struct DaySheetView: View {
                 }
             }
             .sheet(isPresented: $showAddApgerbsSheet) {
-                AddApgerbsToDayView(day: $day) // Lapa, kurā dienai var pievienot apģērbus
+                AddClothingItemToDayView(day: $day) // Lapa, kurā dienai var pievienot apģērbus
             }
             .onDisappear {
                 saveAndClose() // Automātiska saglabāšana, aizverot dienu

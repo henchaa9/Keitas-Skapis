@@ -4,7 +4,7 @@ import SwiftData
 import Combine
 
 // MARK: - Netīro un mazgāšanā esošo apģērbu skats
-struct NetirieApgerbiView: View {
+struct DirtyClothingItemsView: View {
     // MARK: - Vides mainīgie un datu vaicājumi
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -104,7 +104,7 @@ struct NetirieApgerbiView: View {
                             spacing: 10
                         ) {
                             ForEach(filteredClothingItems, id: \.id) { item in
-                                ApgerbsButton(
+                                clothingItemButton(
                                     clothingItem: item,
                                     isSelected: selectedClothingItemsIDs.contains(item.id),
                                     onTap: {
@@ -135,7 +135,7 @@ struct NetirieApgerbiView: View {
             // Detaļu lapa apģērbam
             .sheet(isPresented: $showClothingItemDetail) {
                 if let item = selectedClothingItem {
-                    ApgerbsDetailView(
+                    clothingItemDetailView(
                         clothingItem: item,
                         onEdit: {
                             showClothingItemDetail = false
@@ -294,6 +294,6 @@ struct NetirieApgerbiView: View {
 
 
 #Preview {
-    NetirieApgerbiView()
+    DirtyClothingItemsView()
 }
 

@@ -3,7 +3,7 @@ import SwiftUI
 import SwiftData
 
 // MARK: - Skats, kurā kalendāra dienai var pievienot apģērbus
-struct AddApgerbsToDayView: View {
+struct AddClothingItemToDayView: View {
     // MARK: - Dienas objekts, kuru jārediģē
     @Binding var day: Day
 

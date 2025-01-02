@@ -3,7 +3,7 @@ import SwiftUI
 import SwiftData
 
 // MARK: - Apģērba detaļu skats, kas tiek attēlots uzspiežot uz kāda apģērba
-struct ApgerbsDetailView: View {
+struct clothingItemDetailView: View {
     // MARK: - Vides mainīgie
     @EnvironmentObject private var chosenManager: ChosenManager
     @Environment(\.dismiss) var dismiss

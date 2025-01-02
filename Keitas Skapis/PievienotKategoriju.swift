@@ -57,7 +57,7 @@ struct ImagePicker: UIViewControllerRepresentable {
 // MARK: - PievienotKategorijuView
 
 // Skats kategoriju pievienošanai un rediģēšanai
-struct PievienotKategorijuView: View {
+struct addClothingCategoryView: View {
     // MARK: - Vides mainīgie
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
@@ -315,5 +315,5 @@ struct PievienotKategorijuView: View {
 
 
 #Preview {
-    PievienotKategorijuView()
+    addClothingCategoryView()
 }

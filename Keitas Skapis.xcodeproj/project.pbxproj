@@ -23,15 +23,15 @@
 		2D83CDFE2D0DB9A7007CF84C /* ApgerbsBtn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D83CDFD2D0DB9A7007CF84C /* ApgerbsBtn.swift */; };
 		2D8E93162D1FF3F70015422E /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8E93152D1FF3F70015422E /* CalendarView.swift */; };
 		2D8E93182D1FF4190015422E /* DaySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8E93172D1FF4190015422E /* DaySheet.swift */; };
-		2D8E931C2D2002F70015422E /* AddApgerbsToDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8E931B2D2002F70015422E /* AddApgerbsToDayView.swift */; };
+		2D8E931C2D2002F70015422E /* AddClothingItemToDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8E931B2D2002F70015422E /* AddClothingItemToDayView.swift */; };
 		2D8E931E2D204E1E0015422E /* ActiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D8E931D2D204E1E0015422E /* ActiveView.swift */; };
 		2D936A562D08C52C005DBBAE /* NetirieApgerbi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D936A552D08C52C005DBBAE /* NetirieApgerbi.swift */; };
 		2DA6AD332D1EC3170006031A /* Favorites.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD322D1EC3170006031A /* Favorites.swift */; };
 		2DA6AD392D1F078E0006031A /* ChosenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD382D1F078E0006031A /* ChosenManager.swift */; };
-		2DA6AD3B2D1F07FC0006031A /* ApgerbsDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD3A2D1F07FC0006031A /* ApgerbsDetailView.swift */; };
-		2DA6AD3D2D1F09CB0006031A /* IzveletieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD3C2D1F09CB0006031A /* IzveletieView.swift */; };
+		2DA6AD3B2D1F07FC0006031A /* clothingItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD3A2D1F07FC0006031A /* clothingItemDetailView.swift */; };
+		2DA6AD3D2D1F09CB0006031A /* chosenClothingItemsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DA6AD3C2D1F09CB0006031A /* chosenClothingItemsView.swift */; };
 		2DF5F7D32D231FF7003559AF /* FilterSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DF5F7D22D231FF7003559AF /* FilterSelectionView.swift */; };
-		2DFC61D72C8360B00019B63D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFC61D62C8360B00019B63D /* ContentView.swift */; };
+		2DFC61D72C8360B00019B63D /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFC61D62C8360B00019B63D /* HomeView.swift */; };
 		2DFC61D92C8360B10019B63D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2DFC61D82C8360B10019B63D /* Assets.xcassets */; };
 		2DFC61DC2C8360B10019B63D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2DFC61DB2C8360B10019B63D /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -54,16 +54,16 @@
 		2D83CDFD2D0DB9A7007CF84C /* ApgerbsBtn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApgerbsBtn.swift; sourceTree = "<group>"; };
 		2D8E93152D1FF3F70015422E /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		2D8E93172D1FF4190015422E /* DaySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaySheet.swift; sourceTree = "<group>"; };
-		2D8E931B2D2002F70015422E /* AddApgerbsToDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddApgerbsToDayView.swift; sourceTree = "<group>"; };
+		2D8E931B2D2002F70015422E /* AddClothingItemToDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddClothingItemToDayView.swift; sourceTree = "<group>"; };
 		2D8E931D2D204E1E0015422E /* ActiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveView.swift; sourceTree = "<group>"; };
 		2D936A552D08C52C005DBBAE /* NetirieApgerbi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetirieApgerbi.swift; sourceTree = "<group>"; };
 		2DA6AD322D1EC3170006031A /* Favorites.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Favorites.swift; sourceTree = "<group>"; };
 		2DA6AD382D1F078E0006031A /* ChosenManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChosenManager.swift; sourceTree = "<group>"; };
-		2DA6AD3A2D1F07FC0006031A /* ApgerbsDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApgerbsDetailView.swift; sourceTree = "<group>"; };
-		2DA6AD3C2D1F09CB0006031A /* IzveletieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IzveletieView.swift; sourceTree = "<group>"; };
+		2DA6AD3A2D1F07FC0006031A /* clothingItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = clothingItemDetailView.swift; sourceTree = "<group>"; };
+		2DA6AD3C2D1F09CB0006031A /* chosenClothingItemsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = chosenClothingItemsView.swift; sourceTree = "<group>"; };
 		2DF5F7D22D231FF7003559AF /* FilterSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterSelectionView.swift; sourceTree = "<group>"; };
 		2DFC61D12C8360B00019B63D /* Keitas Skapis.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Keitas Skapis.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		2DFC61D62C8360B00019B63D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2DFC61D62C8360B00019B63D /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		2DFC61D82C8360B10019B63D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2DFC61DB2C8360B10019B63D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -111,21 +111,21 @@
 			children = (
 				2D55E2022C9717DB002C18FB /* Info.plist */,
 				2D8032742CA94B8000CE0615 /* KeitasSkapisApp.swift */,
-				2DA6AD3A2D1F07FC0006031A /* ApgerbsDetailView.swift */,
+				2DA6AD3A2D1F07FC0006031A /* clothingItemDetailView.swift */,
 				2D6A94FA2D2186CF0066FC15 /* HideKeyboard.swift */,
-				2DFC61D62C8360B00019B63D /* ContentView.swift */,
+				2DFC61D62C8360B00019B63D /* HomeView.swift */,
 				2D6381A62D25891700BAA14C /* ImageLoader.swift */,
 				2D6A94FC2D218FF80066FC15 /* HelpView.swift */,
 				2D8E931D2D204E1E0015422E /* ActiveView.swift */,
 				2D8E93152D1FF3F70015422E /* CalendarView.swift */,
 				2D8E93172D1FF4190015422E /* DaySheet.swift */,
-				2D8E931B2D2002F70015422E /* AddApgerbsToDayView.swift */,
+				2D8E931B2D2002F70015422E /* AddClothingItemToDayView.swift */,
 				2DF5F7D22D231FF7003559AF /* FilterSelectionView.swift */,
 				2D83CDFD2D0DB9A7007CF84C /* ApgerbsBtn.swift */,
 				2D83CDFB2D0DB522007CF84C /* CategoryBtn.swift */,
 				2D936A552D08C52C005DBBAE /* NetirieApgerbi.swift */,
 				2D83CDF92D0D929A007CF84C /* ToolBar.swift */,
-				2DA6AD3C2D1F09CB0006031A /* IzveletieView.swift */,
+				2DA6AD3C2D1F09CB0006031A /* chosenClothingItemsView.swift */,
 				2D1AF2EF2CB2F59D00388469 /* PievienotKategoriju.swift */,
 				2D1AF2EB2CB2C3AD00388469 /* Models.swift */,
 				2D6501562CB84ED9005DB578 /* PievienotApgerbu.swift */,
@@ -225,7 +225,7 @@
 				2D83CDFE2D0DB9A7007CF84C /* ApgerbsBtn.swift in Sources */,
 				2DF5F7D32D231FF7003559AF /* FilterSelectionView.swift in Sources */,
 				2D936A562D08C52C005DBBAE /* NetirieApgerbi.swift in Sources */,
-				2DA6AD3B2D1F07FC0006031A /* ApgerbsDetailView.swift in Sources */,
+				2DA6AD3B2D1F07FC0006031A /* clothingItemDetailView.swift in Sources */,
 				2D8E93182D1FF4190015422E /* DaySheet.swift in Sources */,
 				2DA6AD332D1EC3170006031A /* Favorites.swift in Sources */,
 				2D1AF2EC2CB2C3AD00388469 /* Models.swift in Sources */,
@@ -235,12 +235,12 @@
 				2D6A94FD2D218FF80066FC15 /* HelpView.swift in Sources */,
 				2D83CDFA2D0D929A007CF84C /* ToolBar.swift in Sources */,
 				2D6381A72D25891700BAA14C /* ImageLoader.swift in Sources */,
-				2DFC61D72C8360B00019B63D /* ContentView.swift in Sources */,
+				2DFC61D72C8360B00019B63D /* HomeView.swift in Sources */,
 				2D83CDFC2D0DB522007CF84C /* CategoryBtn.swift in Sources */,
-				2D8E931C2D2002F70015422E /* AddApgerbsToDayView.swift in Sources */,
+				2D8E931C2D2002F70015422E /* AddClothingItemToDayView.swift in Sources */,
 				2D8032752CA94B8000CE0615 /* KeitasSkapisApp.swift in Sources */,
 				2D6A94FB2D2186CF0066FC15 /* HideKeyboard.swift in Sources */,
-				2DA6AD3D2D1F09CB0006031A /* IzveletieView.swift in Sources */,
+				2DA6AD3D2D1F09CB0006031A /* chosenClothingItemsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

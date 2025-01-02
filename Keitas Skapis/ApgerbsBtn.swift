@@ -2,7 +2,7 @@
 import SwiftUI
 
 // MARK: - Skats apģērba attēlošanai
-struct ApgerbsButton: View {
+struct clothingItemButton: View {
     // MARK: - Parametri
     
     let clothingItem: ClothingItem

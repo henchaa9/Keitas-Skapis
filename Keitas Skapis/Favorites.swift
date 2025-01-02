@@ -96,7 +96,7 @@ struct FavoritesView: View {
                         ) {
                             ForEach(favoriteClothingItems, id: \.id) { item in
                                 // Poga apģērba attēlošanai
-                                ApgerbsButton(
+                                clothingItemButton(
                                     clothingItem: item,
                                     isSelected: selectedClothingItemsIDs.contains(item.id),
                                     onTap: {
@@ -131,7 +131,7 @@ struct FavoritesView: View {
             // Apģērba detaļu skats
             .sheet(isPresented: $showClothingItemDetail) {
                 if let clothingItem = selectedClothingItem {
-                    ApgerbsDetailView(
+                    clothingItemDetailView(
                         clothingItem: clothingItem,
                         onEdit: {
                             showClothingItemDetail = false

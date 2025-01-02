@@ -11,7 +11,7 @@ struct KeitasSkapisApp: App {
     var body: some Scene {
         WindowGroup {
             // Galvenais skats
-            ContentView()
+            HomeView()
                 .environmentObject(chosenManager)
         }
         .modelContainer(for: [

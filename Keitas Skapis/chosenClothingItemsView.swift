@@ -3,7 +3,7 @@ import SwiftUI
 import SwiftData
 
 // MARK: - Izvēlēto apģerbu skats
-struct IzveletieView: View {
+struct chosenClothingItemsView: View {
     // MARK: - Vides mainīgie un datu vaicājumi
     @EnvironmentObject private var chosenManager: ChosenManager
     @Environment(\.modelContext) private var modelContext

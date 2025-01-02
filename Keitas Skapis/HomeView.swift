@@ -30,7 +30,7 @@ class SearchTextObservable: ObservableObject {
 // MARK: - ContentView
 
 // Galvenais skats (Sākums)
-struct ContentView: View {
+struct HomeView: View {
     // MARK: - Datu vaicājumi un vides mainīgie
     @Query private var clothingCategories: [ClothingCategory]
     @Query private var clothingItems: [ClothingItem]
@@ -131,7 +131,7 @@ struct ContentView: View {
             .sheet(isPresented: $showClothingItemDetail) {
                 // Apģērba detaļu lapa
                 if let item = selectedClothingItem {
-                    ApgerbsDetailView(
+                    clothingItemDetailView(
                         clothingItem: item,
                         onEdit: {
                             isEditing = true
@@ -148,7 +148,7 @@ struct ContentView: View {
             }
             .navigationDestination(isPresented: $isAddingCategory) {
                 // Jaunas kategorijas pievienošanas skats
-                PievienotKategorijuView()
+                addClothingCategoryView()
             }
             .navigationDestination(isPresented: $isAddingClothingItem) {
                 // Jauna apģērba pievienošanas skats
@@ -157,7 +157,7 @@ struct ContentView: View {
             .navigationDestination(isPresented: $isEditing) {
                 // Rediģēšanas skati kategorijām vai apģērbiem
                 if let category = selectedCategory {
-                    PievienotKategorijuView(existingCategory: category)
+                    addClothingCategoryView(existingCategory: category)
                         .onDisappear {
                             isEditing = false
                             selectedCategory = nil
@@ -385,7 +385,7 @@ struct ContentView: View {
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 90, maximum: 120))], spacing: 10) {
                         ForEach(filteredClothingItems, id: \.id) { item in
-                            ApgerbsButton(
+                            clothingItemButton(
                                 clothingItem: item,
                                 isSelected: selectedClothingItemsIDs.contains(item.id),
                                 onTap: {
@@ -413,7 +413,7 @@ struct ContentView: View {
             .sheet(isPresented: $showClothingItemDetail) {
                 // Apģērba detalizētā skata attēlošana
                 if let item = selectedClothingItem {
-                    ApgerbsDetailView(
+                    clothingItemDetailView(
                         clothingItem: item,
                         onEdit: {
                             isEditing = true
