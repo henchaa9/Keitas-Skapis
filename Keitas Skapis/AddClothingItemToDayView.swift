@@ -99,7 +99,7 @@ struct AddClothingItemToDayView: View {
             try modelContext.save()
         } catch {
             // Kļūdu apstrāde
-            errorMessage = "Neizdevās saglabāt izmaiņas. Lūdzu, mēģiniet vēlreiz."
+            errorMessage = "Neizdevās saglabāt izmaiņas"
             showErrorAlert = true
         }
     }

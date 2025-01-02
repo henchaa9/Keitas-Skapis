@@ -15,6 +15,10 @@ struct clothingItemDetailView: View {
     var onEdit: () -> Void
     var onDelete: () -> Void
     
+    //MARK: - Kļūdu mainīgie
+    @State private var showErrorAlert: Bool = false
+    @State private var errorMessage: String = ""
+    
     // Initializer, kurā tiek inicializēts apģērbs un rediģēšanas, un dzēšanas funkcijas
     init(clothingItem: ClothingItem, onEdit: @escaping () -> Void, onDelete: @escaping () -> Void) {
         self.clothingItem = clothingItem
@@ -180,6 +184,13 @@ struct clothingItemDetailView: View {
         .onAppear {
             loadImage()
         }
+        .alert(isPresented: $showErrorAlert) { // Added alert modifier
+            Alert(
+                title: Text("Kļūda!"),
+                message: Text(errorMessage),
+                dismissButton: .default(Text("OK"))
+            )
+        }
     }
 
     // MARK: - Palīgfunkcijas
@@ -190,7 +201,9 @@ struct clothingItemDetailView: View {
         do {
             try clothingItem.modelContext?.save()
         } catch {
-            print("Failed to save favorite status: \(error.localizedDescription)")
+            // Kļūdu apstrāde
+            errorMessage = "Neizdevās atjaunināt mīļāko statusu"
+            showErrorAlert = true
         }
     }
 
@@ -252,7 +265,9 @@ struct clothingItemDetailView: View {
         do {
             try clothingItem.modelContext?.save()
         } catch {
-            print("Failed to save status update: \(error.localizedDescription)")
+            // Kļūdu apstrāde
+            errorMessage = "Neizdevās atjaunināt stāvokli"
+            showErrorAlert = true
         }
     }
 }

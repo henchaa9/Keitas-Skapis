@@ -241,7 +241,7 @@ struct FavoritesView: View {
             try modelContext.save()
         } catch {
             // Kļūdas pārvaldība
-            errorMessage = "Failed to update clothing item status."
+            errorMessage = "Neizdevās atjaunināt apģērba statusu"
             showErrorAlert = true
         }
     }
@@ -261,7 +261,7 @@ struct FavoritesView: View {
                     // performFiltering() // Not needed if no filtering
                 } catch {
                     // Kļūdas pārvaldība
-                    errorMessage = "Failed to delete clothing item."
+                    errorMessage = "Neizdevās izdzēst apģērbu"
                     showErrorAlert = true
                 }
             }
@@ -280,7 +280,7 @@ struct FavoritesView: View {
                     // performFiltering() // Not needed if no filtering
                 } catch {
                     // Kļūdas pārvaldība
-                    errorMessage = "Failed to delete selected clothing items."
+                    errorMessage = "Neizdevās izdzēst izvēlētos apģērbus"
                     showErrorAlert = true
                 }
             }

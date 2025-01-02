@@ -533,7 +533,7 @@ struct PievienotApgerbuView: View {
                 dismiss()
             } catch {
                 // Kļūdas pārvaldība
-                errorMessage = "Neizdevās saglabāt apģērbu: \(error.localizedDescription)"
+                errorMessage = "Neizdevās saglabāt apģērbu"
                 showErrorAlert = true
             }
         }

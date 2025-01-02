@@ -243,7 +243,7 @@ struct DirtyClothingItemsView: View {
             try modelContext.save()
         } catch {
             // Kļūdas pārvaldība
-            errorMessage = "Failed to update clothing item status."
+            errorMessage = "Neizdevās atjaunināt apģērba statusu"
             showErrorAlert = true
         }
     }
@@ -263,7 +263,7 @@ struct DirtyClothingItemsView: View {
                     // performFiltering() // Not needed if no filtering
                 } catch {
                     // Kļūdas pārvaldība
-                    errorMessage = "Failed to delete clothing item."
+                    errorMessage = "Neizdevās dzēst apģērbu"
                     showErrorAlert = true
                 }
             }
@@ -282,7 +282,7 @@ struct DirtyClothingItemsView: View {
                     // performFiltering() // Not needed if no filtering
                 } catch {
                     // Kļūdas pārvaldība
-                    errorMessage = "Failed to delete selected clothing items."
+                    errorMessage = "Neizdevās dzēst izvēlētos apģērbus"
                     showErrorAlert = true
                 }
             }
