@@ -35,10 +35,11 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     ///   - name: Nosaukums, pēc noklusējuma "Jauna Kategorija".
     ///   - picture: Neobligāti attēla dati.
     ///   - removeBackground: Norāda, vai attēlam jānoņem fons, pēc noklusējuma `false`.
-    init(name: String = "Jauna Kategorija", picture: Data? = nil, removeBackground: Bool = false) {
+    init(name: String = "Jauna Kategorija", picture: Data? = nil, removeBackground: Bool = false, clothingItems: [ClothingItem] = []) {
         self.name = name
         self.picture = picture
         self.removeBackground = removeBackground
+        self.categoryClothingItems = clothingItems
     }
     
     // MARK: - Aprēķināmie parametri
@@ -179,7 +180,7 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     
     // Atslēgas, izņemot relācijas, lai nenotiktu cikliskas references
     enum CodingKeys: String, CodingKey {
-        case id, name, picture, removeBackground
+        case id, name, picture, removeBackground, categoryClothingItems
     }
     
     // Inicializē kategoriju no Decoder (atkodē uz izmantojamām vērtībām), izņemot relācijas
@@ -199,6 +200,7 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         try container.encode(name, forKey: .name)
         try container.encodeIfPresent(picture, forKey: .picture)
         try container.encode(removeBackground, forKey: .removeBackground)
+        try container.encode(categoryClothingItems, forKey: .categoryClothingItems)
     }
 }
 
@@ -279,7 +281,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
     
     // MARK: - Relācijas
     
-    @Relationship var clothingItemCategories: [ClothingCategory] = [] // Apģērbam piesaistītās kategorijas
+    @Relationship(inverse: \ClothingCategory.categoryClothingItems) var clothingItemCategories: [ClothingCategory] = [] // Apģērbam piesaistītās kategorijas
     @Relationship(inverse: \Day.dayClothingItems) var clothingItemDays: [Day] = [] // Apģērbam piesaistītās dienas
     
     // MARK: - Statiskie parametri
@@ -453,7 +455,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
     
     // Definē atslēgas, iekļaujot relācijas
     enum CodingKeys: String, CodingKey {
-        case id, name, notes, color, status, ironable, size, season, lastWorn, washing, dirty, picture, removeBackground, clothingItemDays
+        case id, name, notes, color, status, ironable, size, season, lastWorn, washing, dirty, picture, removeBackground, clothingItemDays, clothingItemCategories
     }
     
     // Inicializē apģērbu no Decoder(atkodē uz lietojamām vērtībām), izņemot relācijas
@@ -493,6 +495,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
         try container.encodeIfPresent(picture, forKey: .picture)
         try container.encode(removeBackground, forKey: .removeBackground)
         try container.encode(clothingItemDays, forKey: .clothingItemDays)
+        try container.encode(clothingItemCategories, forKey: .clothingItemCategories)
     }
 }
 
