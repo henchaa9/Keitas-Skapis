@@ -76,7 +76,7 @@ struct ToolBar: View {
                     Image(systemName: "washer")
                         .font(.system(size: 24))
                         .foregroundStyle(.black)
-                    Text("Netīrie")
+                    Text("Tīrīšana")
                         .font(.footnote)
                         .foregroundStyle(.black)
                 }
