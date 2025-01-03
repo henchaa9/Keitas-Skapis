@@ -332,7 +332,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
     
     // MARK: - Attēla ielāde
     
-    // Ielādē apģērba attēlu, noņemot fonu ja nepieciešams
+    // Asinhroni ielādē apģērba attēlu, noņemot fonu ja nepieciešams
     // Izmanto kešatmiņu, lai uzlabotu veiktspēju
     /// - Parameter completion: Pabeigšanas handler ar ielādēto UIImage.
     func loadImage(completion: @escaping (UIImage?) -> Void) {
@@ -344,31 +344,31 @@ class ClothingItem: Identifiable, Hashable, Codable {
 
         // Asinhroni ielādē attēlu
         DispatchQueue.global(qos: .background).async {
-            var image: UIImage?
+            var processedImage: UIImage?
 
             if let imageData = self.picture, let uiImage = UIImage(data: imageData) {
                 if self.removeBackground {
-                    image = self.removeBackground(from: uiImage) // Palīgfunkcija fona noņemšanai
+                    processedImage = self.removeBackground(from: uiImage)
                 } else {
-                    image = uiImage
+                    processedImage = uiImage
                 }
             }
 
-            // Ievieto attēlu kešatmiņā, ja tas pieejams
-            if let imageToCache = image {
+            // Ievieto apstrādāto attēlu kešatmiņā
+            if let imageToCache = processedImage {
                 ClothingItem.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
             }
 
             // Atgriež attēlu uz galvenās takts
             DispatchQueue.main.async {
-                completion(image)
+                completion(processedImage)
             }
         }
     }
     
     // Pārlādē attēlu, izņemot to no cache un pārlādējot
     func reloadImage() {
-        // Izņemt attēlu no kešatmiņas
+        // Izņem attēlu no kešatmiņas
         ClothingItem.imageCache.removeObject(forKey: self.id.uuidString as NSString)
         
         // Pārlādē un atkal ievieto kešatmiņā attēlu

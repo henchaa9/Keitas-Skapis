@@ -487,14 +487,17 @@ struct PievienotApgerbuView: View {
                 clothingItem.size = clothingItemSize
                 clothingItem.season = Array(clothingItemSeason)
                 clothingItem.lastWorn = clothingItemLastWorn
+                clothingItem.removeBackground = removeBackground
                 
                 // Saglabā attēlu, ja izvēlēts
-                if let imageData = displayedImage?.pngData() {
+                if let imageData = selectedImage?.pngData() {
                     clothingItem.picture = imageData
                 }
                 
                 // Atjaunina relācijas
                 updateCategoryRelationships(for: clothingItem, newCategories: Array(clothingItemCategories))
+                
+                clothingItem.reloadImage()
             } else {
                 // Izveido jaunu apģērbu
                 let newClothingItem = ClothingItem(
@@ -507,13 +510,11 @@ struct PievienotApgerbuView: View {
                     size: clothingItemSize,
                     lastWorn: clothingItemLastWorn,
                     dirty: clothingItemStatus == 1,
-                    washing: clothingItemStatus == 2
+                    washing: clothingItemStatus == 2,
+                    picture: selectedImage?.pngData(),
+                    removeBackground: removeBackground
                 )
                 
-                // Saglabā attēlu, ja izvēlēts
-                if let imageData = displayedImage?.pngData() {
-                    newClothingItem.picture = imageData
-                }
                 
                 // Izveido relācijas
                 newClothingItem.clothingItemCategories = Array(clothingItemCategories)
