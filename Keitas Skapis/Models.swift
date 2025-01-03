@@ -505,7 +505,7 @@ class Day: Codable {
     
     @Attribute var id: UUID = UUID() // ID
     @Attribute var date: Date // Datums
-    @Attribute var notes: String // Piezīmes
+    @Attribute var notes: String = "" // Piezīmes
     
     // MARK: - Relācijas
     
@@ -518,7 +518,7 @@ class Day: Codable {
     ///   - date: datums.
     ///   - notes: piezīmes.
     ///   - clothingItems: dienai piesaistītie apģērbi, pēc noklusējuma tukšs masīvs.
-    init(date: Date, notes: String, clothingItems: [ClothingItem] = []) {
+    init(date: Date, notes: String = "", clothingItems: [ClothingItem] = []) {
         self.date = date
         self.notes = notes
         self.dayClothingItems = clothingItems

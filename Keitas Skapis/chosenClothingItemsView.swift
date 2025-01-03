@@ -103,16 +103,19 @@ struct chosenClothingItemsView: View {
         }
 
         let currentDay: Day
+        var isNewDay = false
+
         // Pārbauda, vai attiecīgās dienas objekts jau neeksistē
         if let existingDay = days.first(where: { sameDate($0.date, selectedDate) }) {
             currentDay = existingDay
         } else {
-            // Izveido jaunu dienu, ja tāda neeksistē
-            let newDay = Day(date: selectedDate, notes: notes)
+            // Izveido jaunu dienu, bez piezīmēm
+            let newDay = Day(date: selectedDate)
             modelContext.insert(newDay)
             do {
                 try modelContext.save()
                 currentDay = newDay
+                isNewDay = true
             } catch {
                 // Kļūdas pārvaldība
                 errorMessage = "Neizdevās saglabāt jauno dienu."
@@ -136,9 +139,12 @@ struct chosenClothingItemsView: View {
             }
         }
 
-        // Pievieno piezīmes
-        if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        // Pievieno piezīmes tikai, ja diena nav jauna
+        if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isNewDay {
             currentDay.notes += currentDay.notes.isEmpty ? notes : "\n\(notes)"
+        } else if isNewDay && !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            // Set notes for new day
+            currentDay.notes = notes
         }
 
         // Mēģina saglabāt
@@ -152,6 +158,8 @@ struct chosenClothingItemsView: View {
             showErrorAlert = true
         }
     }
+
+    
 
     // Pārbauda, vai divi datumi iekrīt vienā dienā
     /// - Parameters:

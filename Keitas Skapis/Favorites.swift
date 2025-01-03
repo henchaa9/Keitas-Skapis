@@ -129,23 +129,24 @@ struct FavoritesView: View {
                 .padding(.top, -10)
 
             // Apģērba detaļu skats
-            .sheet(isPresented: $showClothingItemDetail) {
-                if let clothingItem = selectedClothingItem {
-                    clothingItemDetailView(
-                        clothingItem: clothingItem,
-                        onEdit: {
-                            showClothingItemDetail = false
-                            isEditing = true
-                        },
-                        onDelete: {
-                            deleteSelectedClothingItem() // Palīgfunkcija
-                            showClothingItemDetail = false
-                        }
-                    )
-                } else {
-                    Text("Nav izvēlēts apģērbs")
+                .sheet(isPresented: $showClothingItemDetail) {
+                    // Apģērba detalizētā skata attēlošana
+                    if let item = selectedClothingItem {
+                        clothingItemDetailView(
+                            clothingItem: item,
+                            onEdit: {
+                                isEditing = true
+                                showClothingItemDetail = false
+                            },
+                            onDelete: {
+                                deleteSelectedClothingItem()
+                                showClothingItemDetail = false
+                            }
+                        )
+                    } else {
+                        Text("No Apgerbs Selected")
+                    }
                 }
-            }
 
             // Saite uz attēla rediģēšanu
             .navigationDestination(isPresented: $isEditing) {
@@ -247,27 +248,10 @@ struct FavoritesView: View {
     }
 
 
-    // Izdzēš izvēlēto apģērbu(us)
+    // Izvēlētā apģērba dzēšana
     private func deleteSelectedClothingItem() {
-        // Situācija 1: Izvēlēts viens apģērbs
-        if let single = selectedClothingItem {
-            selectedClothingItem = nil
-            showClothingItemDetail = false
-
-            DispatchQueue.main.async {
-                modelContext.delete(single)
-                do {
-                    try modelContext.save()
-                    // performFiltering() // Not needed if no filtering
-                } catch {
-                    // Kļūdas pārvaldība
-                    errorMessage = "Neizdevās izdzēst apģērbu"
-                    showErrorAlert = true
-                }
-            }
-        }
-        // Situācija 2: Izvēlēti vairāki apģērbi
-        else if !selectedClothingItemsIDs.isEmpty {
+        // Situācija 1: Izvēlēti vairāki apģērbi
+        if !selectedClothingItemsIDs.isEmpty {
             DispatchQueue.main.async {
                 // Iet cauri visiem apģērbiem un dzēš izvēlētos
                 for item in clothingItems where selectedClothingItemsIDs.contains(item.id) {
@@ -277,10 +261,27 @@ struct FavoritesView: View {
                 isSelectionModeActive = false // Iziet no atlases režīma
                 do {
                     try modelContext.save()
-                    // performFiltering() // Not needed if no filtering
+                    //performFiltering()
                 } catch {
                     // Kļūdas pārvaldība
-                    errorMessage = "Neizdevās izdzēst izvēlētos apģērbus"
+                    errorMessage = "Neizdevās dzēst izvēlētos apģērbus"
+                    showErrorAlert = true
+                }
+            }
+        }
+        // Situācija 2: Izvēlēts viens apģērbs
+        else if let single = selectedClothingItem {
+            selectedClothingItem = nil
+            showClothingItemDetail = false
+
+            DispatchQueue.main.async {
+                modelContext.delete(single)
+                do {
+                    try modelContext.save()
+                    //performFiltering()
+                } catch {
+                    // Kļūdas pārvaldība
+                    errorMessage = "Neizdevās dzēst apģērbu"
                     showErrorAlert = true
                 }
             }

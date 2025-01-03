@@ -128,7 +128,9 @@ struct HomeView: View {
                     allColors: allColors
                 )
             }
-            .sheet(isPresented: $showClothingItemDetail) {
+            .sheet(isPresented: $showClothingItemDetail, onDismiss: {
+                selectedClothingItem = nil
+            }) {
                 // Apģērba detaļu lapa
                 if let item = selectedClothingItem {
                     clothingItemDetailView(
@@ -625,27 +627,10 @@ struct HomeView: View {
 
     // Izvēlētā apģērba dzēšana
     private func deleteSelectedClothingItem() {
-        // Situācija 1: Izvēlēts viens apģērbs
-        if let single = selectedClothingItem {
-            selectedClothingItem = nil
-            showClothingItemDetail = false
-
+        // Situācija 1: Izvēlēti vairāki apģērbi
+        if !selectedClothingItemsIDs.isEmpty {
             DispatchQueue.main.async {
-                modelContext.delete(single)
-                do {
-                    try modelContext.save()
-                    performFiltering()
-                } catch {
-                    // Kļūdas pārvaldība
-                    errorMessage = "Neizdevās dzēst apģērbu"
-                    showErrorAlert = true
-                }
-            }
-        }
-        // Situācija 2: Izvēlēti vairāki apģērbi
-        else if !selectedClothingItemsIDs.isEmpty {
-            DispatchQueue.main.async {
-                // Iet cauri visiem apģērbiem, un dzēš izvēlētos
+                // Iet cauri visiem apģērbiem un dzēš izvēlētos
                 for item in clothingItems where selectedClothingItemsIDs.contains(item.id) {
                     modelContext.delete(item)
                 }
@@ -661,7 +646,25 @@ struct HomeView: View {
                 }
             }
         }
+        // Situācija 2: Izvēlēts viens apģērbs
+        else if let single = selectedClothingItem {
+            selectedClothingItem = nil
+            showClothingItemDetail = false
+
+            DispatchQueue.main.async {
+                modelContext.delete(single)
+                do {
+                    try modelContext.save()
+                    performFiltering()
+                } catch {
+                    // Kļūdas pārvaldība
+                    errorMessage = "Neizdevās dzēst apģērbu"
+                    showErrorAlert = true
+                }
+            }
+        }
     }
+
 }
 
 
