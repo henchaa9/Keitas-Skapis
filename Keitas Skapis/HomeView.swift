@@ -619,6 +619,7 @@ struct HomeView: View {
                 showErrorAlert = true
             }
             selectedCategory = nil
+            performFiltering()
         }
     }
 

@@ -9,11 +9,15 @@ struct CategoryButton: View {
     let isSelected: Bool
     let onLongPress: (ClothingCategory) -> Void
     let toggleSelection: (ClothingCategory) -> Void
+    
+    // MARK: - Stāvokļu mainīgie
+    
+    @State private var image: UIImage?
 
     var body: some View {
         VStack {
-            // Apģērba attēls, ja tas ir pievienots un ielādēts
-            if let image = clothingCategory.displayedImage {
+            // Kategorijas attēls, asinhroni ielādēts
+            if let image = image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
@@ -32,6 +36,7 @@ struct CategoryButton: View {
             // Nosaukums
             Text(clothingCategory.name)
                 .frame(width: 80, height: 30)
+                .multilineTextAlignment(.center)
         }
         .frame(width: 90, height: 120)
         .background(isSelected ? Color.blue.opacity(0.3) : Color(.white))
@@ -46,6 +51,18 @@ struct CategoryButton: View {
                 onLongPress(clothingCategory) // Reģistrē turēšanu
             }
         )
+        .onAppear {
+            loadImage()
+        }
+    }
+    
+    // MARK: - Palīgfunkcijas
+    
+    // Asinhroni ielādē kategorijas attēlu
+    private func loadImage() {
+        clothingCategory.loadImage { loadedImage in
+            self.image = loadedImage
+        }
     }
 }
 

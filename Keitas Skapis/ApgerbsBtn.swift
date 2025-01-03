@@ -9,6 +9,9 @@ struct clothingItemButton: View {
     let isSelected: Bool
     let onTap: () -> Void
     let onLongPress: () -> Void
+    
+    // MARK: - Stāvokļu mainīgie
+    
     @State private var image: UIImage?
 
     var body: some View {

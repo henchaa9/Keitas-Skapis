@@ -24,6 +24,10 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     
     @Relationship var categoryClothingItems: [ClothingItem] = [] // Apģērbi, kas piesaistīti kategorijai
     
+    // MARK: - Attēlu kešatmiņa
+      
+      static var imageCache = NSCache<NSString, UIImage>() // Kešatmiņa priekš kategoriju attēliem
+    
     // MARK: - Initializer
     
     // Inicializē jaunu kategoriju ar neobligātiem parametriem
@@ -48,9 +52,53 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     // Atgriež attēlojamo attēlu, ar noņemtu fonu pēc vajadzības
     var displayedImage: UIImage? {
         if removeBackground, let image = self.image {
-            return removeBackground(from: image) // Helper Function
+            return removeBackground(from: image) // Palīgfunkcija
         }
         return self.image
+    }
+    
+    // MARK: - Attēlu ielāde
+    
+    // Asinhroni ielādē kategorijas attēlu, pēc nepieciešamības noņem fonu un saglabā attēlu kešatmiņā
+    /// - Parameter completion: Completion handler ar ielādēto UIImage.
+    func loadImage(completion: @escaping (UIImage?) -> Void) {
+        // Pārbauda, vai attēls jau ir kešatmiņā
+        if let cachedImage = ClothingCategory.imageCache.object(forKey: self.id.uuidString as NSString) {
+            completion(cachedImage)
+            return
+        }
+        
+        // Asinhroni apstrādā attēlu
+        DispatchQueue.global(qos: .background).async {
+            var processedImage: UIImage?
+            
+            if let imageData = self.picture, let uiImage = UIImage(data: imageData) {
+                if self.removeBackground {
+                    processedImage = self.removeBackground(from: uiImage)
+                } else {
+                    processedImage = uiImage
+                }
+            }
+            
+            // Ievieto apstrādāto attēlu kešatmiņā
+            if let imageToCache = processedImage {
+                ClothingCategory.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
+            }
+            
+            // Atgriež attēlu uz galvenās takts
+            DispatchQueue.main.async {
+                completion(processedImage)
+            }
+        }
+    }
+    
+    // Pārlādē attēlu iztīrot kešatmiņu un pārlādējot attēlu
+    func reloadImage() {
+        // Izņem attēlu no kešatmiņas
+        ClothingCategory.imageCache.removeObject(forKey: self.id.uuidString as NSString)
+        
+        // Pārlādē attēlu
+        loadImage { _ in }
     }
     
     // MARK: - Fona noņemšanas funkcijas

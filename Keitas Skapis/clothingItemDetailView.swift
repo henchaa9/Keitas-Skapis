@@ -7,6 +7,7 @@ struct clothingItemDetailView: View {
     // MARK: - Vides mainīgie
     @EnvironmentObject private var chosenManager: ChosenManager
     @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) private var modelContext
     
     // MARK: - Stāvokļu mainīgie
     @State private var selectedStatus: String
@@ -183,8 +184,9 @@ struct clothingItemDetailView: View {
         .background(Color(.systemGray6))
         .onAppear {
             loadImage()
+            updateLastWornIfNeeded() // Atjaunina lastWorn
         }
-        .alert(isPresented: $showErrorAlert) { // Added alert modifier
+        .alert(isPresented: $showErrorAlert) { // Kļūdas paziņojums
             Alert(
                 title: Text("Kļūda!"),
                 message: Text(errorMessage),
@@ -268,6 +270,26 @@ struct clothingItemDetailView: View {
             // Kļūdu apstrāde
             errorMessage = "Neizdevās atjaunināt stāvokli"
             showErrorAlert = true
+        }
+    }
+    
+    private func updateLastWornIfNeeded() {
+        // Dienas, kas ir šodien vai agrāk
+        let validDays = clothingItem.clothingItemDays.filter { $0.date <= Date() }
+        
+        // Atrod jaunāko dienu
+        if let latestDay = validDays.max(by: { $0.date < $1.date }) {
+            // Atjaunina `lastWorn` ja latestDay.date ir jaunāks
+            if latestDay.date > clothingItem.lastWorn {
+                clothingItem.lastWorn = latestDay.date
+                do {
+                    try modelContext.save()
+                } catch {
+                    // Kļūdu apstrāde
+                    errorMessage = "Neizdevās atjaunināt pēdējo vilkšanas datumu"
+                    showErrorAlert = true
+                }
+            }
         }
     }
 }

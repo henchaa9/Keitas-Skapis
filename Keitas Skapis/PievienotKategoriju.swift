@@ -226,6 +226,7 @@ struct addClothingCategoryView: View {
                 category.name = categoryName
                 category.picture = imageData
                 category.removeBackground = removeBackground
+                category.reloadImage()
             } else {
                 // Ievieto jaunu kategoriju
                 let newKategorija = ClothingCategory(

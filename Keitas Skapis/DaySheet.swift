@@ -138,9 +138,9 @@ struct DaySheetView: View {
         // Tāpat arī, pievienojot nākotnes datumam, tas atjauninās tikai tad, kad datums pienāk
         let validDays = clothingItem.clothingItemDays.filter { $0.date <= Date() }
         if let latestDay = validDays.max(by: { $0.date < $1.date }) {
-            clothingItem.lastWorn = latestDay.date // Sets to the latest date
+            clothingItem.lastWorn = latestDay.date // Pievieno tuvāko dienu
         } else {
-            // Resets `lastWorn` if no valid days exist
+            // Samaina `lastWorn` ja neeksistē derīgas dienas
             clothingItem.lastWorn = Date.distantPast
         }
     }
