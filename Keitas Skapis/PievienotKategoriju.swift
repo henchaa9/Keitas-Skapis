@@ -226,10 +226,10 @@ struct addClothingCategoryView: View {
                 category.removeBackground = removeBackground
 
                 if let uiImage = selectedImage {
-                    // 1) Always store the original
+                    // 1) Vienmēr saglabā oriģinālu
                     category.picture = uiImage.pngData()
                     
-                    // 2) Condition: if removeBackground is ON, remove it
+                    // 2) Ja removeBackground ir patiess, noņem fonu
                     let finalImage: UIImage
                     if removeBackground {
                         finalImage = removeBackground(from: uiImage)
@@ -237,13 +237,13 @@ struct addClothingCategoryView: View {
                         finalImage = uiImage
                     }
 
-                    // 3) Create a smaller thumbnail version
+                    // 3) Izveido mazāku attēla versiju
                     if let thumbnailData = finalImage.thumbnailImage(maxPixelSize: 200)?.pngData() {
                         category.thumbnailPicture = thumbnailData
                     }
                 }
 
-                // Rebuild the cached image
+                // Pārlādē kešatmiņu
                 category.reloadImage()
             } else {
                 // Ievieto jaunu kategoriju
@@ -253,10 +253,10 @@ struct addClothingCategoryView: View {
                 )
 
                 if let uiImage = selectedImage {
-                    // 1) Always store the original
+                    // 1) Vienmēr saglabā oriģinālu
                     newCategory.picture = uiImage.pngData()
 
-                    // 2) Possibly remove background
+                    // 2) Ja removeBackground ir patiess, noņem fonu
                     let finalImage: UIImage
                     if removeBackground {
                         finalImage = removeBackground(from: uiImage)
@@ -264,7 +264,7 @@ struct addClothingCategoryView: View {
                         finalImage = uiImage
                     }
 
-                    // 3) Generate thumbnail
+                    // 3) Izveido mazāku attēla versiju
                     if let thumbnailData = finalImage.thumbnailImage(maxPixelSize: 200)?.pngData() {
                         newCategory.thumbnailPicture = thumbnailData
                     }
@@ -293,12 +293,12 @@ struct addClothingCategoryView: View {
     /// - Returns: jauna UIImage ar noņemtu fonu vai ar fonu, ja noņemšana neizdodas
     private func removeBackground(from image: UIImage) -> UIImage {
         guard let inputImage = CIImage(image: image) else {
-            print("Failed to create CIImage")
+            print("Neizdevās izveidot CIImage")
             return image
         }
 
         guard let maskImage = createMask(from: inputImage) else {
-            print("Failed to create mask")
+            print("Neizdevās izveidot masku")
             return image
         }
 
@@ -344,7 +344,7 @@ struct addClothingCategoryView: View {
     /// - Returns: Jauns UIImage attēls izveidots no CIImage.
     private func convertToUIImage(ciImage: CIImage, originalOrientation: UIImage.Orientation = .up) -> UIImage {
         guard let cgImage = CIContext(options: nil).createCGImage(ciImage, from: ciImage.extent) else {
-            fatalError("Failed to render CGImage")
+            fatalError("Neizdevās ģenerēt CGImage")
         }
         return UIImage(cgImage: cgImage, scale: 1.0, orientation: originalOrientation)
     }

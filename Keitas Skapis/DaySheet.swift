@@ -125,7 +125,7 @@ struct DaySheetView: View {
             try modelContext.save()
         } catch {
             // Kļūdu apstrāde
-            errorMessage = "Neizdevās saglabāt izmaiņas. Lūdzu, mēģiniet vēlreiz."
+            errorMessage = "Neizdevās saglabāt izmaiņas"
             showErrorAlert = true
         }
     }
@@ -161,7 +161,7 @@ struct DaySheetView: View {
                 dismiss() // Aizver lapu
             } catch {
                 // Kļūdu apstrāde
-                errorMessage = "Neizdevās saglabāt izmaiņas. Lūdzu, mēģiniet vēlreiz."
+                errorMessage = "Neizdevās saglabāt izmaiņas"
                 showErrorAlert = true
             }
             return
@@ -174,7 +174,7 @@ struct DaySheetView: View {
                 try modelContext.save()
             } catch {
                 // Kļūdu apstrāde
-                errorMessage = "Neizdevās saglabāt dienu. Lūdzu, mēģiniet vēlreiz."
+                errorMessage = "Neizdevās saglabāt dienu"
                 showErrorAlert = true
                 // Ja iestājas kļūda, noņem dienu
                 modelContext.delete(day)

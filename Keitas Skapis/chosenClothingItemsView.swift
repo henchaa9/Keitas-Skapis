@@ -69,11 +69,11 @@ struct chosenClothingItemsView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Aizvērt") {
-                        dismiss() // Dismiss the current view
+                        dismiss() // Aizve skatu
                     }
                 }
             }
-            .alert(isPresented: $showErrorAlert) { // Added alert modifier
+            .alert(isPresented: $showErrorAlert) {
                 Alert(
                     title: Text("Kļūda"),
                     message: Text(errorMessage),
@@ -143,7 +143,7 @@ struct chosenClothingItemsView: View {
         if !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isNewDay {
             currentDay.notes += currentDay.notes.isEmpty ? notes : "\n\(notes)"
         } else if isNewDay && !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            // Set notes for new day
+            // Izveido piezīmes jaunai dienai
             currentDay.notes = notes
         }
 

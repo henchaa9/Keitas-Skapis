@@ -17,8 +17,8 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     
     @Attribute var id: UUID = UUID() // ID
     @Attribute var name: String // Nosaukums
-    @Attribute(.externalStorage) var picture: Data? // Neobligāti attēla dati, saglabāti atsevišķi
-    @Attribute(.externalStorage) var thumbnailPicture: Data? // Samazināts attēls
+    @Attribute(.externalStorage) var picture: Data? // Neobligāti attēla dati, glabāti atsevišķi
+    @Attribute(.externalStorage) var thumbnailPicture: Data? // Samazināts attēls, glabāti atsevišķi
     @Attribute var removeBackground: Bool = false // Patiesumvērtība fona noņemšanas vērtības saglabāšanai
     
     // MARK: - Relācijas
@@ -27,7 +27,7 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     
     // MARK: - Attēlu kešatmiņa
       
-      static var imageCache = NSCache<NSString, UIImage>() // Kešatmiņa priekš kategoriju attēliem
+    static var imageCache = NSCache<NSString, UIImage>() // Kešatmiņa priekš kategoriju attēliem
     
     // MARK: - Initializer
     
@@ -177,7 +177,7 @@ class ClothingCategory: Identifiable, Hashable, Codable {
         hasher.combine(id)
     }
     
-    // MARK: - Nodrošina atbilstību Codable
+    // MARK: - Nodrošina atbilstību Codable, jeb kā datus jāsaglabā
     
     // Atslēgas, izņemot relācijas, lai nenotiktu cikliskas references
     enum CodingKeys: String, CodingKey {
@@ -206,13 +206,13 @@ class ClothingCategory: Identifiable, Hashable, Codable {
 }
 
 extension ClothingCategory {
-    /// Store both the full-size image in `picture` and a downsized thumbnail in `thumbnailPicture`.
+    /// Saglabā pilna izmēra attēlu `picture` un samazinātu versiju `thumbnailPicture`.
     func setImage(_ image: UIImage) {
-        // 1) Full-size
+        // 1) Oriģināls
         if let fullData = image.pngData() {
             self.picture = fullData
         }
-        // 2) Thumbnail
+        // 2) Samazināts
         if let thumbnail = image.thumbnailImage(maxPixelSize: 200),
            let thumbData = thumbnail.pngData() {
             self.thumbnailPicture = thumbData
@@ -221,26 +221,26 @@ extension ClothingCategory {
 }
 
 extension ClothingCategory {
-    /// - Parameter useThumbnail: If `true`, try to load `thumbnailPicture` first
+    /// - Parameter useThumbnail: Ja `true`, mēģina vispirms ielādēt `thumbnailPicture`
     func loadImage(useThumbnail: Bool = false,
                    completion: @escaping (UIImage?) -> Void) {
-        // 1) If there's a cached image, use that immediately
+        // 1) Pārbauda, vai kešatmiņā jau ir attēls, un izmanto to
         if let cachedImage = ClothingCategory.imageCache.object(forKey: self.id.uuidString as NSString) {
             completion(cachedImage)
             return
         }
         
-        // 2) Load thumbnail if requested
+        // 2) Ielādē samazināto versiju
         if useThumbnail,
            let thumbData = self.thumbnailPicture,
            let thumbImage = UIImage(data: thumbData) {
-            // Put the thumbnail in the cache
+            // Ievieto samazināto attēlu kešatmiņā
             ClothingCategory.imageCache.setObject(thumbImage, forKey: self.id.uuidString as NSString)
             completion(thumbImage)
             return
         }
         
-        // 3) Otherwise, load the full-size image asynchronously
+        // 3) Citādi, asinhroni ielādē oriģinālo attēlu
         DispatchQueue.global(qos: .background).async {
             var processedImage: UIImage?
             
@@ -253,7 +253,7 @@ extension ClothingCategory {
                 }
             }
             
-            // Cache
+            // Kešatmiņa
             if let imageToCache = processedImage {
                 ClothingCategory.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
             }
@@ -330,17 +330,17 @@ class ClothingItem: Identifiable, Hashable, Codable {
     @Attribute var name: String // Nosaukums
     @Attribute var notes: String // Piezīmes
     @Attribute var color: CustomColor // Krāsa
-    @Attribute var status: Int // Stāvoklis tīrs/netīrs/mazgājas
+    @Attribute var status: Int // Stāvoklis
     @Attribute var ironable: Bool // Gludināms/Negludināms
-    @Attribute var size: Int // Izmērs XS/S/M/L/XL
-    @Attribute var season: [Season] // Sezona vasara/rudens/ziema/pavasaris
-    @Attribute var lastWorn: Date // Pēdējoreiz vilkts datums
+    @Attribute var size: Int // Izmērs
+    @Attribute var season: [Season] // Sezona
+    @Attribute var lastWorn: Date // Pēdējoreiz vilkts
     @Attribute var washing: Bool // Mazgājas
     @Attribute var dirty: Bool // Netīrs
-    @Attribute var removeBackground: Bool = false // Patiesumvērtība fona noņemšanai
+    @Attribute var removeBackground: Bool = false // Fona noņemšana
     @Attribute var isFavorite: Bool = false // Mīļākais
-    @Attribute(.externalStorage) var picture: Data? // Neobligāti attēla dati, glabāti atsevišķi
-    @Attribute(.externalStorage) var thumbnailPicture: Data? // Thumbnail
+    @Attribute(.externalStorage) var picture: Data? // Attēls glabāts atsevišķi
+    @Attribute(.externalStorage) var thumbnailPicture: Data? // Samazināts attēls, glabāts atsevišķi
     
     // MARK: - Relācijas
     
@@ -349,7 +349,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
     
     // MARK: - Statiskie parametri
     
-    static var imageCache = NSCache<NSString, UIImage>() // Atmiņā esošs cache priekš attēliem
+    static var imageCache = NSCache<NSString, UIImage>() // Kešatmiņa apģērba attēliem
     
     // MARK: - Initializer
     
@@ -399,11 +399,11 @@ class ClothingItem: Identifiable, Hashable, Codable {
     
     // Izveido mazāku attēla versiju, lai uzlabotu veiktspēju
     func setImage(_ image: UIImage) {
-        // 1) Full-size image data
+        // 1) Oriģināls attēls
         if let fullData = image.pngData() {
             self.picture = fullData
         }
-        // 2) Create thumbnail
+        // 2) Samazināts attēls
         if let thumbnail = image.thumbnailImage(maxPixelSize: 200),
            let thumbData = thumbnail.pngData() {
             self.thumbnailPicture = thumbData
@@ -576,28 +576,28 @@ class ClothingItem: Identifiable, Hashable, Codable {
 }
 
 extension ClothingItem {
-    /// - Parameter useThumbnail: If `true`, try to load `thumbnailPicture` first
+    /// - Parameter useThumbnail: Ja `true`, mēģina vispirms ielādēt `thumbnailPicture`
     func loadImage(useThumbnail: Bool = false,
                    completion: @escaping (UIImage?) -> Void)
     {
-        // 1) If there's a cached image, use that immediately
+        // 1) Ja kešatmiņā ir attēls, izmanto to
         if let cachedImage = ClothingItem.imageCache.object(forKey: self.id.uuidString as NSString) {
             completion(cachedImage)
             return
         }
         
-        // 2) Load thumbnail if requested
+        // 2) Ielādē samazināto attēlu, ja prasīts
         if useThumbnail,
            let thumbData = self.thumbnailPicture,
            let thumbImage = UIImage(data: thumbData)
         {
-            // Put the thumbnail in the cache
+            // Ievieto samazināto attēlu kešatmiņā
             ClothingItem.imageCache.setObject(thumbImage, forKey: self.id.uuidString as NSString)
             completion(thumbImage)
             return
         }
         
-        // 3) Otherwise, load the full-size image asynchronously
+        // 3) Citādi, asinhorni ielādē oriģinālo attēlu
         DispatchQueue.global(qos: .background).async {
             var processedImage: UIImage?
             
@@ -611,7 +611,7 @@ extension ClothingItem {
                 }
             }
             
-            // Put the processed image in the cache
+            // Ievieto apstrādāto attēlu kešatmiņā
             if let imageToCache = processedImage {
                 ClothingItem.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
             }

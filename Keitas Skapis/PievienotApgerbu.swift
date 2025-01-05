@@ -354,7 +354,7 @@ struct PievienotApgerbuView: View {
                     
                     // Apstiprināt poga
                     Button {
-                        Confirm()
+                        Save()
                     } label: {
                         Text("Apstiprināt")
                             .frame(maxWidth: .infinity)
@@ -463,8 +463,7 @@ struct PievienotApgerbuView: View {
     
     // Saglabā apģērbu
     /// - Note: Šī funkcija gan saglabā jaunus apģērbus, gan rediģētus
-    /// Tā izmanto palīgmetodes fona noņemšanai
-    func Confirm() {
+    func Save() {
         // Pārbauda, vai nosaukums nav tukšs
         guard !clothingItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             errorMessage = "Nosaukums nevar būt tukšs."
@@ -492,17 +491,17 @@ struct PievienotApgerbuView: View {
                 
                 // Saglabā attēlu, ja izvēlēts
                 if let uiImage = selectedImage {
-                    // Always keep the original
+                    // Vienmēr saglabā oriģinālu
                     clothingItem.picture = uiImage.pngData()
                     
-                    // For the thumbnail, check if background removal is toggled
+                    // Pārbauda, vai removeBackground ir patiess
                     let finalThumbnail: UIImage
                     if removeBackground {
                         finalThumbnail = removeBackground(from: uiImage)
                     } else {
                         finalThumbnail = uiImage
                     }
-                    // Then resize to a small thumbnail
+                    // Izveido mazāku attēlu
                     if let thumbData = finalThumbnail.thumbnailImage(maxPixelSize: 200)?.pngData() {
                         clothingItem.thumbnailPicture = thumbData
                     }
@@ -529,19 +528,19 @@ struct PievienotApgerbuView: View {
                     removeBackground: removeBackground
                 )
                 
-                // pieliek attēlu
+                // Pieliek attēlu
                 if let uiImage = selectedImage {
-                    // Always keep the original
+                    // Vienmēr saglabā oriģinālu
                     newClothingItem.picture = uiImage.pngData()
                     
-                    // For the thumbnail, check if background removal is toggled
+                    // Pārbauda, vai removeBackground ir patiess
                     let finalThumbnail: UIImage
                     if removeBackground {
                         finalThumbnail = removeBackground(from: uiImage)
                     } else {
                         finalThumbnail = uiImage
                     }
-                    // Then resize to a small thumbnail
+                    // Izveido samazinātu attēlu
                     if let thumbData = finalThumbnail.thumbnailImage(maxPixelSize: 200)?.pngData() {
                         newClothingItem.thumbnailPicture = thumbData
                     }

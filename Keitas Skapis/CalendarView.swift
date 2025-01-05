@@ -130,7 +130,7 @@ struct CalendarView: View {
                 isTapLocked = false
             }
         } label: {
-            Text("\(calendar.component(.day, from: date))") // Display day number
+            Text("\(calendar.component(.day, from: date))") // Parāda dienas numuru
                 .padding(8)
                 .background(existingDiena != nil ? Color.yellow.opacity(0.3) : Color.clear)
                 .clipShape(Circle())
@@ -141,7 +141,7 @@ struct CalendarView: View {
 
     // MARK: - Palīgfunkcijas
     /// Ģenerē sarakstu ar datumiem katrai dienai
-    /// - Returns: Saraksts ar `Date` objektiem katrai dienai
+    /// - Returns: Masīvs ar `Date` objektiem katrai dienai
     private func daysInDisplayedMonth() -> [Date] {
         guard let range = calendar.range(of: .day, in: .month, for: displayedMonth) else {
             return []
