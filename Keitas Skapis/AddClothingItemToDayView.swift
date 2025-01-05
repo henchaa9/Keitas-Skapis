@@ -42,7 +42,7 @@ struct AddClothingItemToDayView: View {
 
                             Spacer()
 
-                            AsyncImageView(clothingItem: item)
+                            AsyncImageView(clothingItem: item, imageType: .thumbnail)
                                 .frame(width: 40, height: 40)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }

@@ -3,26 +3,21 @@ import SwiftUI
 
 // MARK: - Skats kategorijas attēlošanai
 struct CategoryButton: View {
-    // MARK: - Parametri
-    
     let clothingCategory: ClothingCategory
     let isSelected: Bool
     let onLongPress: (ClothingCategory) -> Void
     let toggleSelection: (ClothingCategory) -> Void
     
-    // MARK: - Stāvokļu mainīgie
-    
     @State private var image: UIImage?
-
+    
     var body: some View {
         VStack {
-            // Kategorijas attēls, asinhroni ielādēts
             if let image = image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 80, height: 80)
-            } else { // Noklusējuma attēls
+            } else {
                 Image(systemName: "photo")
                     .resizable()
                     .scaledToFit()
@@ -32,8 +27,7 @@ struct CategoryButton: View {
                     .padding(.top, 20)
                     .padding(.bottom, 10)
             }
-
-            // Nosaukums
+            
             Text(clothingCategory.name)
                 .frame(width: 80, height: 30)
                 .multilineTextAlignment(.center)
@@ -44,26 +38,32 @@ struct CategoryButton: View {
         .contentShape(Rectangle())
         .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
         .onTapGesture {
-            toggleSelection(clothingCategory) // Maina izvēles statusu
+            toggleSelection(clothingCategory)
         }
         .simultaneousGesture(
             LongPressGesture().onEnded { _ in
-                onLongPress(clothingCategory) // Reģistrē turēšanu
+                onLongPress(clothingCategory)
             }
         )
         .onAppear {
-            loadImage()
+            loadThumbnail()
         }
     }
     
-    // MARK: - Palīgfunkcijas
-    
-    // Asinhroni ielādē kategorijas attēlu
-    private func loadImage() {
-        clothingCategory.loadImage { loadedImage in
-            self.image = loadedImage
+    private func loadThumbnail() {
+        // Same logic as ClothingItem
+        if let thumbData = clothingCategory.thumbnailPicture,
+           let uiImage = UIImage(data: thumbData) {
+            // Thumbnail is available
+            self.image = uiImage
+        } else {
+            // No thumbnail, so load full image asynchronously
+            clothingCategory.loadImage { loadedImage in
+                self.image = loadedImage
+            }
         }
     }
 }
+
 
 

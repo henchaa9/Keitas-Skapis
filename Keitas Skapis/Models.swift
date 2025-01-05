@@ -18,6 +18,7 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     @Attribute var id: UUID = UUID() // ID
     @Attribute var name: String // Nosaukums
     @Attribute(.externalStorage) var picture: Data? // Neobligāti attēla dati, saglabāti atsevišķi
+    @Attribute(.externalStorage) var thumbnailPicture: Data? // Samazināts attēls
     @Attribute var removeBackground: Bool = false // Patiesumvērtība fona noņemšanas vērtības saglabāšanai
     
     // MARK: - Relācijas
@@ -204,6 +205,67 @@ class ClothingCategory: Identifiable, Hashable, Codable {
     }
 }
 
+extension ClothingCategory {
+    /// Store both the full-size image in `picture` and a downsized thumbnail in `thumbnailPicture`.
+    func setImage(_ image: UIImage) {
+        // 1) Full-size
+        if let fullData = image.pngData() {
+            self.picture = fullData
+        }
+        // 2) Thumbnail
+        if let thumbnail = image.thumbnailImage(maxPixelSize: 200),
+           let thumbData = thumbnail.pngData() {
+            self.thumbnailPicture = thumbData
+        }
+    }
+}
+
+extension ClothingCategory {
+    /// - Parameter useThumbnail: If `true`, try to load `thumbnailPicture` first
+    func loadImage(useThumbnail: Bool = false,
+                   completion: @escaping (UIImage?) -> Void) {
+        // 1) If there's a cached image, use that immediately
+        if let cachedImage = ClothingCategory.imageCache.object(forKey: self.id.uuidString as NSString) {
+            completion(cachedImage)
+            return
+        }
+        
+        // 2) Load thumbnail if requested
+        if useThumbnail,
+           let thumbData = self.thumbnailPicture,
+           let thumbImage = UIImage(data: thumbData) {
+            // Put the thumbnail in the cache
+            ClothingCategory.imageCache.setObject(thumbImage, forKey: self.id.uuidString as NSString)
+            completion(thumbImage)
+            return
+        }
+        
+        // 3) Otherwise, load the full-size image asynchronously
+        DispatchQueue.global(qos: .background).async {
+            var processedImage: UIImage?
+            
+            if let imageData = self.picture,
+               let uiImage = UIImage(data: imageData) {
+                if self.removeBackground {
+                    processedImage = self.removeBackground(from: uiImage)
+                } else {
+                    processedImage = uiImage
+                }
+            }
+            
+            // Cache
+            if let imageToCache = processedImage {
+                ClothingCategory.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
+            }
+            
+            DispatchQueue.main.async {
+                completion(processedImage)
+            }
+        }
+    }
+}
+
+
 // MARK: - CustomColor Struct
 
 // Struct, kas attēlo krāsu, kuru var pievienot apģērbam
@@ -278,6 +340,7 @@ class ClothingItem: Identifiable, Hashable, Codable {
     @Attribute var removeBackground: Bool = false // Patiesumvērtība fona noņemšanai
     @Attribute var isFavorite: Bool = false // Mīļākais
     @Attribute(.externalStorage) var picture: Data? // Neobligāti attēla dati, glabāti atsevišķi
+    @Attribute(.externalStorage) var thumbnailPicture: Data? // Thumbnail
     
     // MARK: - Relācijas
     
@@ -333,6 +396,19 @@ class ClothingItem: Identifiable, Hashable, Codable {
     }
     
     // MARK: - Attēla ielāde
+    
+    // Izveido mazāku attēla versiju, lai uzlabotu veiktspēju
+    func setImage(_ image: UIImage) {
+        // 1) Full-size image data
+        if let fullData = image.pngData() {
+            self.picture = fullData
+        }
+        // 2) Create thumbnail
+        if let thumbnail = image.thumbnailImage(maxPixelSize: 200),
+           let thumbData = thumbnail.pngData() {
+            self.thumbnailPicture = thumbData
+        }
+    }
     
     // Asinhroni ielādē apģērba attēlu, noņemot fonu ja nepieciešams
     // Izmanto kešatmiņu, lai uzlabotu veiktspēju
@@ -498,6 +574,55 @@ class ClothingItem: Identifiable, Hashable, Codable {
         try container.encode(clothingItemCategories, forKey: .clothingItemCategories)
     }
 }
+
+extension ClothingItem {
+    /// - Parameter useThumbnail: If `true`, try to load `thumbnailPicture` first
+    func loadImage(useThumbnail: Bool = false,
+                   completion: @escaping (UIImage?) -> Void)
+    {
+        // 1) If there's a cached image, use that immediately
+        if let cachedImage = ClothingItem.imageCache.object(forKey: self.id.uuidString as NSString) {
+            completion(cachedImage)
+            return
+        }
+        
+        // 2) Load thumbnail if requested
+        if useThumbnail,
+           let thumbData = self.thumbnailPicture,
+           let thumbImage = UIImage(data: thumbData)
+        {
+            // Put the thumbnail in the cache
+            ClothingItem.imageCache.setObject(thumbImage, forKey: self.id.uuidString as NSString)
+            completion(thumbImage)
+            return
+        }
+        
+        // 3) Otherwise, load the full-size image asynchronously
+        DispatchQueue.global(qos: .background).async {
+            var processedImage: UIImage?
+            
+            if let imageData = self.picture,
+               let uiImage = UIImage(data: imageData)
+            {
+                if self.removeBackground {
+                    processedImage = self.removeBackground(from: uiImage)
+                } else {
+                    processedImage = uiImage
+                }
+            }
+            
+            // Put the processed image in the cache
+            if let imageToCache = processedImage {
+                ClothingItem.imageCache.setObject(imageToCache, forKey: self.id.uuidString as NSString)
+            }
+            
+            DispatchQueue.main.async {
+                completion(processedImage)
+            }
+        }
+    }
+}
+
 
 // MARK: - Day Modelis
 

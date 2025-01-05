@@ -1,24 +1,23 @@
-
 import SwiftUI
 import SwiftData
 
-// Ieejas punkts programmā
+// MARK: - Ieejas punkts lietotnē
 @main
 struct KeitasSkapisApp: App {
-    // Mainīgais, kas globāli pārvalda lietotāja izvēlētos apģērbus
+    // Pārvalda izvēlētos apģērbus
     @StateObject private var chosenManager = ChosenManager()
     
     var body: some Scene {
         WindowGroup {
-            // Galvenais skats
-            HomeView()
+            // Galvenais skats pārvalda navigāciju starp visiem skatiem, ko nodrošina rīkjosla
+            MainTabView()
+                // Padod chosenManager skatiem, kuriem to vajag
                 .environmentObject(chosenManager)
         }
         .modelContainer(for: [
-            // Galvenie datu modeļi
             ClothingCategory.self,
             ClothingItem.self,
-            Day.self,
+            Day.self
         ])
     }
 }

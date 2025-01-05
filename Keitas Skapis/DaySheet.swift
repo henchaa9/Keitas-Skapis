@@ -42,7 +42,7 @@ struct DaySheetView: View {
                                     
                                     Spacer()
                                     
-                                    AsyncImageView(clothingItem: item) // Apģērba attēls tiek lādēts asinhroni
+                                    AsyncImageView(clothingItem: item, imageType: .thumbnail) // Apģērba attēls tiek lādēts asinhroni
                                         .frame(width: 50, height: 50)
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
                                 }

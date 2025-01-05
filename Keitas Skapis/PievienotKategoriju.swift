@@ -190,8 +190,8 @@ struct addClothingCategoryView: View {
             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
             .padding(.vertical, 15)
             .padding(.horizontal, 20)
-
         }
+        .padding(.bottom, 250)
         .preferredColorScheme(.light)
         .hideKeyboardOnTap()
         .alert(isPresented: $showErrorAlert) {
@@ -220,34 +220,70 @@ struct addClothingCategoryView: View {
         }
 
         Task {
-            let imageData = selectedImage?.pngData()
             if let category = existingCategory {
-                // Atjaunina kategoriju
+                // Rediģējam esošu kategoriju
                 category.name = categoryName
-                category.picture = imageData
                 category.removeBackground = removeBackground
+
+                if let uiImage = selectedImage {
+                    // 1) Always store the original
+                    category.picture = uiImage.pngData()
+                    
+                    // 2) Condition: if removeBackground is ON, remove it
+                    let finalImage: UIImage
+                    if removeBackground {
+                        finalImage = removeBackground(from: uiImage)
+                    } else {
+                        finalImage = uiImage
+                    }
+
+                    // 3) Create a smaller thumbnail version
+                    if let thumbnailData = finalImage.thumbnailImage(maxPixelSize: 200)?.pngData() {
+                        category.thumbnailPicture = thumbnailData
+                    }
+                }
+
+                // Rebuild the cached image
                 category.reloadImage()
             } else {
                 // Ievieto jaunu kategoriju
-                let newKategorija = ClothingCategory(
+                let newCategory = ClothingCategory(
                     name: categoryName,
-                    picture: imageData,
                     removeBackground: removeBackground
                 )
-                modelContext.insert(newKategorija)
+
+                if let uiImage = selectedImage {
+                    // 1) Always store the original
+                    newCategory.picture = uiImage.pngData()
+
+                    // 2) Possibly remove background
+                    let finalImage: UIImage
+                    if removeBackground {
+                        finalImage = removeBackground(from: uiImage)
+                    } else {
+                        finalImage = uiImage
+                    }
+
+                    // 3) Generate thumbnail
+                    if let thumbnailData = finalImage.thumbnailImage(maxPixelSize: 200)?.pngData() {
+                        newCategory.thumbnailPicture = thumbnailData
+                    }
+                }
+                
+                modelContext.insert(newCategory)
             }
 
             // Mēģina saglabāt
             do {
                 try modelContext.save()
-                dismiss() // Aizver skatu, ja saglabāšana ir veiksmīga
+                dismiss()
             } catch {
-                // Kļūdas pārvaldība
-                errorMessage = "Neizdevās saglabāt kategoriju: \(error.localizedDescription)"
+                errorMessage = "Neizdevās saglabāt kategoriju"
                 showErrorAlert = true
             }
         }
     }
+
 
 
     // MARK: - Palīgfunkcijas

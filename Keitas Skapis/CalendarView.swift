@@ -36,6 +36,7 @@ struct CalendarView: View {
                         .stroke(Color(.black), lineWidth: 1)
                 )
                 .padding(.horizontal, 10)
+                .padding(.top, 5)
                 .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
                 
                 VStack {
@@ -71,7 +72,7 @@ struct CalendarView: View {
                     .edgesIgnoringSafeArea(.all)
                     .opacity(0.3)
             )
-            ToolBar()
+            //ToolBar()
                 .background(Color(.systemGray5))
                 .padding(.top, -10)
                 .sheet(isPresented: $showDaySheet, onDismiss: { selectedDay = nil }) {
@@ -82,7 +83,7 @@ struct CalendarView: View {
                     }
                 }
                 .navigationBarBackButtonHidden(true)
-        }
+        }.preferredColorScheme(.light)
     }
 
     // MARK: - Mēnešu pārslēgšana

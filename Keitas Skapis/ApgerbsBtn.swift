@@ -12,13 +12,13 @@ struct clothingItemButton: View {
     
     // MARK: - Stāvokļu mainīgie
     
-    @State private var image: UIImage?
+    @State private var thumbnail: UIImage?
 
     var body: some View {
         VStack {
             // Apģērba attēls, ja tas ir pievienots un ielādēts
-            if let image = image {
-                Image(uiImage: image)
+            if let thumbnail = thumbnail {
+                Image(uiImage: thumbnail)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 80, height: 80)
@@ -50,16 +50,22 @@ struct clothingItemButton: View {
             onLongPress() // Reģistrē turēšanu
         }
         .onAppear {
-            loadImage() // Ielādē attēlu, kad skats parādās
+            loadThumbnail() // Ielādē attēlu, kad skats parādās
         }
     }
 
     // MARK: - Palīgfunkcijas
     
     // Asinhroni ielādē apģērba attēlu
-    private func loadImage() {
-        clothingItem.loadImage { loadedImage in
-            self.image = loadedImage
+    private func loadThumbnail() {
+        // Ielādē mazāko attēla versijju veiktspējas uzlabošanai:
+        if let thumbData = clothingItem.thumbnailPicture, let uiImage = UIImage(data: thumbData) {
+            self.thumbnail = uiImage
+        } else {
+            // Ja neizdodas ielādēt mazāko attēlu, ielādē pilna izmēra attēlu
+            clothingItem.loadImage { fullImage in
+                self.thumbnail = fullImage
+            }
         }
     }
 }

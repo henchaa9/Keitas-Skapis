@@ -106,7 +106,7 @@ struct HomeView: View {
                     .opacity(0.3)
             )
             .hideKeyboardOnTap()
-                ToolBar()
+                //ToolBar()
                 .background(Color(.systemGray5))
                 .padding(.top, -10)
             .background(Color(.systemGray6))
@@ -279,6 +279,7 @@ struct HomeView: View {
                 .stroke(Color(.black), lineWidth: 1)
         )
         .padding(.horizontal, 10)
+        .padding(.top, 5)
         .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
     }
 
@@ -430,7 +431,7 @@ struct HomeView: View {
                     Text("No Apgerbs Selected")
                 }
             }
-        }
+        }.padding(.bottom, 80)
     }
 
     // MARK: - ActionSheet pārvalde

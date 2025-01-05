@@ -84,6 +84,7 @@ struct DirtyClothingItemsView: View {
                 .cornerRadius(12)
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1))
                 .padding(.horizontal, 10)
+                .padding(.top, 5)
                 .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
                 // Režģis ar apģērbiem, kuri izmanto ApgerbsBtn attēlošanai
@@ -126,10 +127,10 @@ struct DirtyClothingItemsView: View {
                         }
                         .padding()
                     }
-                }
+                }.padding(.bottom, 80)
             }
             .background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
-            ToolBar()
+            //ToolBar()
                 .background(Color(.systemGray5)).padding(.top, -10)
 
             // Detaļu lapa apģērbam

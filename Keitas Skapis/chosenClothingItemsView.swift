@@ -36,7 +36,7 @@ struct chosenClothingItemsView: View {
                                 Spacer()
                                 
                                 // Asinhroni ielādē attēlu
-                                AsyncImageView(clothingItem: clothingItem)
+                                AsyncImageView(clothingItem: clothingItem, imageType: .thumbnail)
                                     .frame(width: 50, height: 50)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
                             }

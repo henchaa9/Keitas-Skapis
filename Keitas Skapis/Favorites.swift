@@ -75,6 +75,7 @@ struct FavoritesView: View {
                 .cornerRadius(12)
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.black), lineWidth: 1))
                 .padding(.horizontal, 10)
+                .padding(.top, 5)
                 .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
 
                 ScrollView {
@@ -118,13 +119,13 @@ struct FavoritesView: View {
                         }
                         .padding()
                     }
-                }
+                }.padding(.bottom, 80)
             }
             .background(Image("background_dmitriy_steinke").resizable().edgesIgnoringSafeArea(.all).opacity(0.3))
 
             // MARK: - ToolBar
             // Rīkjosla
-            ToolBar()
+            //ToolBar()
                 .background(Color(.systemGray5))
                 .padding(.top, -10)
 

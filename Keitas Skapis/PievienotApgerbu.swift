@@ -371,6 +371,7 @@ struct PievienotApgerbuView: View {
                 .padding(20)
             }
         }
+        .padding(.bottom, 60)
         .preferredColorScheme(.light)
         .hideKeyboardOnTap()
         .alert(isPresented: $showErrorAlert) { // Added alert modifier
@@ -490,9 +491,23 @@ struct PievienotApgerbuView: View {
                 clothingItem.removeBackground = removeBackground
                 
                 // Saglabā attēlu, ja izvēlēts
-                if let imageData = selectedImage?.pngData() {
-                    clothingItem.picture = imageData
+                if let uiImage = selectedImage {
+                    // Always keep the original
+                    clothingItem.picture = uiImage.pngData()
+                    
+                    // For the thumbnail, check if background removal is toggled
+                    let finalThumbnail: UIImage
+                    if removeBackground {
+                        finalThumbnail = removeBackground(from: uiImage)
+                    } else {
+                        finalThumbnail = uiImage
+                    }
+                    // Then resize to a small thumbnail
+                    if let thumbData = finalThumbnail.thumbnailImage(maxPixelSize: 200)?.pngData() {
+                        clothingItem.thumbnailPicture = thumbData
+                    }
                 }
+
                 
                 // Atjaunina relācijas
                 updateCategoryRelationships(for: clothingItem, newCategories: Array(clothingItemCategories))
@@ -511,10 +526,27 @@ struct PievienotApgerbuView: View {
                     lastWorn: clothingItemLastWorn,
                     dirty: clothingItemStatus == 1,
                     washing: clothingItemStatus == 2,
-                    picture: selectedImage?.pngData(),
                     removeBackground: removeBackground
                 )
                 
+                // pieliek attēlu
+                if let uiImage = selectedImage {
+                    // Always keep the original
+                    newClothingItem.picture = uiImage.pngData()
+                    
+                    // For the thumbnail, check if background removal is toggled
+                    let finalThumbnail: UIImage
+                    if removeBackground {
+                        finalThumbnail = removeBackground(from: uiImage)
+                    } else {
+                        finalThumbnail = uiImage
+                    }
+                    // Then resize to a small thumbnail
+                    if let thumbData = finalThumbnail.thumbnailImage(maxPixelSize: 200)?.pngData() {
+                        newClothingItem.thumbnailPicture = thumbData
+                    }
+                }
+
                 
                 // Izveido relācijas
                 newClothingItem.clothingItemCategories = Array(clothingItemCategories)
