@@ -5,8 +5,8 @@ import SwiftData
 // MARK: - Kalendāra skats
 struct CalendarView: View {
     // MARK: - Datu vaicājumi un vides mainīgie
-    @Environment(\.modelContext) private var modelContext // Accesses the data model context for data operations
-    @Environment(\.dismiss) var dismiss // Provides a method to dismiss the current view
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) var dismiss
     @Query private var days: [Day]
     
     // MARK: - Stāvokļu mainīgie

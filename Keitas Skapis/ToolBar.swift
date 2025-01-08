@@ -1,23 +1,23 @@
 
 import SwiftUI
 
-/// An enum representing each bottom tab
+///  Lietotnes skati
 enum AppTab {
     case home, favorites, calendar, dirty
 }
 
 struct MainTabView: View {
-    // Track which tab is currently selected
+    // Izvēlētais skats
     @State private var selectedTab: AppTab = .home
     
-    // Manager for chosen items, if needed
+    // Chosen manager izvēlētajiem apģērbiem
     @StateObject private var chosenManager = ChosenManager()
-    // Controls the “Izvēlētie” sheet
+    // Kontrolē Izvēlēto apģērbu skatu
     @State private var showChosenClothesSheet = false
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            // 1) Switch the main content (the "root" screen) based on selectedTab
+            // 1) Maina skatus
             switch selectedTab {
             case .home:
                 NavigationStack {
@@ -37,16 +37,16 @@ struct MainTabView: View {
                 }
             }
 
-            // 2) Custom tab bar at the bottom with the same styling as your old ToolBar
+            // 2) Rīkjosla
             HStack {
-                // -- Sākums (Home) button
+                // Galvenais skats
                 Button {
                     selectedTab = .home
                 } label: {
                     VStack {
                         Image(systemName: "house")
                             .font(.system(size: 24))
-                            // Highlight the icon/text if selected
+                            // Iekrāso izvēlētā skata ikonu
                             .foregroundStyle(selectedTab == .home ? .blue : .black)
                         Text("Sākums")
                             .font(.footnote)
@@ -55,7 +55,7 @@ struct MainTabView: View {
                 }
                 .frame(maxWidth: .infinity)
 
-                // -- Izvēlētie (sheet), triggered by the cart icon
+                // Izvēlēto apģērbu skats
                 Button {
                     showChosenClothesSheet = true
                 } label: {
@@ -69,13 +69,12 @@ struct MainTabView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                // The sheet for chosen items
                 .sheet(isPresented: $showChosenClothesSheet) {
                     chosenClothingItemsView()
                         .environmentObject(chosenManager)
                 }
 
-                // -- Mīļākie (Favorites)
+                // Mīļāko apģērbu skats
                 Button {
                     selectedTab = .favorites
                 } label: {
@@ -90,7 +89,7 @@ struct MainTabView: View {
                 }
                 .frame(maxWidth: .infinity)
 
-                // -- Kalendārs (Calendar)
+                // Kalendāra skats
                 Button {
                     selectedTab = .calendar
                 } label: {
@@ -105,7 +104,7 @@ struct MainTabView: View {
                 }
                 .frame(maxWidth: .infinity)
 
-                // -- Tīrīšana (Dirty Items)
+                // Tīrīšanas skats
                 Button {
                     selectedTab = .dirty
                 } label: {
@@ -128,7 +127,7 @@ struct MainTabView: View {
             .shadow(color: .gray.opacity(0.3), radius: 5, x: 0, y: 2)
             .padding(.horizontal, 5)
         }
-        // Make chosenManager available to child views
+        // Padara chosenManager redzamu citiem skatiem
         .environmentObject(chosenManager)
     }
 }
